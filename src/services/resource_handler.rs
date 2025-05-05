@@ -1,0 +1,45 @@
+use crate::AppState;
+use crate::services::{
+  read_dir,
+  read_file,
+};
+use crate::structs::entry_details::EntryDetails;
+use crate::util;
+use actix_files::NamedFile;
+use actix_web::{
+  web::Data,
+  Either::{self, Left, Right},
+  HttpRequest,
+  HttpResponse,
+};
+use std::{
+  fs,
+  io,
+  path::PathBuf,
+};
+
+pub async fn handle(req: HttpRequest, data: Data<AppState>) -> Either<HttpResponse, NamedFile> {
+  let path_result: Result<PathBuf, HttpResponse> = util::validate_path(&req, &data);
+  if path_result.is_err() { return Left(path_result.err().unwrap()); }
+  let path: PathBuf = path_result.unwrap();
+
+  let metadata_result = fs::metadata(&path);
+  if metadata_result.is_err() { return Left(HttpResponse::InternalServerError().finish()); }
+  let metadata: fs::Metadata = metadata_result.unwrap();
+
+  // If the path we're requesting points to a directory
+  if metadata.is_dir() {
+    let results: Result<Vec<EntryDetails>, io::Error> = read_dir::read(&path, &req, &data).await;
+    if results.is_err() { return Left(HttpResponse::InternalServerError().finish()); }
+    return Left(HttpResponse::Ok().json(results.unwrap()));
+  }
+  // Or if it points to a file
+  if metadata.is_file() {
+    let results: Result<NamedFile, io::Error> = read_file::read(&path, &data).await;
+    if results.is_err() { return Left(HttpResponse::InternalServerError().finish()); }
+    return Right(results.unwrap());
+  }
+
+  // Otherwise, throw a 404
+  Left(HttpResponse::NotFound().finish())
+}

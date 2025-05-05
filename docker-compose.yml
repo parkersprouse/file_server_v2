@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+    image: web_file_browser_server:latest
+    container_name: web_file_browser_server
+    env_file:
+      - docker/local.env
+    ports:
+      - "1234:1234"
+
+networks:
+  web_file_browser_server_default:
+    external: true
