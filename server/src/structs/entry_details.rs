@@ -1,11 +1,13 @@
 use crate::AppState;
+use crate::structs::entry_type::EntryType;
 use actix_web::web::Data;
+use chrono::{DateTime, Utc};
+use serde::Serialize;
 use std::{
+  fs,
   ops::Index,
   path::PathBuf,
 };
-
-use serde::Serialize;
 
 #[derive(Clone, Serialize)]
 pub struct EntryDetails {
@@ -20,20 +22,17 @@ pub struct EntryDetails {
 #[allow(dead_code)]
 impl EntryDetails {
   pub fn new(
-    created_at: String,
-    duration: Option<i16>,
-    filetype: String,
-    last_modified_at: String,
-    name: String,
-    path: String,
+    entry: &fs::DirEntry,
+    data: &Data<AppState>,
   ) -> Self {
+    let metadata: fs::Metadata = entry.metadata().unwrap();
     Self {
-      created_at,
-      duration,
-      filetype,
-      last_modified_at,
-      name,
-      path,
+      created_at: DateTime::<Utc>::from(metadata.created().unwrap()).to_rfc3339(),
+      duration: None,
+      filetype: EntryType::stringify(&metadata.file_type()).into(),
+      last_modified_at: DateTime::<Utc>::from(metadata.modified().unwrap()).to_rfc3339(),
+      name: entry.file_name().into_string().unwrap(),
+      path: Self::clean_path(entry.path(), data),
     }
   }
 

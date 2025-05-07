@@ -11,7 +11,14 @@ impl EntryType {
     Self::FILE
   }
 
-  pub fn valid(metadata: &fs::Metadata) -> bool {
-    metadata.is_dir() || metadata.is_file()
+  pub fn valid(entry: &fs::DirEntry) -> bool {
+    match entry.metadata() {
+      Ok(metadata) => {
+        metadata.is_dir() || metadata.is_file()
+      }
+      Err(_) => {
+        false
+      }
+    }
   }
 }

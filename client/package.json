@@ -1,0 +1,8 @@
+{
+  "name": "file_server_v2_client",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {},
+  "license": "MPL-2.0",
+  "packageManager": "pnpm@10.10.0"
+}

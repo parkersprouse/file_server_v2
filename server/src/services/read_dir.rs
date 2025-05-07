@@ -10,7 +10,7 @@ use actix_web::{
   web::Data,
   HttpRequest,
 };
-use chrono::{DateTime, Utc};
+use chrono::DateTime;
 use std::{
   cmp::Ordering,
   fs,
@@ -66,19 +66,10 @@ pub async fn read<P>(path: P, req: &HttpRequest, data: &Data<AppState>) -> Resul
   let entries: fs::ReadDir = fs::read_dir(path)?;
   for entry_result in entries {
     let entry: fs::DirEntry = entry_result?;
-    let metadata: fs::Metadata = entry.metadata()?;
-
     // skip "invalid" entry types - i.e. anything not a directory or file
-    if !EntryType::valid(&metadata) { continue; }
-
-    output.push(EntryDetails {
-      created_at: DateTime::<Utc>::from(metadata.created()?).to_rfc3339(),
-      duration: None,
-      filetype: EntryType::stringify(&metadata.file_type()).into(),
-      last_modified_at: DateTime::<Utc>::from(metadata.modified()?).to_rfc3339(),
-      name: entry.file_name().into_string().unwrap(),
-      path: EntryDetails::clean_path(entry.path(), data),
-    });
+    if EntryType::valid(&entry) {
+      output.push(EntryDetails::new(&entry, &data));
+    }
   }
 
   Ok(sort_output(output, query_params))
