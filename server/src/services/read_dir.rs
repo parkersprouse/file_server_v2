@@ -47,9 +47,9 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
   // Then make sure directories appear on top
   clone.sort_by(|a, b| {
     // If we're comparing a directory against a file, the directory moves up
-    if a.filetype.eq(EntryType::DIR) && b.filetype.ne(EntryType::DIR) { return Ordering::Less; }
+    if a.entry_type.eq(EntryType::DIR) && b.entry_type.ne(EntryType::DIR) { return Ordering::Less; }
     // If we're comparing a file against a directory, the file moves down
-    if a.filetype.ne(EntryType::DIR) && b.filetype.eq(EntryType::DIR) { return Ordering::Greater; }
+    if a.entry_type.ne(EntryType::DIR) && b.entry_type.eq(EntryType::DIR) { return Ordering::Greater; }
     // Otherwise, change nothing
     Ordering::Equal
   });
@@ -68,7 +68,7 @@ pub async fn read<P>(path: P, req: &HttpRequest, data: &Data<AppState>) -> Resul
     let entry: fs::DirEntry = entry_result?;
     // skip "invalid" entry types - i.e. anything not a directory or file
     if EntryType::valid(&entry) {
-      output.push(EntryDetails::new(&entry, &data));
+      output.push(EntryDetails::new(&entry, data));
     }
   }
 
