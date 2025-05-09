@@ -1,3 +1,5 @@
+use std::ops::Index;
+
 use crate::structs::entry_details::EntryDetails;
 use chrono::DateTime;
 
@@ -16,12 +18,12 @@ impl SortKey {
     Self::NAME,
   ];
 
-  pub fn validate(dir: &str) -> &str {
-    if Self::VALID_PARAMS.contains(&dir) { return dir; }
-    Self::NAME
+  pub fn validate(dir: String) -> String {
+    if Self::VALID_PARAMS.contains(&dir.as_str()) { return dir; }
+    Self::NAME.into()
   }
 
-  pub fn is_time_based(entry: &EntryDetails, key: &str) -> bool {
-    DateTime::parse_from_rfc3339(&entry[key]).is_ok()
+  pub fn is_time_based(entry: &EntryDetails, key: String) -> bool {
+    DateTime::parse_from_rfc3339(entry.index(key.as_str())).is_ok()
   }
 }

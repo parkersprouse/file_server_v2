@@ -6,8 +6,8 @@ impl EntryType {
   pub const DIR: &'static str = "dir";
   pub const FILE: &'static str = "file";
 
-  pub fn stringify(filetype: &fs::FileType) -> &'static str {
-    if filetype.is_dir() { return Self::DIR; }
+  pub fn stringify(entry_type: &fs::FileType) -> &'static str {
+    if entry_type.is_dir() { return Self::DIR; }
     Self::FILE
   }
 

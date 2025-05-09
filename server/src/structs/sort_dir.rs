@@ -9,9 +9,9 @@ impl SortDir {
     Self::DESC,
   ];
 
-  pub fn validate(dir: &str) -> &str {
-    if Self::VALID_PARAMS.contains(&dir) { return dir; }
-    Self::ASC
+  pub fn validate(dir: String) -> String {
+    if Self::VALID_PARAMS.contains(&dir.as_str()) { return dir; }
+    Self::ASC.into()
   }
 
   pub fn is_desc(dir: &str) -> bool {

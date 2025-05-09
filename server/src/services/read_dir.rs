@@ -22,34 +22,34 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
   // If output is empty, exit early
   if output.is_empty() { return output; }
 
-  let dir = SortDir::validate(&query_params.dir);
-  let key = SortKey::validate(&query_params.key);
+  let dir = SortDir::validate(query_params.dir.clone());
+  let key = SortKey::validate(query_params.key.clone());
 
   let mut clone = output.clone();
 
   // Check if the attribute we're attempting to sort by can be parsed as a datetime
-  let time_based: bool = SortKey::is_time_based(clone.first().unwrap(), key);
+  let time_based: bool = SortKey::is_time_based(clone.first().unwrap(), &key);
 
   // First sort by requested attribute
   clone.sort_by(|a, b| {
     if time_based {
-      let a_dt = DateTime::parse_from_rfc3339(&a[key]).unwrap();
-      let b_dt = DateTime::parse_from_rfc3339(&b[key]).unwrap();
-      if SortDir::is_desc(dir) { b_dt.cmp(&a_dt) }
+      let a_dt = DateTime::parse_from_rfc3339(&a[&key]).unwrap();
+      let b_dt = DateTime::parse_from_rfc3339(&b[&key]).unwrap();
+      if SortDir::is_desc(&dir) { b_dt.cmp(&a_dt) }
       else { a_dt.cmp(&b_dt) }
-    } else if SortDir::is_desc(dir) {
-      b[key].to_lowercase().cmp(&a[key].to_lowercase())
+    } else if SortDir::is_desc(&dir) {
+      b[&key].to_lowercase().cmp(&a[&key].to_lowercase())
     } else {
-      a[key].to_lowercase().cmp(&b[key].to_lowercase())
+      a[&key].to_lowercase().cmp(&b[&key].to_lowercase())
     }
   });
 
   // Then make sure directories appear on top
   clone.sort_by(|a, b| {
     // If we're comparing a directory against a file, the directory moves up
-    if a.filetype.eq(EntryType::DIR) && b.filetype.ne(EntryType::DIR) { return Ordering::Less; }
+    if a.entry_type.eq(EntryType::DIR) && b.entry_type.ne(EntryType::DIR) { return Ordering::Less; }
     // If we're comparing a file against a directory, the file moves down
-    if a.filetype.ne(EntryType::DIR) && b.filetype.eq(EntryType::DIR) { return Ordering::Greater; }
+    if a.entry_type.ne(EntryType::DIR) && b.entry_type.eq(EntryType::DIR) { return Ordering::Greater; }
     // Otherwise, change nothing
     Ordering::Equal
   });
@@ -67,9 +67,7 @@ pub async fn read<P>(path: P, req: &HttpRequest, data: &Data<AppState>) -> Resul
   for entry_result in entries {
     let entry: fs::DirEntry = entry_result?;
     // skip "invalid" entry types - i.e. anything not a directory or file
-    if EntryType::valid(&entry) {
-      output.push(EntryDetails::new(&entry, &data));
-    }
+    if EntryType::valid(&entry) { output.push(EntryDetails::new(&entry, &data)); }
   }
 
   Ok(sort_output(output, query_params))

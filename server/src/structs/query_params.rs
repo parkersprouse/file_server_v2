@@ -8,6 +8,7 @@ use actix_web::{
 };
 use std::collections::HashMap;
 
+#[derive(Clone)]
 pub struct QueryParams {
   pub dir: String,
   pub key: String,
