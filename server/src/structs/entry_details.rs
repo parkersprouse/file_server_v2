@@ -2,7 +2,7 @@ use crate::AppState;
 use crate::structs::entry_type::EntryType;
 use actix_web::web::Data;
 use chrono::{DateTime, Utc};
-use infer;
+use file_format::{FileFormat, Kind};
 use serde::Serialize;
 use std::{
   fs,
@@ -36,7 +36,7 @@ impl EntryDetails {
     let file_type: String = Self::file_type(&entry_type, &full_path);
     Self {
       created_at: DateTime::<Utc>::from(metadata.created().unwrap()).to_rfc3339(),
-      duration: Self::determine_duration(&file_type, &path),
+      duration: Self::determine_duration(&full_path, &file_type),
       entry_type,
       file_type,
       last_modified_at: DateTime::<Utc>::from(metadata.modified().unwrap()).to_rfc3339(),
@@ -56,10 +56,13 @@ impl EntryDetails {
     )
   }
 
-  pub fn determine_duration(file_type: &str, path: &str) -> String {
+  pub fn determine_duration(path: &PathBuf, file_type: &str) -> String {
     if file_type.ne("video") { return "".to_owned(); }
     let result = Command::new("./metadata").arg(path).output();
-    if result.is_err() { return "".to_owned(); }
+    if result.is_err() {
+      println!("{:?}", result.err());
+      return "".to_owned();
+    }
 
     let mut output = String::new();
     let _ = result.unwrap().stdout.as_slice().read_to_string(&mut output);
@@ -76,31 +79,43 @@ impl EntryDetails {
 
   pub fn file_type(entry_type: &str, path: &PathBuf) -> String {
     if entry_type.eq(EntryType::DIR) { return "".into(); }
-    println!("{:?}", path);
 
-    let result = infer::get_from_path(path);
+    let result = FileFormat::from_file(path);
     if result.is_err() {
       println!("{:?}", result.err());
       return "file".into();
     }
 
-    let option = result.unwrap();
-    if option.is_none() { return "file".into(); }
-    println!("{:?}", option);
-
-    let full_type = option.unwrap();
-    println!("{:?}", full_type);
-    match full_type.matcher_type() {
-      infer::MatcherType::App => { "application".into() },
-      infer::MatcherType::Archive => { "archive".into() },
-      infer::MatcherType::Audio => { "audio".into() },
-      infer::MatcherType::Book => { "ebook".into() },
-      infer::MatcherType::Doc => { "document".into() },
-      infer::MatcherType::Font => { "font".into() },
-      infer::MatcherType::Image => { "image".into() },
-      infer::MatcherType::Text => { "text".into() },
-      infer::MatcherType::Video => { "video".into() },
-      infer::MatcherType::Custom => { "file".into() },
+    let full_type = result.unwrap();
+    match full_type.kind() {
+        Kind::Archive => { "archive".into() },           // https://github.com/mmalecot/file-format#archive
+        Kind::Audio => { "audio".into() },               // https://github.com/mmalecot/file-format#audio
+        Kind::Compressed => { "compressed".into() },     // https://github.com/mmalecot/file-format#compressed
+        Kind::Database => { "database".into() },         // https://github.com/mmalecot/file-format#database
+        Kind::Diagram => { "diagram".into() },           // https://github.com/mmalecot/file-format#diagram
+        Kind::Disk => { "vdisk".into() },                // https://github.com/mmalecot/file-format#disk
+        Kind::Document => { "document".into() },         // https://github.com/mmalecot/file-format#document
+        Kind::Ebook => { "ebook".into() },               // https://github.com/mmalecot/file-format#ebook
+        Kind::Executable => { "executable".into() },     // https://github.com/mmalecot/file-format#executable
+        Kind::Font => { "font".into() },                 // https://github.com/mmalecot/file-format#font
+        Kind::Formula => { "formula".into() },           // https://github.com/mmalecot/file-format#formula
+        Kind::Geospatial => { "geospatial".into() },     // https://github.com/mmalecot/file-format#geospatial
+        Kind::Image => { "image".into() },               // https://github.com/mmalecot/file-format#image
+        Kind::Metadata => { "metadata".into() },         // https://github.com/mmalecot/file-format#metadata
+        Kind::Model => { "model".into() },               // https://github.com/mmalecot/file-format#model
+        Kind::Other => {                                 // https://github.com/mmalecot/file-format#other
+          if full_type.media_type().starts_with("text/") {
+            return "text".into();
+          }
+          "file".into()
+        },
+        Kind::Package => { "package".into() },           // https://github.com/mmalecot/file-format#package
+        Kind::Playlist => { "playlist".into() },         // https://github.com/mmalecot/file-format#playlist
+        Kind::Presentation => { "presentation".into() }, // https://github.com/mmalecot/file-format#presentation
+        Kind::Rom => { "rom".into() },                   // https://github.com/mmalecot/file-format#rom
+        Kind::Spreadsheet => { "spreadsheet".into() },   // https://github.com/mmalecot/file-format#spreadsheet
+        Kind::Subtitle => { "subtitle".into() },         // https://github.com/mmalecot/file-format#subtitle
+        Kind::Video => { "video".into() },               // https://github.com/mmalecot/file-format#video
     }
   }
 }
@@ -110,7 +125,7 @@ impl Index<&'_ str> for EntryDetails {
   fn index(&self, field: &str) -> &str {
     match field {
       "created_at" => &self.created_at,
-      "duration" => "TODO",
+      "duration" => &self.duration,
       "entry_type" => &self.entry_type,
       "file_type" => &self.file_type,
       "last_modified_at" => &self.last_modified_at,
