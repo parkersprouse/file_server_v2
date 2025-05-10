@@ -8,11 +8,10 @@ use actix_web::{
   HttpRequest,
   HttpServer,
 };
-use config::Config;
-use dotenv::dotenv;
+use app_config::AppConfig;
 use std::io;
 
-mod config;
+mod app_config;
 mod services {
   pub mod read_dir;
   pub mod read_file;
@@ -28,14 +27,12 @@ mod structs {
 mod util;
 
 pub struct AppState {
-  pub config: Config,
+  pub config: AppConfig,
 }
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {
-  dotenv().ok();
-
-  let config: Config = Config::init();
+  let config: AppConfig = AppConfig::init();
   let app_state: Data<AppState> = Data::new(AppState {
     config: config.clone(),
   });
