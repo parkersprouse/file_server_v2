@@ -1,0 +1,296 @@
+/* stylelint-disable property-no-vendor-prefix, selector-no-vendor-prefix */
+
+/* ----------------------------------------------------------- *
+ *  This reset is made from a combination of the following:    *
+ *  - Sanitize.css                                             *
+ *    https://github.com/csstools/sanitize.css/                *
+ *  - Josh Comeau's CSS Reset                                  *
+ *    https://www.joshwcomeau.com/css/custom-css-reset/        *
+ *  - Reseter.css                                              *
+ *    https://github.com/xkrishguptaa/reseter.css              *
+ *  - "Pro Tips" from Project Awesome                          *
+ *    https://project-awesome.org/AllThingsSmitty/css-protips  *
+ *  - Internal preferences                                     *
+ * ----------------------------------------------------------- */
+
+@import url('sanitize.css');
+@import url('sanitize.css/forms.css');
+@import url('sanitize.css/typography.css');
+@import url('sanitize.css/reduce-motion.css');
+@import url('sanitize.css/assets.css');
+@import url('sanitize.css/system-ui.css');
+@import url('sanitize.css/ui-monospace.css');
+@import url('./_apple.css');
+
+/* https://project-awesome.org/AllThingsSmitty/css-protips#use-root-for-flexible-type *\/
+:root {
+  font-size: calc(1vw + 1vh + .5vmin);
+}
+*/
+
+html,
+body {
+  min-width: 100vw;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+
+  font-weight: normal;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-wrap: balance;
+  text-rendering: optimizeLegibility;
+
+  font-synthesis: none;
+}
+
+:where(canvas, img, picture, video) {
+  display: block;
+  max-width: 100%;
+}
+
+/* https://project-awesome.org/AllThingsSmitty/css-protips#inherit-font-on-form-elements-for-a-better-mobile-experience */
+:where(button, input, select, textarea) {
+  font: inherit;
+}
+
+:where(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+  padding: calc(2em * .67) 0;
+  text-wrap: balance;
+  overflow-wrap: break-word;
+
+  &:first-child {
+    padding-top: 0;
+  }
+}
+
+:where(p) {
+  overflow-wrap: break-word;
+}
+
+/* https://project-awesome.org/AllThingsSmitty/css-protips#equal-width-table-cells */
+:where(table) {
+  table-layout: fixed;
+  border-color: inherit;
+  text-indent: 0;
+}
+
+/* https://project-awesome.org/AllThingsSmitty/css-protips#use-attribute-selectors-with-empty-links */
+:where(a[href^='http']):empty::before {
+  content: attr(href);
+}
+
+/* https://project-awesome.org/AllThingsSmitty/css-protips#use-pointer-events-to-control-mouse-events */
+:where(:disabled) {
+  pointer-events: none;
+}
+
+:where(main) {
+  display: block;
+}
+
+:where(p + p) {
+  margin-top: 1rem;
+}
+
+:where(a) {
+  background-color: transparent;
+}
+
+:where(abbr[title]) {
+  text-decoration: underline dotted;
+}
+
+:where(code, kbd, samp, pre) {
+  /* stylelint-disable-next-line font-family-no-duplicate-names */
+  font-family: monospace, monospace;
+  font-size: 1em;
+}
+
+:where(sub, sup) {
+  position: relative;
+  font-size: 75%;
+  line-height: 0;
+  vertical-align: baseline;
+}
+
+:where(sub) {
+  bottom: -0.25em;
+}
+
+:where(sup) {
+  top: -0.5em;
+}
+
+:where(hr) {
+  overflow: visible;
+  box-sizing: content-box;
+  height: 0;
+  color: inherit;
+}
+
+:where(dl, ol, ul) {
+  margin: 1em 0;
+}
+
+:where(ol ol, ol ul, ol dl, ul ol, ul ul, ul dl, dl ol, dl ul, dl dl) {
+  margin: 0;
+}
+
+:where(b, strong) {
+  font-weight: bolder;
+}
+
+:where(audio, video) {
+  display: inline-block;
+}
+
+:where(audio):not([controls]) {
+  display: none;
+  height: 0;
+}
+
+:where(img) {
+  border: 0;
+}
+
+:where(svg):not(:root) {
+  overflow: hidden;
+}
+
+:where(details) {
+  display: block;
+}
+
+:where(dialog) {
+  position: absolute;
+  right: 0;
+  left: 0;
+
+  display: block;
+
+  width: fit-content;
+  height: fit-content;
+  margin: auto;
+  padding: 1em;
+  border: solid;
+
+  color: inherit;
+
+  background-color: inherit;
+
+  &:not([open]) {
+    display: none;
+  }
+}
+
+:where(summary) {
+  display: list-item;
+}
+
+:where(canvas) {
+  display: inline-block;
+}
+
+:where(template) {
+  display: none;
+}
+
+:where([hidden]) {
+  display: none;
+}
+
+:where(button, input, optgroup, select, textarea) {
+  border: 1px solid currentColor;
+}
+
+:where(button) {
+  overflow: visible;
+  text-transform: none;
+}
+
+:where(button, [type='button'], [type='reset'], [type='submit']) {
+  padding: 1px 6px;
+  -webkit-appearance: button;
+
+  &:not(:disabled) {
+    cursor: pointer;
+  }
+}
+
+:where(input) {
+  overflow: visible;
+}
+
+:where(input, textarea) {
+  padding: 1px;
+}
+
+:where(fieldset) {
+  margin: 0 2px;
+  border: 1px solid currentColor;
+}
+
+:where(legend) {
+  display: table;
+  max-width: 100%;
+  color: inherit;
+  white-space: normal;
+}
+
+:where(progress) {
+  display: inline-block;
+  vertical-align: baseline;
+}
+
+:where(select) {
+  text-transform: none;
+}
+
+:where(textarea) {
+  overflow: auto;
+  overscroll-behavior: auto;
+  vertical-align: top;
+}
+
+:where([type='search']) {
+  -webkit-appearance: textfield;
+  outline-offset: -2px;
+}
+
+:where([type='color']) {
+  background: inherit;
+}
+
+:where([contenteditable]) {
+  text-wrap: stable;
+}
+
+::-webkit-inner-spin-button,
+::-webkit-outer-spin-button {
+  height: auto;
+}
+
+::-webkit-input-placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+
+::-webkit-search-decoration,
+::-webkit-file-upload-button {
+  font: inherit;
+  -webkit-appearance: button;
+}
+
+::-moz-focus-inner {
+  border: 0;
+}
+
+:-moz-focusring {
+  outline: 1px dotted ButtonText;
+}
+
+:-moz-ui-invalid {
+  box-shadow: none;
+}

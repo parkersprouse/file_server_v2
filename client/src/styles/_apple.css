@@ -1,0 +1,23 @@
+/* ------------------------------------------------------------------------------- *
+ *  Apple-specific hack for proper font scaling                                    *
+ *  @See                                                                           *
+ *    - https://github.com/csstools/sanitize.css/issues/219#issuecomment-848640193 *
+ *    - https://codepen.io/chrislachance/pen/OJpmgrM                               *
+ * ------------------------------------------------------------------------------- */
+
+:root {
+  font: -apple-system-body;
+}
+
+@supports (font: -apple-system-body) and (not(-webkit-touch-callout: default)) {
+  /*
+   * From the original author:
+   *   Prevents Desktop Safari from setting size to 13px when -apple-system-body is set.
+   *   Manually set to default 16px, as there is no way a user can set the Safari desktop font size default anyways.
+   *   Which is a shame honestly.
+   *   Oh, by the way, that @supports line is a brand new CSS hack I invented for this to target Desktop Safari specifically
+   */
+  :root {
+    font-size: 16px;
+  }
+}
