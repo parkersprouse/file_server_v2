@@ -1,5 +1,6 @@
 use crate::services::resource_handler;
 use actix_web::{
+  middleware::Logger,
   web::{
     get,
     Data,
@@ -37,9 +38,14 @@ async fn main() -> io::Result<()> {
     config: config.clone(),
   });
 
+  env_logger::Builder::new()
+    .filter(None, app_state.config.log_level)
+    .init();
+
   HttpServer::new(move || {
     App::new()
       .app_data(app_state.to_owned())
+      .wrap(Logger::default())
       .route("/{path:.*}", get().to(async |req: HttpRequest, data: Data<AppState>| resource_handler::handle(req, data).await))
       .route("/{path:.*}/", get().to(async |req: HttpRequest, data: Data<AppState>| resource_handler::handle(req, data).await))
   })
