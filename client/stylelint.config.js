@@ -6,7 +6,7 @@ export default {
   ],
   ignoreFiles: [
     '**/node_modules/',
-    'src/assets/styles/_apple.css',
+    'src/styles/_apple.css',
   ],
   plugins: [
     '@stylistic/stylelint-plugin',

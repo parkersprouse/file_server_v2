@@ -1,0 +1,2 @@
+# The URL of the running Web File Browser server
+server_url = "http://0.0.0.0:9000/"

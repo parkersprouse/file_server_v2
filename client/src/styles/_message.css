@@ -1,0 +1,92 @@
+:root {
+  --message-basic-background: #e8e8ec;
+  --message-basic-border-color: #b9bbc6;
+  --message-basic-color: #1c2024;
+  --message-error-background: #ffcdce;
+  --message-error-border-color: #fdbdbe;
+  --message-error-color: #641723;
+  --message-info-background: #91dbf8;
+  --message-info-border-color: #61ccf5;
+  --message-info-color: #004560;
+  --message-success-background: #c4e8d1;
+  --message-success-border-color: #adddc0;
+  --message-success-color: #193b2d;
+  --message-warning-background: #ffd19a;
+  --message-warning-border-color: #ffc182;
+  --message-warning-color: #582d1d;
+}
+
+.dark {
+  --message-basic-background: #212225;
+  --message-basic-border-color: #2e3135;
+  --message-basic-color: #edeef0;
+  --message-error-background: #3b1219;
+  --message-error-border-color: #611623;
+  --message-error-color: #ec5d5e;
+  --message-info-background: #002746;
+  --message-info-border-color: #00447a;
+  --message-info-color: #91bbdc;
+  --message-success-background: #132d21;
+  --message-success-border-color: #174933;
+  --message-success-color: #33b074;
+  --message-warning-background: #ffd19a;
+  --message-warning-border-color: #ffc182;
+  --message-warning-color: #582d1d;
+}
+
+.message {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  border-color: var(--message-basic-border-color);
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 4px;
+
+  color: var(--message-basic-color);
+
+  background: var(--message-basic-background);
+
+  & .message-content {
+    display: flex;
+    flex-flow: row nowrap;
+    gap: 0.5rem;
+    align-items: center;
+    justify-content: flex-start;
+
+    height: 100%;
+    padding: 0.75rem;
+
+    & .message-icon {
+      flex-shrink: 0;
+    }
+
+    & .message-text {
+      font-weight: 500;
+    }
+  }
+
+  &.message--error {
+    border-color: var(--message-error-border-color);
+    color: var(--message-error-color);
+    background: var(--message-error-background);
+  }
+
+  &.message--info {
+    border-color: var(--message-info-border-color);
+    color: var(--message-info-color);
+    background: var(--message-info-background);
+  }
+
+  &.message--success {
+    border-color: var(--message-success-border-color);
+    color: var(--message-success-color);
+    background: var(--message-success-background);
+  }
+
+  &.message--warning {
+    border-color: var(--message-warning-border-color);
+    color: var(--message-warning-color);
+    background: var(--message-warning-background);
+  }
+}

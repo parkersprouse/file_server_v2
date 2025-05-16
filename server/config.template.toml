@@ -1,0 +1,6 @@
+# Valid options - off / error / warn / info / debug / trace
+log_level = "info"
+# The port you want the server to run on.
+port = 9000
+# The absolute file path to the directory you want served as the root
+root_dir = "/my/files"

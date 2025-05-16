@@ -3,6 +3,7 @@ use crate::structs::entry_type::EntryType;
 use actix_web::web::Data;
 use chrono::{DateTime, Utc};
 use file_format::{FileFormat, Kind};
+use log::warn;
 use serde::Serialize;
 use std::{
   fs,
@@ -82,7 +83,7 @@ impl EntryDetails {
 
     let result = FileFormat::from_file(path);
     if result.is_err() {
-      println!("{:?}", result.err());
+      warn!("Failed to determine file format - defaulting to 'file'\n{:?}", result.err());
       return "file".into();
     }
 
@@ -104,10 +105,10 @@ impl EntryDetails {
         Kind::Metadata => { "metadata".into() },         // https://github.com/mmalecot/file-format#metadata
         Kind::Model => { "model".into() },               // https://github.com/mmalecot/file-format#model
         Kind::Other => {                                 // https://github.com/mmalecot/file-format#other
-          if full_type.media_type().starts_with("text/") {
-            return "text".into();
+          match full_type.media_type().starts_with("text/") {
+            true => "text".into(),
+            false => "file".into(),
           }
-          "file".into()
         },
         Kind::Package => { "package".into() },           // https://github.com/mmalecot/file-format#package
         Kind::Playlist => { "playlist".into() },         // https://github.com/mmalecot/file-format#playlist

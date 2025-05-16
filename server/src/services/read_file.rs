@@ -10,11 +10,11 @@ pub async fn read<P>(path: P, _data: &Data<AppState>) -> Result<NamedFile, Error
 where
   P: AsRef<Path>,
 {
-  let file: NamedFile = NamedFile::open(path)?
+  let file: NamedFile = NamedFile::open_async(path).await?
     .use_etag(true)
     .use_last_modified(true)
     .set_content_disposition(ContentDisposition {
-      disposition: DispositionType::Inline,
+      disposition: DispositionType::Attachment,
       parameters: vec![],
     });
 

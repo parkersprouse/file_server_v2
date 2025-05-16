@@ -8,6 +8,78 @@
   </head>
 
   <body>
-    <main id="<%= mountId %>"></main>
+    <nav>
+      <menu class='menu--start'>
+        <li>
+          <a href='/'>[root]</a>
+        </li>
+      </menu>
+
+      <menu class='menu--end'>
+        <li>{{ sort icons }}</li>
+      </menu>
+    </nav>
+
+    <main x-data='files'>
+      <template x-if='errored'>
+        <aside class='message message--error'>
+          <div class='message-content'>
+            <div class='message-icon'></div>
+            <div class='message-text'>
+              There was a problem loading the directory
+            </div>
+          </div>
+        </aside>
+      </template>
+
+      <template x-if='loading'>
+        <section>
+          <span class='skeleton'></span>
+          <span class='skeleton'></span>
+          <span class='skeleton'></span>
+          <span class='skeleton'></span>
+          <span class='skeleton'></span>
+          <span class='skeleton'></span>
+          <span class='skeleton'></span>
+          <span class='skeleton'></span>
+        </section>
+      </template>
+
+      <template x-if='empty'>
+        <aside class='message message--warning'>
+          <div class='message-content'>
+            <div class='message-icon'></div>
+            <div class='message-text'>
+              Empty Directory
+            </div>
+          </div>
+        </aside>
+      </template>
+
+      <template x-if='present'>
+        <table style='margin: 0 auto; table-layout: auto; border: 1px solid black; border-collapse: collapse;'>
+          <thead>
+            <tr>
+              <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Name</th>
+              <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Type</th>
+              <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Created At</th>
+              <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Last Modified At</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for='entry in entries'>
+              <tr>
+                <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>
+                  <a x-bind:href='$route(entry)' x-text='entry.name'></a>
+                </td>
+                <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='entry.entry_type'></td>
+                <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='$formatDate(entry.created_at)'></td>
+                <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='$formatDate(entry.last_modified_at)'></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </template>
+    </main>
   </body>
 </html>

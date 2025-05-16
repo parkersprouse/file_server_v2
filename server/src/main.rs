@@ -1,5 +1,7 @@
 use crate::services::resource_handler;
+use actix_cors::Cors;
 use actix_web::{
+  http,
   middleware::Logger,
   web::{
     get,
@@ -46,6 +48,12 @@ async fn main() -> io::Result<()> {
     App::new()
       .app_data(app_state.to_owned())
       .wrap(Logger::default())
+      .wrap(Cors::default()
+        .allow_any_origin()
+        .allowed_methods(vec!["GET"])
+        .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::ACCEPT])
+        .max_age(3600) // one hour
+      )
       .route("/{path:.*}", get().to(async |req: HttpRequest, data: Data<AppState>| resource_handler::handle(req, data).await))
       .route("/{path:.*}/", get().to(async |req: HttpRequest, data: Data<AppState>| resource_handler::handle(req, data).await))
   })

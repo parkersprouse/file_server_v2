@@ -1,0 +1,61 @@
+import Alpine from 'alpinejs';
+
+import { config } from '@/scripts/config.ts';
+import { datetime } from '@/scripts/datetime.ts';
+import { http } from '@/scripts/http.ts';
+import { EntryType } from '@/scripts/types/entry_type.ts';
+
+import type { EntityDetails } from '@/scripts/types/entry_details.d.ts';
+
+window.Alpine = Alpine;
+
+Alpine.data('files', () => ({
+  entries: null as null | EntityDetails[],
+  error: false,
+
+  async init(): Promise<void> {
+    try {
+      const res = await http.get(`${window.location.pathname.replace(/^\//, '')}${window.location.search}`);
+      this.entries = res.data;
+    } catch {
+      this.error = true;
+    }
+  },
+
+  get errored(): boolean {
+    return this.error;
+  },
+
+  get empty(): boolean {
+    return !this.errored && !this.loading && !this.present;
+  },
+
+  get loading(): boolean {
+    return !this.errored && !Array.isArray(this.entries);
+  },
+
+  get present(): boolean {
+    if (this.loading || this.errored) return false;
+    return this.entries!.length > 0;
+  },
+}));
+
+Alpine.magic('formatDate', () => (value: string): string => {
+  const date = datetime(value);
+  if (date.isValid()) return date.fromNow();
+  return 'n/a';
+});
+
+Alpine.magic('route', () => (entry: EntityDetails): string => {
+  if (entry.entry_type === EntryType.DIR) return entry.path;
+  return `${config.server_url.replace(/\/*$/, '')}/${entry.path.replace(/\/*$/, '')}`;
+});
+
+function init(): void {
+  Alpine.start();
+}
+
+export {
+  Alpine,
+  init,
+};

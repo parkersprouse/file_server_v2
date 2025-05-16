@@ -11,3 +11,7 @@ dist/
 .vscode/*
 !.vscode/extensions.json
 .idea
+
+# Config
+.env
+config.toml
