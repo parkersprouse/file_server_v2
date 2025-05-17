@@ -49,6 +49,11 @@
   background-color: var(--text-color);
 }
 
+[x-cloak] {
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
 html,
 body {
   line-height: normal;
@@ -79,6 +84,10 @@ body {
   flex-flow: column nowrap;
   gap: 0;
   place-content: flex-start stretch;
+}
+
+.icon {
+  font-size: 1.2em;
 }
 
 a {
@@ -141,5 +150,15 @@ nav {
         }
       }
     }
+  }
+}
+
+.theme-toggle {
+  position: fixed;
+  right: 1.2em;
+  bottom: 1.2em;
+
+  & .icon {
+    cursor: pointer;
   }
 }

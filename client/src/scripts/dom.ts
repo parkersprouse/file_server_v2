@@ -9,6 +9,25 @@ import type { EntityDetails } from '@/scripts/types/entry_details.d.ts';
 
 window.Alpine = Alpine;
 
+Alpine.data('theme', () => ({
+  dark: window.localStorage.getItem('theme') === 'dark',
+
+  init(): void {
+    this.updateDOM();
+  },
+
+  toggle(): void {
+    this.dark = !this.dark;
+    window.localStorage.setItem('theme', this.dark ? 'dark' : 'light');
+    this.updateDOM();
+  },
+
+  updateDOM(): void {
+    if (this.dark) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
+  },
+}));
+
 Alpine.data('files', () => ({
   entries: null as null | EntityDetails[],
   error: false,

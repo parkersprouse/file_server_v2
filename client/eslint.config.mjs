@@ -41,6 +41,7 @@ export default [
       '**/bin/**/*',
       '**/dist/**/*',
       '**/node_modules/**/*',
+      '*.config.*',
     ],
   },
   {
@@ -73,6 +74,10 @@ export default [
     settings: {
       'import-x/external-module-folders': [
         'node_modules',
+      ],
+      'import-x/ignore': [
+        '^\\~icons/.*',
+        '\\*?raw',
       ],
       'import-x/parsers': {
         '@typescript-eslint/parser': ts_exts,
@@ -594,6 +599,10 @@ export default [
       'import-x/extensions': [
         'error',
         'ignorePackages',
+        {
+          '': 'never',
+          'raw': 'never',
+        },
       ],
       'import-x/first': 'error',
       'import-x/named': 'off',
@@ -654,7 +663,7 @@ export default [
           pathGroups: [
             {
               group: 'builtin',
-              pattern: '**/*.{css,json}',
+              pattern: '**/*.{css,toml}',
               patternOptions: {
                 dot: true,
                 nocomment: true,
@@ -662,7 +671,6 @@ export default [
               position: 'before',
             },
           ],
-          pathGroupsExcludedImportTypes: ['@buspatrol'],
           warnOnUnassignedImports: true,
         },
       ],
@@ -842,7 +850,7 @@ export default [
    *   while making sure files under the `src/` directory aren't impacted.
    */
   {
-    files: [...js_exts, ...ts_exts].map((ext) => `**/*${ext}`),
+    files: exts.map((ext) => `**/*${ext}`),
     ignores: ['src/**/*'],
     rules: {
       'import-x/no-nodejs-modules': 'off',
