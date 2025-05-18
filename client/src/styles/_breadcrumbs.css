@@ -1,0 +1,42 @@
+.breadcrumbs {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
+
+  overflow-x: auto;
+  overscroll-behavior: auto;
+  justify-content: flex-start;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+
+  & span {
+    white-space: nowrap;
+
+    &.bc-separator {
+      &::after {
+        content: '/';
+        user-select: none;
+        color: var(--text-color-muted);
+      }
+    }
+
+    & > * {
+      border-bottom: 1px solid transparent;
+    }
+
+    & > a {
+      color: var(--text-color-muted);
+
+      @media (hover: hover) {
+        &:hover {
+          border-bottom-color: var(--text-color);
+          color: var(--text-color);
+        }
+      }
+    }
+  }
+}

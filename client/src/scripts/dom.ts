@@ -4,7 +4,9 @@ import { config } from '@/scripts/config.ts';
 import { datetime } from '@/scripts/datetime.ts';
 import { http } from '@/scripts/http.ts';
 import { EntryType } from '@/scripts/types/entry_type.ts';
+import { breadcrumbify } from '@/scripts/util.ts';
 
+import type { Breadcrumb } from '@/scripts/types/breadcrumb.d.ts';
 import type { EntityDetails } from '@/scripts/types/entry_details.d.ts';
 
 window.Alpine = Alpine;
@@ -29,6 +31,7 @@ Alpine.data('theme', () => ({
 }));
 
 Alpine.data('files', () => ({
+  breadcrumbs: null as null | Breadcrumb[],
   entries: null as null | EntityDetails[],
   error: false,
 
@@ -36,9 +39,16 @@ Alpine.data('files', () => ({
     try {
       const res = await http.get(`${window.location.pathname.replace(/^\//, '')}${window.location.search}`);
       this.entries = res.data;
+      this.breadcrumbs = breadcrumbify();
+      console.log(this.breadcrumbs);
     } catch {
       this.error = true;
     }
+  },
+
+  get at_root(): boolean {
+    if (!this.breadcrumbs) return true;
+    return this.breadcrumbs.length === 0;
   },
 
   get errored(): boolean {
@@ -67,7 +77,7 @@ Alpine.magic('formatDate', () => (value: string): string => {
 
 Alpine.magic('route', () => (entry: EntityDetails): string => {
   if (entry.entry_type === EntryType.DIR) return entry.path;
-  return `${config.server_url.replace(/\/*$/, '')}/${entry.path.replace(/\/*$/, '')}`;
+  return `${config.server_url.replace(/\/*$/, '')}/${entry.path.replace(/^\/*/, '')}`;
 });
 
 function init(): void {

@@ -4,6 +4,9 @@
     "src/**/*.js",
     "src/**/*.ts",
   ],
+  "exclude": [
+    "node_modules"
+  ],
   "compilerOptions": {
     "types": [
       "node"

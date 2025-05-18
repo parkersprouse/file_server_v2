@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang='en'>
+  <head>
+    <%- include('head'); %>
+  </head>
+
+  <body>
+    <script>
+      if (window.localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
+
+    <%- include('nav'); %>
+
+    <main x-data='files'>
+      <template x-if='errored'>
+        <%- include('files_error'); %>
+      </template>
+
+      <template x-if='loading'>
+        <%- include('files_loading'); %>
+      </template>
+
+      <template x-if='empty'>
+        <%- include('files_empty'); %>
+      </template>
+
+      <template x-if='present'>
+        <%- include('files_present'); %>
+      </template>
+    </main>
+  </body>
+</html>

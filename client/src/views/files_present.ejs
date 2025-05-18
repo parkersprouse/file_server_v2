@@ -1,0 +1,22 @@
+<table style='margin: 0 auto; table-layout: auto; border: 1px solid black; border-collapse: collapse;'>
+  <thead>
+    <tr>
+      <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Name</th>
+      <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Type</th>
+      <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Created At</th>
+      <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Last Modified At</th>
+    </tr>
+  </thead>
+  <tbody>
+    <template x-for='entry in entries'>
+      <tr>
+        <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>
+          <a x-bind:href='$route(entry)' x-text='entry.name'></a>
+        </td>
+        <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='entry.entry_type'></td>
+        <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='$formatDate(entry.created_at)'></td>
+        <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='$formatDate(entry.last_modified_at)'></td>
+      </tr>
+    </template>
+  </tbody>
+</table>

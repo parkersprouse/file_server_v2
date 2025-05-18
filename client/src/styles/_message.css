@@ -1,34 +1,44 @@
 :root {
+  /* Basic Message */
   --message-basic-background: #e8e8ec;
   --message-basic-border-color: #b9bbc6;
   --message-basic-color: #1c2024;
+  /* Error Message */
   --message-error-background: #ffcdce;
   --message-error-border-color: #fdbdbe;
   --message-error-color: #641723;
+  /* Info Message */
   --message-info-background: #91dbf8;
   --message-info-border-color: #61ccf5;
   --message-info-color: #004560;
+  /* Success Message */
   --message-success-background: #c4e8d1;
   --message-success-border-color: #adddc0;
   --message-success-color: #193b2d;
+  /* Warning Message */
   --message-warning-background: #ffd19a;
   --message-warning-border-color: #ffc182;
   --message-warning-color: #582d1d;
 }
 
 .dark {
-  --message-basic-background: #212225;
-  --message-basic-border-color: #2e3135;
+  /* Basic Message */
+  --message-basic-background: #2e3135; /* #111113; #212225; */
+  --message-basic-border-color: #43484e;
   --message-basic-color: #edeef0;
+  /* Error Message */
   --message-error-background: #3b1219;
   --message-error-border-color: #611623;
   --message-error-color: #ec5d5e;
+  /* Info Message */
   --message-info-background: #002746;
   --message-info-border-color: #00447a;
   --message-info-color: #91bbdc;
+  /* Success Message */
   --message-success-background: #132d21;
   --message-success-border-color: #174933;
   --message-success-color: #33b074;
+  /* Warning Message */
   --message-warning-background: #ffd19a;
   --message-warning-border-color: #ffc182;
   --message-warning-color: #582d1d;

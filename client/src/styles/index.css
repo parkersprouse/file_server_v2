@@ -3,6 +3,7 @@
 @import url('./_reset.css');
 @import url('./_message.css');
 @import url('./_skeleton.css');
+@import url('./_breadcrumbs.css');
 
 /*
  * Example Usage:
@@ -31,10 +32,11 @@
   --svg-alt-color: #545454;
   --svg-alt-hover-color: #d45453;
   --text-color: #000;
+  --text-color-muted: #80838d;
 }
 
 .dark {
-  --bg-color: #222226; /* #18191b; */
+  --bg-color: #222226; /* #222226; 18191b; */
   --border-color: #3f3f46; /* #2f3135; */
   --box-shadow-color: var(--border-color);
   --link-color: var(--text-color);
@@ -42,6 +44,7 @@
   --svg-alt-color: #cbd1db;
   --svg-alt-hover-color: #df7f7e;
   --text-color: #edeef0;
+  --text-color-muted: #777b84;
 }
 
 ::selection {
@@ -87,6 +90,8 @@ body {
 }
 
 .icon {
+  width: 1em;
+  height: 1em;
   font-size: 1.2em;
 }
 
@@ -120,7 +125,7 @@ nav {
   padding: 1rem;
   border-bottom: 1px solid var(--border-color);
 
-  & menu {
+  & article {
     display: flex;
     flex: 1;
     flex-flow: row nowrap;
@@ -129,8 +134,6 @@ nav {
 
     margin: 0;
     padding: 0;
-
-    list-style-type: none;
 
     &.menu--start {
       justify-content: flex-start;
@@ -154,10 +157,6 @@ nav {
 }
 
 .theme-toggle {
-  position: fixed;
-  right: 1.2em;
-  bottom: 1.2em;
-
   & .icon {
     cursor: pointer;
   }

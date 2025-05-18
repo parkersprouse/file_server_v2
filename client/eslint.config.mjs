@@ -42,6 +42,7 @@ export default [
       '**/dist/**/*',
       '**/node_modules/**/*',
       '*.config.*',
+      '!rsbuild.config.*',
     ],
   },
   {
@@ -115,7 +116,7 @@ export default [
    * [Extension] ESLint Stylistic's set of rules (recommended config)
    * https://eslint.style/guide/config-presets#static-configurations
    */
-  stylistic.configs['recommended-flat'],
+  stylistic.configs.recommended,
 
   /**
    * ------------------------------------------------------------------------------
