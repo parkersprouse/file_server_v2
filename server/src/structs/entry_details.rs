@@ -76,6 +76,14 @@ impl EntryDetails {
     if duration.is_none() { return "".to_owned(); }
 
     duration.unwrap().to_owned()
+      .split(':')
+      .map(|n| format!("{:02}", n.parse::<f32>().unwrap().trunc()))
+      .fold(String::new(), |mut a, b| {
+        a.reserve(b.len() + 1);
+        a.push_str(b.as_str());
+        a.push_str(":");
+        a
+      }).trim_end_matches(":").to_owned()
   }
 
   pub fn file_type(entry_type: &str, path: &PathBuf) -> String {

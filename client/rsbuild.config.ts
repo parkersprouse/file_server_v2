@@ -13,7 +13,7 @@ export default defineConfig({
       },
       paths: [
         'rsbuild.config.*',
-        'src/**/*.ejs',
+        'src/**/*',
       ],
       type: 'reload-server',
     },

@@ -795,7 +795,7 @@ export default [
       'unicorn/prefer-set-size': 'error',
       'unicorn/prefer-spread': 'error',
       'unicorn/prefer-string-raw': 'error',
-      'unicorn/prefer-string-replace-all': 'error',
+      'unicorn/prefer-string-replace-all': 'off',
       'unicorn/prefer-string-starts-ends-with': 'error',
       'unicorn/prefer-string-trim-start-end': 'error',
       'unicorn/prefer-switch': [

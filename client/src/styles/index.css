@@ -28,7 +28,7 @@
   --border-color: #000;
   --box-shadow-color: var(--border-color);
   --link-color: var(--text-color);
-  --link-hover-color: #CC0100;
+  --link-hover-color: #d45453; /* #CC0100; */
   --svg-alt-color: #545454;
   --svg-alt-hover-color: #d45453;
   --text-color: #000;
@@ -40,7 +40,7 @@
   --border-color: #3f3f46; /* #2f3135; */
   --box-shadow-color: var(--border-color);
   --link-color: var(--text-color);
-  --link-hover-color: #d45453;
+  --link-hover-color: #0099d4; /* #d45453; */
   --svg-alt-color: #cbd1db;
   --svg-alt-hover-color: #df7f7e;
   --text-color: #edeef0;
@@ -118,19 +118,56 @@ nav {
   flex: 0 1 0%;
   flex-flow: row nowrap;
   gap: 0.5rem;
-  place-content: center space-between;
+  align-items: center;
+  justify-content: space-between;
 
   width: 100%;
   margin: 0;
-  padding: 1rem;
+  padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
+
+  & button {
+    cursor: pointer;
+
+    margin: 0;
+    padding: 0;
+    border: none;
+
+    color: var(--link-color);
+    text-decoration: none;
+
+    background: none;
+    outline: none;
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--link-hover-color);
+      }
+    }
+  }
+
+  & a {
+    color: var(--link-color);
+    text-decoration: none;
+
+    @media (hover: hover) {
+      &:hover {
+        color: var(--link-hover-color);
+      }
+    }
+  }
+
+  & .icon {
+    font-size: 2em;
+  }
 
   & article {
     display: flex;
     flex: 1;
     flex-flow: row nowrap;
     gap: 0.5rem;
-    place-content: center center;
+    align-items: center;
+    justify-content: center;
 
     margin: 0;
     padding: 0;
@@ -141,17 +178,6 @@ nav {
 
     &.menu--end {
       justify-content: flex-end;
-    }
-
-    & a {
-      color: var(--link-color);
-      text-decoration: none;
-
-      @media (hover: hover) {
-        &:hover {
-          color: var(--link-hover-color);
-        }
-      }
     }
   }
 }

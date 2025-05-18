@@ -4,7 +4,9 @@ import { config } from '@/scripts/config.ts';
 import { datetime } from '@/scripts/datetime.ts';
 import { http } from '@/scripts/http.ts';
 import { EntryType } from '@/scripts/types/entry_type.ts';
-import { breadcrumbify } from '@/scripts/util.ts';
+import { SortDir } from '@/scripts/types/sort_dir.ts';
+import { SortKey } from '@/scripts/types/sort_key.ts';
+import { breadcrumbify, pathToRoute, trim } from '@/scripts/util.ts';
 
 import type { Breadcrumb } from '@/scripts/types/breadcrumb.d.ts';
 import type { EntityDetails } from '@/scripts/types/entry_details.d.ts';
@@ -37,10 +39,9 @@ Alpine.data('files', () => ({
 
   async init(): Promise<void> {
     try {
-      const res = await http.get(`${window.location.pathname.replace(/^\//, '')}${window.location.search}`);
+      const res = await http.get(pathToRoute(window.location.pathname));
       this.entries = res.data;
       this.breadcrumbs = breadcrumbify();
-      console.log(this.breadcrumbs);
     } catch {
       this.error = true;
     }
@@ -69,6 +70,29 @@ Alpine.data('files', () => ({
   },
 }));
 
+Alpine.store('sort', {
+  dir: SortDir.ASC,
+  key: SortKey.NAME,
+
+  init(): void {
+    const query = new URLSearchParams(window.location.search);
+    this.dir = query.get('dir') ?? SortDir.ASC;
+    this.key = query.get('key') ?? SortKey.NAME;
+  },
+
+  update(key: SortKey): void {
+    let dir = SortDir.ASC;
+    if (key === this.key) {
+      if (this.dir === SortDir.ASC) dir = SortDir.DESC;
+      else dir = SortDir.ASC;
+    }
+    window.location.search = new URLSearchParams({
+      dir,
+      key,
+    }).toString();
+  },
+} as { [key: string | number | symbol]: unknown; });
+
 Alpine.magic('formatDate', () => (value: string): string => {
   const date = datetime(value);
   if (date.isValid()) return date.fromNow();
@@ -76,8 +100,8 @@ Alpine.magic('formatDate', () => (value: string): string => {
 });
 
 Alpine.magic('route', () => (entry: EntityDetails): string => {
-  if (entry.entry_type === EntryType.DIR) return entry.path;
-  return `${config.server_url.replace(/\/*$/, '')}/${entry.path.replace(/^\/*/, '')}`;
+  if (entry.entry_type === EntryType.DIR) return pathToRoute(entry.path);
+  return `${trim(config.server_url)}${pathToRoute(entry.path)}`;
 });
 
 function init(): void {

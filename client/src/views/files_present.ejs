@@ -5,6 +5,7 @@
       <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Type</th>
       <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Created At</th>
       <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Last Modified At</th>
+      <th style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);'>Duration</th>
     </tr>
   </thead>
   <tbody>
@@ -16,6 +17,7 @@
         <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='entry.entry_type'></td>
         <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='$formatDate(entry.created_at)'></td>
         <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='$formatDate(entry.last_modified_at)'></td>
+        <td style='padding: 0.25rem 0.5rem; border: 1px solid var(--border-color);' x-text='entry.duration'></td>
       </tr>
     </template>
   </tbody>

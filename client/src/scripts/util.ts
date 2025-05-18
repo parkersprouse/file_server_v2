@@ -9,3 +9,11 @@ export function breadcrumbify(): Breadcrumb[] {
       undefined,
   })).filter((part) => part.label.length > 0);
 }
+
+export function pathToRoute(path: string): string {
+  return `/${trim(path)}${window.location.search}`;
+}
+
+export function trim(path: string): string {
+  return path.replace(/(^\/*)|(\/*$)/g, '');
+}
