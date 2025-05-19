@@ -86,10 +86,15 @@ Alpine.store('sort', {
       if (this.dir === SortDir.ASC) dir = SortDir.DESC;
       else dir = SortDir.ASC;
     }
+
     window.location.search = new URLSearchParams({
       dir,
       key,
     }).toString();
+  },
+
+  checkActive(key: SortKey, dir: SortDir): boolean {
+    return dir === this.dir && key === this.key;
   },
 } as { [key: string | number | symbol]: unknown; });
 
