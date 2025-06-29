@@ -29,17 +29,17 @@ pub async fn handle(req: HttpRequest, data: Data<AppState>) -> Either<HttpRespon
 
   // If the path we're requesting points to a directory
   if metadata.is_dir() {
-    let results: Result<Vec<EntryDetails>, io::Error> = read_dir::read(&path, &req, &data).await;
-    if results.is_err() { return Left(HttpResponse::InternalServerError().finish()); }
-    return Left(HttpResponse::Ok().json(results.unwrap()));
+    let result: Result<Vec<EntryDetails>, io::Error> = read_dir::read(&path, &req, &data).await;
+    if result.is_err() { return Left(HttpResponse::InternalServerError().finish()); }
+    return Left(HttpResponse::Ok().json(result.unwrap()));
   }
   // Or if it points to a file
   if metadata.is_file() {
-    let results: Result<NamedFile, io::Error> = read_file::read(&path, &data).await;
-    if results.is_err() { return Left(HttpResponse::InternalServerError().finish()); }
-    return Right(results.unwrap());
+    let result: Result<NamedFile, io::Error> = read_file::read(&path).await;
+    if result.is_err() { return Left(HttpResponse::InternalServerError().finish()); }
+    return Right(result.unwrap());
   }
 
-  // Otherwise, throw a 404
+  // Otherwise, 404
   Left(HttpResponse::NotFound().finish())
 }
