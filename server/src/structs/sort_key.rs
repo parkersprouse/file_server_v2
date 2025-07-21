@@ -9,15 +9,12 @@ impl SortKey {
   pub const MODIFIED: &'static str = "last_modified_at";
   pub const NAME: &'static str = "name";
 
-  const VALID_PARAMS: [&str; 4] = [
-    Self::CREATED,
-    Self::DURATION,
-    Self::MODIFIED,
-    Self::NAME,
-  ];
+  const VALID_PARAMS: [&str; 4] = [Self::CREATED, Self::DURATION, Self::MODIFIED, Self::NAME];
 
   pub fn validate(dir: &str) -> &str {
-    if Self::VALID_PARAMS.contains(&dir) { return dir; }
+    if Self::VALID_PARAMS.contains(&dir) {
+      return dir;
+    }
     Self::NAME
   }
 

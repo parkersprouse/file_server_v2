@@ -20,11 +20,11 @@ impl AppConfig {
       .unwrap();
 
     AppConfig {
-      log_level: AppConfig::parse_app_log_level(
-        &settings.get_string("log_level").unwrap_or("info".into())),
+      log_level: AppConfig::parse_app_log_level(&settings.get_string("log_level").unwrap_or("info".into())),
       port: settings.get_int("port").unwrap_or(9000) as u16,
-      root_dir_path: settings.get("root_dir").unwrap_or_else(|_|
-        panic!("Must set either \"root_dir\" in config.toml, or \"WEB_FILE_BROWSER_ROOT_DIR\" environment variable")),
+      root_dir_path: settings.get("root_dir").unwrap_or_else(|_| {
+        panic!("Must set either \"root_dir\" in config.toml, or \"WEB_FILE_BROWSER_ROOT_DIR\" environment variable")
+      }),
     }
   }
 
@@ -39,12 +39,7 @@ impl AppConfig {
       ("trace", LevelFilter::Trace),
     ]);
 
-    match app_levels
-      .clone()
-      .into_keys()
-      .collect::<Vec<&str>>()
-      .contains(&level)
-    {
+    match app_levels.clone().into_keys().collect::<Vec<&str>>().contains(&level) {
       true => *app_levels.get(level).unwrap_or(&LevelFilter::Info),
       false => LevelFilter::Info,
     }

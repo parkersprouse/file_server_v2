@@ -5,7 +5,7 @@ export function breadcrumbify(): Breadcrumb[] {
   return parts.map((part, index) => ({
     label: part,
     path: index < parts.length - 1 ?
-      `/${parts.slice(0, index - 1).join('/')}${window.location.search}` :
+      `/${parts.slice(0, index + 1).join('/')}${window.location.search}` :
       undefined,
   })).filter((part) => part.label.length > 0);
 }

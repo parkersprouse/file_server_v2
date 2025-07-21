@@ -1,11 +1,5 @@
-use crate::structs::{
-  sort_dir::SortDir,
-  sort_key::SortKey,
-};
-use actix_web::{
-  web::Query,
-  HttpRequest,
-};
+use crate::structs::{sort_dir::SortDir, sort_key::SortKey};
+use actix_web::{HttpRequest, web::Query};
 use std::collections::HashMap;
 
 pub struct QueryParams {

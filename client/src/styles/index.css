@@ -4,6 +4,7 @@
 @import url('./_message.css');
 @import url('./_skeleton.css');
 @import url('./_breadcrumbs.css');
+@import url('./_file_list_view.css');
 
 /*
  * Example Usage:
@@ -92,7 +93,7 @@ body {
 .icon {
   width: 1em;
   height: 1em;
-  font-size: 1.2em;
+  font-size: 1em;
 }
 
 a {
@@ -158,7 +159,7 @@ nav {
   }
 
   & .icon {
-    font-size: 2em;
+    font-size: 1.35em;
   }
 
   & article {
@@ -186,4 +187,9 @@ nav {
   & .icon {
     cursor: pointer;
   }
+}
+
+.flex-centered {
+  align-items: center !important;
+  justify-content: center !important;
 }

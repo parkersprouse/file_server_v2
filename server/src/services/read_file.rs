@@ -6,7 +6,8 @@ pub async fn read<P>(path: P) -> Result<NamedFile, Error>
 where
   P: AsRef<Path>,
 {
-  let file: NamedFile = NamedFile::open_async(path).await?
+  let file: NamedFile = NamedFile::open_async(path)
+    .await?
     .use_etag(true)
     .use_last_modified(true)
     .set_content_disposition(ContentDisposition {

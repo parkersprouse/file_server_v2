@@ -1,26 +1,16 @@
 use crate::AppState;
 use crate::structs::{
-  entry_details::EntryDetails,
-  entry_type::EntryType,
-  query_params::QueryParams,
-  sort_dir::SortDir,
-  sort_key::SortKey,
+  entry_details::EntryDetails, entry_type::EntryType, query_params::QueryParams, sort_dir::SortDir, sort_key::SortKey,
 };
-use actix_web::{
-  web::Data,
-  HttpRequest,
-};
+use actix_web::{HttpRequest, web::Data};
 use chrono::DateTime;
-use std::{
-  cmp::Ordering,
-  fs,
-  io::Error,
-  path::Path,
-};
+use std::{cmp::Ordering, fs, io::Error, path::Path};
 
 fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<EntryDetails> {
   // If output is empty, exit early
-  if output.is_empty() { return output; }
+  if output.is_empty() {
+    return output;
+  }
 
   let dir = SortDir::validate(&query_params.dir);
   let key = SortKey::validate(&query_params.key);
@@ -35,8 +25,7 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
     if time_based {
       let a_dt = DateTime::parse_from_rfc3339(&a[key]).unwrap();
       let b_dt = DateTime::parse_from_rfc3339(&b[key]).unwrap();
-      if SortDir::is_desc(dir) { b_dt.cmp(&a_dt) }
-      else { a_dt.cmp(&b_dt) }
+      if SortDir::is_desc(dir) { b_dt.cmp(&a_dt) } else { a_dt.cmp(&b_dt) }
     } else if SortDir::is_desc(dir) {
       b[key].to_lowercase().cmp(&a[key].to_lowercase())
     } else {
@@ -47,9 +36,13 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
   // Then make sure directories appear on top
   clone.sort_by(|a, b| {
     // If we're comparing a directory against a file, the directory moves up
-    if a.entry_type.eq(EntryType::DIR) && b.entry_type.ne(EntryType::DIR) { return Ordering::Less; }
+    if a.entry_type.eq(EntryType::DIR) && b.entry_type.ne(EntryType::DIR) {
+      return Ordering::Less;
+    }
     // If we're comparing a file against a directory, the file moves down
-    if a.entry_type.ne(EntryType::DIR) && b.entry_type.eq(EntryType::DIR) { return Ordering::Greater; }
+    if a.entry_type.ne(EntryType::DIR) && b.entry_type.eq(EntryType::DIR) {
+      return Ordering::Greater;
+    }
     // Otherwise, change nothing
     Ordering::Equal
   });
@@ -58,10 +51,11 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
 }
 
 pub async fn read<P>(path: P, req: &HttpRequest, data: &Data<AppState>) -> Result<Vec<EntryDetails>, Error>
-  where P: AsRef<Path>
+where
+  P: AsRef<Path>,
 {
-  let query_params = QueryParams::new(req);
-  let mut output = Vec::<EntryDetails>::new();
+  let query_params: QueryParams = QueryParams::new(req);
+  let mut output: Vec<EntryDetails> = Vec::<EntryDetails>::new();
 
   let entries: fs::ReadDir = fs::read_dir(path)?;
   for entry_result in entries {

@@ -2,9 +2,11 @@
   scrollbar-color: transparent transparent;
   scrollbar-width: none;
 
-  overflow-x: auto;
-  overscroll-behavior: auto;
+  overflow: auto hidden;
+  overscroll-behavior: contain;
   justify-content: flex-start;
+
+  text-overflow: ellipsis;
 
   &::-webkit-scrollbar {
     display: none;

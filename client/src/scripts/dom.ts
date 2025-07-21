@@ -13,6 +13,11 @@ import type { EntityDetails } from '@/scripts/types/entry_details.d.ts';
 
 window.Alpine = Alpine;
 
+
+/* ----------- *
+ * Alpine Data *
+ * ----------- */
+
 Alpine.data('theme', () => ({
   dark: window.localStorage.getItem('theme') === 'dark',
 
@@ -70,6 +75,11 @@ Alpine.data('files', () => ({
   },
 }));
 
+
+/* ------------- *
+ * Alpine Stores *
+ * ------------- */
+
 Alpine.store('sort', {
   dir: SortDir.ASC,
   key: SortKey.NAME,
@@ -97,6 +107,13 @@ Alpine.store('sort', {
     return dir === this.dir && key === this.key;
   },
 } as { [key: string | number | symbol]: unknown; });
+
+
+/* ------------- *
+ * Alpine Magics *
+ * ------------- */
+
+Alpine.magic('appendQuery', () => (path: string): string => `${path}${window.location.search}`);
 
 Alpine.magic('formatDate', () => (value: string): string => {
   const date = datetime(value);
