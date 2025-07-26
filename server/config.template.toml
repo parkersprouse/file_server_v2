@@ -1,6 +1,6 @@
-# Valid options - off / error / warn / info / debug / trace
+# [Valid options] off / error / warn / info / debug / trace
 log_level = "info"
-# The port you want the server to run on.
+# The port to run the server on
 port = 9000
-# The absolute file path to the directory you want served as the root
+# The absolute system path to the directory that will be the file browser root directory
 root_dir = "/my/files"
