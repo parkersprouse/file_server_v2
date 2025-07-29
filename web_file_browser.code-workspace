@@ -4,5 +4,13 @@
       "path": "."
     }
   ],
-  "settings": {}
+  "settings": {
+    "eslint.format.enable": false,
+    "eslint.ignoreUntitled": true,
+    "eslint.lintTask.enable": false,
+    "eslint.useFlatConfig": true,
+    "eslint.workingDirectories": [
+      "./client"
+    ]
+  }
 }

@@ -43,6 +43,7 @@ export default {
         except: ['empty'],
       },
     ],
+    'import-notation': null,
     'selector-attribute-quotes': 'always',
     'selector-class-pattern': null,
     'selector-id-pattern': null,
