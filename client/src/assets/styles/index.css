@@ -1,10 +1,7 @@
 @import url('@fontsource-variable/inter');
 @import url('@fontsource-variable/inter/wght-italic.css');
+@import url('tailwindcss');
 @import url('./_reset.css');
-@import url('./_message.css');
-@import url('./_skeleton.css');
-@import url('./_breadcrumbs.css');
-@import url('./_file_list_view.css');
 
 /*
  * Example Usage:
@@ -53,16 +50,11 @@
   background-color: var(--text-color);
 }
 
-[x-cloak] {
-  visibility: hidden !important;
-  opacity: 0 !important;
-}
-
 html,
 body {
   line-height: normal;
-  color: var(--text-color);
-  background-color: var(--bg-color);
+  /* color: var(--text-color);
+  background-color: var(--bg-color); */
 
   /* stylelint-disable -- Unsure where, but there's a bug in Stylelint that removes comments between
                           values when running `--fix`, but it doesn't seem to be associated with a
@@ -83,113 +75,14 @@ body {
   /* stylelint-enable */
 }
 
-body {
-  display: flex;
-  flex-flow: column nowrap;
-  gap: 0;
-  place-content: flex-start stretch;
-}
-
 .icon {
   width: 1em;
   height: 1em;
   font-size: 1em;
 }
 
-a {
-  color: var(--link-color);
-  text-decoration: none;
-
-  @media (hover: hover) {
-    &:hover {
-      color: var(--link-hover-color);
-    }
-  }
-}
-
-main {
-  flex: 1 0 0%;
-  width: 100%;
-  margin: 0;
-  padding: 1rem;
-}
-
-nav {
-  display: flex;
-  flex: 0 1 0%;
-  flex-flow: row nowrap;
-  gap: 0.5rem;
-  align-items: center;
-  justify-content: space-between;
-
-  width: 100%;
-  margin: 0;
-  padding: 0.5rem;
-  border-bottom: 1px solid var(--border-color);
-
-  & button {
-    cursor: pointer;
-
-    margin: 0;
-    padding: 0;
-    border: none;
-
-    color: var(--link-color);
-    text-decoration: none;
-
-    background: none;
-    outline: none;
-
-    @media (hover: hover) {
-      &:hover {
-        color: var(--link-hover-color);
-      }
-    }
-  }
-
-  & a {
-    color: var(--link-color);
-    text-decoration: none;
-
-    @media (hover: hover) {
-      &:hover {
-        color: var(--link-hover-color);
-      }
-    }
-  }
-
-  & .icon {
-    font-size: 1.35em;
-  }
-
-  & article {
-    display: flex;
-    flex: 1;
-    flex-flow: row nowrap;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: center;
-
-    margin: 0;
-    padding: 0;
-
-    &.menu--start {
-      justify-content: flex-start;
-    }
-
-    &.menu--end {
-      justify-content: flex-end;
-    }
-  }
-}
-
 .theme-toggle {
   & .icon {
     cursor: pointer;
   }
-}
-
-.flex-centered {
-  align-items: center !important;
-  justify-content: center !important;
 }

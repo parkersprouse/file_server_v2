@@ -3,10 +3,18 @@ export default {
   extends: [
     'stylelint-config-standard',
     'stylelint-config-clean-order',
+    'stylelint-config-recommended-vue',
   ],
   ignoreFiles: [
     '**/node_modules/',
-    'src/styles/_apple.css',
+    'dist/**/*',
+    'src/assets/styles/_apple.css',
+  ],
+  overrides: [
+    {
+      files: ['src/**/*.vue'],
+      rules: {},
+    },
   ],
   plugins: [
     '@stylistic/stylelint-plugin',

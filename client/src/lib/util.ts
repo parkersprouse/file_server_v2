@@ -1,4 +1,4 @@
-import type { Breadcrumb } from '@/scripts/types/breadcrumb.d.ts';
+import type { Breadcrumb } from '@/types/breadcrumb.d.ts';
 
 export function breadcrumbify(): Breadcrumb[] {
   const parts = decodeURI(window.location.pathname).split('/').slice(1);

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import { config } from '@/scripts/config.ts';
+import { config } from '@/config.ts';
 
 export const http = axios.create({
   baseURL: config.server_url,

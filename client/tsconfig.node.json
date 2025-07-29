@@ -2,37 +2,33 @@
   "extends": "@tsconfig/node22/tsconfig.json",
   "include": [
     "modules.d.ts",
-    "rsbuild.config.*"
-  ],
-  "exclude": [
-    "node_modules"
+    "vite.config.*",
+    "vitest.config.*",
+    "cypress.config.*",
+    "nightwatch.conf.*",
+    "playwright.config.*",
+    "eslint.config.*"
   ],
   "compilerOptions": {
-    "types": [
-      "node"
-    ],
+    "noEmit": true,
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "types": ["node"],
 
     "allowImportingTsExtensions": true,
     "allowJs": true,
     "allowSyntheticDefaultImports": true,
     "checkJs": true,
-    "composite": true,
-    "lib": ["ES2020"],
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "noEmit": true,
-    "skipLibCheck": true,
-    "isolatedModules": true,
-    "resolveJsonModule": true,
     "strict": true,
     "strictNullChecks": true,
-    "target": "ESNext",
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "useDefineForClassFields": true,
 
-    /* Import Alias Handling */
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"],
+      "@/*": [
+        "./src/*"
+      ]
     }
   }
 }
