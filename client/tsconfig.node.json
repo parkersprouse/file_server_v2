@@ -1,13 +1,13 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
   "include": [
-    "modules.d.ts",
-    "vite.config.*",
-    "vitest.config.*",
     "cypress.config.*",
+    "eslint.config.*",
+    "modules.d.ts",
     "nightwatch.conf.*",
     "playwright.config.*",
-    "eslint.config.*"
+    "vite.config.*",
+    "vitest.config.*"
   ],
   "compilerOptions": {
     "noEmit": true,

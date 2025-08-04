@@ -1,4 +1,7 @@
 /* stylelint-disable at-rule-no-unknown */
+@import url('@fontsource-variable/inter/wght.css');
+@import url('@fontsource-variable/inter/wght-italic.css');
+@import url('_reset.css') layer(base);
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -121,5 +124,26 @@
 
   body {
     @apply bg-background text-foreground;
+    /* stylelint-disable -- Unsure where, but there's a bug in Stylelint that removes comments between
+                            values when running `--fix`, but it doesn't seem to be associated with a
+                            specific rule, so we just have to disable Stylelint for the whole attribute.
+                            @see https://github.com/stylelint/stylelint/issues/4620 (it isn't `indentation`) */
+    font-family:
+      'Inter Variable', /* ---- Primary font ----------- */
+      system-ui, /* ----------- System fonts ----------- */
+      -apple-system, /* ------- Safari on macOS >= 10.11 */
+      BlinkMacSystemFont, /* -- Chrome on macOS >= 10.11 */
+      'Segoe UI', /* ---------- >= Windows Vista ------- */
+      'Noto Sans', /* --------- >= KDE Plasma 5 -------- */
+      'Helvetica',
+      'Arial',
+      sans-serif, /* ---------- fallback --------------- */
+      'Apple Color Emoji', /* - macOS emoji ------------ */
+      'Segoe UI Emoji'; /* ---- Windows emoji ---------- */
+    /* stylelint-enable */
+  }
+
+  :where([role='link'][aria-disabled='true' i], [role='link'][disabled]) {
+    cursor: default;
   }
 }

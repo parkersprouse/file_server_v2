@@ -1,28 +1,13 @@
-// // To allow more languages other than `ts` in `.vue` files, uncomment the following lines:
-// // import { configureVueProject } from '@vue/eslint-config-typescript'
-// // configureVueProject({ scriptLangs: ['ts', 'tsx'] })
-// // More info at https://github.com/vuejs/eslint-config-typescript/#advanced-setup
-
-// export default defineConfigWithVueTs(
-//   {
-//     name: 'app/files-to-lint',
-//     files: ['**/*.{ts,mts,tsx,vue}'],
-//   },
-//   globalIgnores(['**/dist/**', '**/dist-ssr/**', '**/coverage/**']),
-// )
-
-
-
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
-import vue from 'eslint-plugin-vue';
 import { FlatCompat } from '@eslint/eslintrc';
 import eslint from '@eslint/js';
 import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import stylistic from '@stylistic/eslint-plugin';
+import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript';
 import { globalIgnores } from 'eslint/config';
 import importX from 'eslint-plugin-import-x';
 import n from 'eslint-plugin-n';
 import unicorn from 'eslint-plugin-unicorn';
+import vue from 'eslint-plugin-vue';
 import globals from 'globals';
 import { configs as typescript_configs } from 'typescript-eslint';
 
@@ -37,7 +22,6 @@ const exts = [
   ...ts_exts,
   ...vue_exts,
 ];
-
 
 /**
  * ------------------------------------------------------------------------------
@@ -56,12 +40,12 @@ export default defineConfigWithVueTs(
    */
   globalIgnores([
     '!rsbuild.config.*',
-    '*.config.*',
     '**/bin/**/*',
     '**/coverage/**',
     '**/dist-ssr/**',
     '**/dist/**/*',
     '**/node_modules/**/*',
+    'src/components/ui/**/*',
   ]),
   {
     files: exts.map((ext) => `**/*${ext}`),
@@ -91,10 +75,6 @@ export default defineConfigWithVueTs(
       'import-x/external-module-folders': [
         'node_modules',
       ],
-      'import-x/ignore': [
-        '^\\~icons/.*',
-        '\\*?raw',
-      ],
       'import-x/parsers': {
         '@typescript-eslint/parser': ts_exts,
         espree: js_exts,
@@ -103,6 +83,11 @@ export default defineConfigWithVueTs(
         'eslint-import-resolver-custom-alias': {
           alias: {
             '@': './src',
+            components: './src/components',
+            composables: './src/composables',
+            lib: './src/lib',
+            ui: './src/components/ui',
+            utils: './src/lib/utils',
           },
           extensions: exts,
         },
@@ -621,7 +606,6 @@ export default defineConfigWithVueTs(
         'ignorePackages',
         {
           '': 'never',
-          'raw': 'never',
         },
       ],
       'import-x/first': 'error',
@@ -684,6 +668,15 @@ export default defineConfigWithVueTs(
             {
               group: 'builtin',
               pattern: '**/*.{css,toml}',
+              patternOptions: {
+                dot: true,
+                nocomment: true,
+              },
+              position: 'before',
+            },
+            {
+              group: 'internal',
+              pattern: '(@|components|composables|lib|ui|utils)/**/*',
               patternOptions: {
                 dot: true,
                 nocomment: true,

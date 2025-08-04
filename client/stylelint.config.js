@@ -9,6 +9,7 @@ export default {
     '**/node_modules/',
     'dist/**/*',
     'src/assets/styles/_apple.css',
+    'src/components/ui/**/*',
   ],
   overrides: [
     {

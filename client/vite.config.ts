@@ -1,53 +1,51 @@
 import { fileURLToPath } from 'node:url';
 
-import { defineConfig } from 'vite';
 import Tailwind from '@tailwindcss/vite';
 import Vue from '@vitejs/plugin-vue';
 import UnpluginIconsResolver from 'unplugin-icons/resolver';
 import UnpluginIcons from 'unplugin-icons/vite';
 import UnpluginComponents from 'unplugin-vue-components/vite';
+import { defineConfig } from 'vite';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
 export default defineConfig({
   appType: 'spa',
-
   build: {
-      assetsDir: '.',
-      minify: 'esbuild',
-      rollupOptions: {
-        output: {
-          // Manually define the chunks that dependencies will be bundled
-          //   into to ensure they stay under acceptable size limits.
-          manualChunks: {
-            tailwind: [
-              'tailwindcss',
-              'tailwind-merge',
-              'tw-animate-css',
-            ],
-            runtime_libs: [
-              'axios',
-              'dayjs',
-              'pinia',
-            ],
-            vue: [
-              '@vueuse/core',
-              'vue',
-              'vue-router',
-            ],
-          },
+    assetsDir: '.',
+    minify: 'esbuild',
+    rollupOptions: {
+      output: {
+        // Manually define the chunks that dependencies will be bundled
+        //   into to ensure they stay under acceptable size limits.
+        manualChunks: {
+          runtime_libs: [
+            'axios',
+            'dayjs',
+            'pinia',
+          ],
+          tailwind: [
+            'tailwindcss',
+            'tailwind-merge',
+            'tw-animate-css',
+          ],
+          vue: [
+            '@vueuse/core',
+            'vue',
+            'vue-router',
+          ],
         },
       },
-      sourcemap: true,
-      target: 'es2020',
     },
-    css: {
-      devSourcemap: true,
-      modules: false,
-      transformer: 'lightningcss',
-    },
-    html: {},
-
+    sourcemap: true,
+    target: 'es2020',
+  },
+  css: {
+    devSourcemap: true,
+    modules: false,
+    transformer: 'lightningcss',
+  },
+  html: {},
   plugins: [
     VueDevTools({
       launchEditor: 'code',
@@ -75,6 +73,11 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
+      components: fileURLToPath(new URL('./src/components', import.meta.url)),
+      composables: fileURLToPath(new URL('./src/composables', import.meta.url)),
+      lib: fileURLToPath(new URL('./src/lib', import.meta.url)),
+      ui: fileURLToPath(new URL('./src/components/ui', import.meta.url)),
+      utils: fileURLToPath(new URL('./src/lib/utils', import.meta.url)),
     },
   },
 });
