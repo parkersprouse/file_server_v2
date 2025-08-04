@@ -1,0 +1,53 @@
+/* stylelint-disable at-rule-no-unknown */
+@theme inline {
+  /* Cerise Red */
+  --color-cerise-red-100: #2a0a12;
+  --color-cerise-red-200: #551324;
+  --color-cerise-red-300: #7f1d35;
+  --color-cerise-red-400: #aa2647;
+  --color-cerise-red-500: #d1345b;
+  --color-cerise-red-600: #da5c7c;
+  --color-cerise-red-700: #e3859c;
+  --color-cerise-red-800: #edaebd;
+  --color-cerise-red-900: #f6d6de;
+  /* Soft Blue */
+  --color-soft-blue-100: #001323;
+  --color-soft-blue-200: #002645;
+  --color-soft-blue-300: #003968;
+  --color-soft-blue-400: #004c8b;
+  --color-soft-blue-500: #0061ae;
+  --color-soft-blue-600: #0084f1;
+  --color-soft-blue-700: #35a4ff;
+  --color-soft-blue-800: #78c2ff;
+  --color-soft-blue-900: #bce1ff;
+  /* Mango Orange */
+  --color-mango-orange-100: #322000;
+  --color-mango-orange-200: #644100;
+  --color-mango-orange-300: #966100;
+  --color-mango-orange-400: #c88200;
+  --color-mango-orange-500: #faa300;
+  --color-mango-orange-600: #ffb62f;
+  --color-mango-orange-700: #ffc863;
+  --color-mango-orange-800: #ffdb97;
+  --color-mango-orange-900: #ffedcb;
+  /* Rich Black */
+  --color-rich-black-100: #030406;
+  --color-rich-black-200: #07090b;
+  --color-rich-black-300: #0a0d11;
+  --color-rich-black-400: #0e1117;
+  --color-rich-black-500: #11151c;
+  --color-rich-black-600: #354156;
+  --color-rich-black-700: #586c90;
+  --color-rich-black-800: #8c9cb8;
+  --color-rich-black-900: #c5cedc;
+  /* Shamrock Green */
+  --color-shamrock-green-100: #001f16;
+  --color-shamrock-green-200: #003d2d;
+  --color-shamrock-green-300: #005c43;
+  --color-shamrock-green-400: #007a5a;
+  --color-shamrock-green-500: #009b72;
+  --color-shamrock-green-600: #00e0a5;
+  --color-shamrock-green-700: #29ffc6;
+  --color-shamrock-green-800: #70ffd9;
+  --color-shamrock-green-900: #b8ffec;
+}

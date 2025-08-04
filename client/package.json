@@ -40,7 +40,7 @@
     "preclean": "pnpm run clean:dist",
     "clean": "rimraf -I -g \"**/node_modules\"",
     "clean:all": "rimraf -I -g \"**/pnpm-lock.yaml\" && pnpm run clean",
-    "component:add": "pnpm dlx shadcn-vue@latest add"
+    "component:add": "pnpm exec shadcn-vue add"
   },
   "dependencies": {
     "@fontsource-variable/inter": "^5.2.6",
@@ -86,6 +86,7 @@
     "lightningcss": "^1.30.1",
     "npm-run-all2": "^8.0.4",
     "rimraf": "^6.0.1",
+    "shadcn-vue": "^2.2.0",
     "stylelint": "^16.22.0",
     "stylelint-config-clean-order": "^7.0.0",
     "stylelint-config-recommended-vue": "^1.6.1",

@@ -1,9 +1,10 @@
 /* stylelint-disable at-rule-no-unknown */
-@import url('@fontsource-variable/inter/wght.css');
-@import url('@fontsource-variable/inter/wght-italic.css');
-@import url('_reset.css') layer(base);
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource-variable/inter/wght-italic.css';
+@import './_reset.css' layer(base);
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@import './_theme.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -115,6 +116,33 @@
   --sidebar-accent-foreground: oklch(98.5% 0 0deg);
   --sidebar-border: oklch(27.4% 0.006 286.033deg);
   --sidebar-ring: oklch(44.2% 0.017 285.786deg);
+}
+
+* {
+  /* This is awful for accessibility and shouldn't be done in projects that people will actually use */
+  outline: none !important;
+
+  &:active,
+  &:focus,
+  &:focus-visible,
+  &:focus-within,
+  &:visited {
+    --tw-ring-shadow: none !important;
+    --tw-shadow: none !important;
+    --tw-ring-color: inherit !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  @media (hover: hover) {
+    &:hover {
+      --tw-ring-shadow: none !important;
+      --tw-shadow: none !important;
+      --tw-ring-color: inherit !important;
+      outline: none !important;
+      box-shadow: none !important;
+    }
+  }
 }
 
 @layer base {

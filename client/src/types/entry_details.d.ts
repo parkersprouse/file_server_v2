@@ -1,6 +1,6 @@
 import type { EntryType } from '@/scripts/types/entry_type.ts';
 
-export type EntityDetails = {
+export type EntryDetails = {
   created_at: string;
   duration: string;
   entry_type: EntryType;

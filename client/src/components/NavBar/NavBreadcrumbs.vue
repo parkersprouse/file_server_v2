@@ -1,10 +1,20 @@
 <template>
   <Breadcrumb>
     <BreadcrumbList>
+      <BreadcrumbItem>
+        <component
+          :href='at_root ? undefined : "/"'
+          :is='at_root ? BreadcrumbPage : BreadcrumbLink'
+          class='inline-flex justify-center items-center gap-1'
+        >
+          [home]
+        </component>
+      </BreadcrumbItem>
       <slot
-        v-for='(crumb) of breadcrumbs'
+        v-for='crumb of breadcrumbs'
         :key='crumb.path'
       >
+        <BreadcrumbSeparator />
         <BreadcrumbItem>
           <component
             :href='crumb.path'
@@ -13,7 +23,6 @@
             {{ crumb.label }}
           </component>
         </BreadcrumbItem>
-        <BreadcrumbSeparator v-if='crumb.path' />
       </slot>
     </BreadcrumbList>
   </Breadcrumb>
@@ -35,5 +44,6 @@ import {
 
 const $route = useRoute();
 
-const breadcrumbs = computed(() => breadcrumbify($route));
+const at_root = computed(() => $route.path === '/');
+const breadcrumbs = computed(() => breadcrumbify($route).slice(1));
 </script>
