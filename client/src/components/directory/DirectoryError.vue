@@ -1,10 +1,13 @@
 <template>
-  <Alert variant='destructive'>
+  <Alert
+    class='bg-red-950 text-cerise-red-700!'
+    variant='destructive'
+  >
     <icon-warning />
-    <AlertTitle>
+    <AlertTitle class='text-cerise-red-700! font-bold'>
       Empty Directory
     </AlertTitle>
-    <AlertDescription>
+    <AlertDescription class='text-cerise-red-700!'>
       No files were found in the current directory.
     </AlertDescription>
   </Alert>

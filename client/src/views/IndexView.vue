@@ -1,6 +1,9 @@
 <template>
   <NavBar />
-  <main>
+
+  <main
+    class='mx-auto flex flex-col justify-start items-center px-4 w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl'
+  >
     <DirectoryError v-if='error' />
     <DirectoryLoading v-else-if='!files' />
     <DirectoryEmpty v-else-if='Boolean(files) && files.length === 0' />

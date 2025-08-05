@@ -86,6 +86,7 @@ export default defineConfigWithVueTs(
             components: './src/components',
             composables: './src/composables',
             lib: './src/lib',
+            types: './src/types',
             ui: './src/components/ui',
             utils: './src/lib/utils',
           },

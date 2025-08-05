@@ -51,3 +51,11 @@
   --color-shamrock-green-800: #70ffd9;
   --color-shamrock-green-900: #b8ffec;
 }
+
+[data-slot='select-item'] {
+  cursor: pointer;
+}
+
+:where([role='link'][aria-disabled='true' i], [role='link'][disabled]) {
+  cursor: default;
+}

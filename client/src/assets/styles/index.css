@@ -170,8 +170,4 @@
       'Segoe UI Emoji'; /* ---- Windows emoji ---------- */
     /* stylelint-enable */
   }
-
-  :where([role='link'][aria-disabled='true' i], [role='link'][disabled]) {
-    cursor: default;
-  }
 }

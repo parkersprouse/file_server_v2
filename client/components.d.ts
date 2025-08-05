@@ -44,9 +44,12 @@ declare module 'vue' {
     IconDotOutlineFill: typeof import('~icons/ph/dot-outline-fill')['default']
     IconDotsThree: typeof import('~icons/ph/dots-three')['default']
     IconEmpty: typeof import('~icons/ph/empty')['default']
+    IconListDashes: typeof import('~icons/ph/list-dashes')['default']
     IconMoonFill: typeof import('~icons/ph/moon-fill')['default']
+    IconRows: typeof import('~icons/ph/rows')['default']
     IconSortAscending: typeof import('~icons/ph/sort-ascending')['default']
     IconSortDescending: typeof import('~icons/ph/sort-descending')['default']
+    IconSquaresFour: typeof import('~icons/ph/squares-four')['default']
     IconSunFill: typeof import('~icons/ph/sun-fill')['default']
     IconWarning: typeof import('~icons/ph/warning')['default']
     Menubar: typeof import('./src/components/ui/menubar/Menubar.vue')['default']
@@ -87,5 +90,6 @@ declare module 'vue' {
     TooltipContent: typeof import('./src/components/ui/tooltip/TooltipContent.vue')['default']
     TooltipProvider: typeof import('./src/components/ui/tooltip/TooltipProvider.vue')['default']
     TooltipTrigger: typeof import('./src/components/ui/tooltip/TooltipTrigger.vue')['default']
+    ViewSelect: typeof import('./src/components/navbar/ViewSelect.vue')['default']
   }
 }

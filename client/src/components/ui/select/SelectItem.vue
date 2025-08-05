@@ -31,7 +31,7 @@ const forwardedProps = useForwardProps(delegatedProps)
   >
     <span class="absolute right-2 flex size-3.5 items-center justify-center">
       <SelectItemIndicator>
-        <icon-dot-outline-fill class='w-auto! h-auto! text-3xl! text-soft-blue-500 dark:text-soft-blue-600' />
+        <icon-dot-outline-fill class='w-auto! h-auto! text-3xl! text-primary' />
       </SelectItemIndicator>
     </span>
 

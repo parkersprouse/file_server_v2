@@ -1,6 +1,6 @@
 <template>
   <Select v-model='selection'>
-    <SelectTrigger  class='bg-transparent! hover:bg-input/50!'>
+    <SelectTrigger  class='bg-transparent! hover:bg-input/50! border-none!'>
       <SelectValue placeholder='Sort'>
         <slot v-if='selection'>
           <icon-sort-ascending v-if='to_dir === "asc"' />
@@ -9,6 +9,7 @@
         </slot>
       </SelectValue>
     </SelectTrigger>
+
     <SelectContent>
       <SelectGroup>
         <SelectItem value='name+asc'>
@@ -69,21 +70,11 @@
 
 <script setup lang='ts'>
 import { get, set } from '@vueuse/core';
-import { computed, onBeforeMount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeMount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { SortDir } from '@/types/sort_dir.ts';
 import { SortKey } from '@/types/sort_key.ts';
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectItemText,
-  SelectSeparator,
-  SelectTrigger,
-  SelectValue,
-} from 'ui/select/index.ts';
 
 const $route = useRoute();
 const $router = useRouter();
@@ -101,6 +92,7 @@ watch(selection, (new_value) => {
   $router.push({
     force: true,
     query: {
+      ...$route.query,
       dir: get(to_dir),
       key: get(to_key),
     },
@@ -115,12 +107,10 @@ onBeforeMount(() => {
   const { dir, key } = $route.query;
   if (dir && key && verifySortParams(dir as SortDir, key as SortKey)) {
     set(selection, `${key}+${dir}`);
+  } else {
+    nextTick(() => {
+      set(selection, 'name+asc');
+    });
   }
 });
 </script>
-
-<style scoped>
-[data-slot='select-item'] {
-  cursor: pointer;
-}
-</style>
