@@ -1,6 +1,9 @@
 <template>
   <Select v-model='active_view'>
-    <SelectTrigger  class='bg-transparent! hover:bg-input/50! border-none!'>
+    <SelectTrigger :class='{
+      "bg-transparent! hover:bg-input/50! border-none!": ghost,
+      [klass ?? ""]: true,
+    }'>
       <SelectValue placeholder='View'>
         <slot v-if='active_view'>
           <icon-squares-four v-if='active_view === "grid"' />
@@ -38,10 +41,18 @@
 
 <script setup lang='ts'>
 import { get, set } from '@vueuse/core';
-import { computed, nextTick, onBeforeMount, ref, watch } from 'vue';
+import { computed, onBeforeMount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { ViewType } from '@/types/view_type.ts';
+import { ViewType } from 'types/view_type.ts';
+
+const {
+  class: klass = null,
+  ghost = false,
+} = defineProps<{
+  class?: string;
+  ghost?: boolean;
+}>();
 
 const $route = useRoute();
 const $router = useRouter();
@@ -74,9 +85,7 @@ onBeforeMount(() => {
   if (view_type && verifyViewType(view_type as ViewType)) {
     set(active_view, view_type);
   } else {
-    nextTick(() => {
-      set(active_view, 'list' as ViewType);
-    });
+    set(active_view, 'list' as ViewType);
   }
 });
 </script>

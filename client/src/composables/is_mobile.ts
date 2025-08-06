@@ -23,12 +23,12 @@ const DEFAULT_BREAKPOINT = 768;
  *   if (get($is_mobile)) { ... }
  */
 export function useIsMobile(): ComputedRef<boolean> {
-  const can_hover = useMediaQuery('(hover: hover)');
+  const cannot_hover = useMediaQuery('not (hover: hover)');
   const breakpoint_var = useCssVar('--breakpoint-md', null, { observe: true });
   const { width } = useWindowSize();
   const is_mobile = computed(() => {
     const breakpoint = Number(get(breakpoint_var)) || DEFAULT_BREAKPOINT;
-    return (get(width) < breakpoint) || get(can_hover);
+    return (get(width) < breakpoint) || get(cannot_hover);
   });
   return is_mobile;
 }

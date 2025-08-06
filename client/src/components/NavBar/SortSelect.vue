@@ -1,6 +1,9 @@
 <template>
   <Select v-model='selection'>
-    <SelectTrigger  class='bg-transparent! hover:bg-input/50! border-none!'>
+    <SelectTrigger :class='{
+      "bg-transparent! hover:bg-input/50! border-none!": ghost,
+      [klass ?? ""]: true,
+    }'>
       <SelectValue placeholder='Sort'>
         <slot v-if='selection'>
           <icon-sort-ascending v-if='to_dir === "asc"' />
@@ -73,8 +76,16 @@ import { get, set } from '@vueuse/core';
 import { computed, nextTick, onBeforeMount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { SortDir } from '@/types/sort_dir.ts';
-import { SortKey } from '@/types/sort_key.ts';
+import { SortDir } from 'types/sort_dir.ts';
+import { SortKey } from 'types/sort_key.ts';
+
+const {
+  class: klass = null,
+  ghost = false,
+} = defineProps<{
+  class?: string;
+  ghost?: boolean;
+}>();
 
 const $route = useRoute();
 const $router = useRouter();

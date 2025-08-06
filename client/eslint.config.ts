@@ -83,12 +83,14 @@ export default defineConfigWithVueTs(
         'eslint-import-resolver-custom-alias': {
           alias: {
             '@': './src',
+            assets: './src/assets',
             components: './src/components',
             composables: './src/composables',
             lib: './src/lib',
             types: './src/types',
             ui: './src/components/ui',
             utils: './src/lib/utils',
+            views: './src/views',
           },
           extensions: exts,
         },

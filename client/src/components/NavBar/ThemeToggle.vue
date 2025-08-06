@@ -6,28 +6,20 @@
   >
     <icon-sun-fill
       v-if='is_dark'
-      class='w-5! h-5!'
+      :class='is_mobile ? "size-8!" : "size-5!"'
     />
     <icon-moon-fill
       v-else
-      class='w-5! h-5!'
+      :class='is_mobile ? "size-8!" : "size-5!"'
     />
   </Button>
 </template>
 
 <script setup lang='ts'>
-import { useDark } from '@vueuse/core';
-
+import { useIsMobile } from 'composables/is_mobile.ts';
+import { useDark } from 'composables/theme.ts';
 import { Button } from 'ui/button/index.ts';
 
-const is_dark = useDark({
-  attribute: 'class',
-  disableTransition: true,
-  initOnMounted: false,
-  listenToStorageChanges: true,
-  selector: 'html',
-  storageKey: 'theme',
-  valueDark: 'dark',
-  valueLight: 'light',
-});
+const is_dark = useDark();
+const is_mobile = useIsMobile();
 </script>

@@ -17,8 +17,8 @@
 <script setup lang='ts'>
 import { ref } from 'vue';
 
-import type { EntryDetails } from '@/types/entry_details.js';
+import type { EntryDetails } from 'types/entry_details.d.ts';
 
 const error = ref(false);
-const files = ref<EntryDetails[]>();
+const files = ref<EntryDetails[]>([]);
 </script>
