@@ -171,3 +171,28 @@
     /* stylelint-enable */
   }
 }
+
+.scrollbar-hidden {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+    background: transparent;
+  }
+}
+
+[class^='scroll-only-'] {
+  overflow: auto;
+  overscroll-behavior: auto;
+
+  &[class$='only-x'] {
+    overflow-y: clip;
+  }
+
+  &[class$='only-y'] {
+    overflow-x: clip;
+  }
+}

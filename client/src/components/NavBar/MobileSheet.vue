@@ -1,3 +1,4 @@
+<!-- eslint-disable vue/no-parsing-error -->
 <template>
   <Sheet>
     <SheetTrigger as-child>
@@ -18,13 +19,22 @@
       </SheetHeader>
 
       <section class='flex flex-col flex-nowrap justify-evenly items-center h-full px-4 pb-4'>
-        <p class='text-md text-muted-foreground font-semibold self-start pb-2'>Layout</p>
+        <p class='flex flex-row flex-nowrap justify-between items-center gap-2 w-full px-0 pt-0 pb-2'>
+          <span class='shrink-0 grow-0 text-md text-muted-foreground font-semibold'>Layout</span>
+          <hr class='shrink-0 grow w-auto! p-0! m-0!'>
+        </p>
         <ViewToggles />
 
-        <p class='text-md text-muted-foreground font-semibold self-start pt-6 pb-2'>Sort</p>
-        <SortSelect class='w-full' />
+        <p class='flex flex-row flex-nowrap justify-between items-center gap-2 w-full px-0 py-2'>
+          <span class='shrink-0 grow-0 text-md text-muted-foreground font-semibold'>Sort</span>
+          <hr class='shrink-0 grow w-auto! p-0! m-0!'>
+        </p>
+        <SortToggles />
 
-        <p class='text-md text-muted-foreground font-semibold self-start pt-6 pb-2'>Theme</p>
+        <p class='flex flex-row flex-nowrap justify-between items-center gap-2 w-full px-0 py-2'>
+          <span class='shrink-0 grow-0 text-md text-muted-foreground font-semibold'>Theme</span>
+          <hr class='shrink-0 grow w-auto! p-0! m-0!'>
+        </p>
         <ThemeToggle />
       </section>
     </SheetContent>

@@ -1,49 +1,74 @@
 <template>
-  <section class='flex flex-row flex-nowrap justify-center items-center gap-4 w-full'>
-    <Button
-      variant='ghost'
-      class='p-1! h-auto'
-      @click='active_view = ViewType.LIST'
-    >
-      <icon-list-dashes-fill
-        v-if='active_view === ViewType.LIST'
-        class='size-12! text-teal-600 dark:text-teal-800'
-      />
-      <icon-list-dashes
-        v-else
-        class='size-12!'
-      />
-    </Button>
+  <section
+    class='flex flex-row flex-nowrap justify-center items-center w-full'
+    :class='$is_mobile ? "gap-4" : "gap-0"'
+  >
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Button
+          variant='ghost'
+          class='p-1! h-auto'
+          @click='active_view = ViewType.LIST'
+        >
+          <icon-list-dashes
+            :class='{
+              "text-teal-600 dark:text-teal-800": active_view === ViewType.LIST,
+              "size-12!": $is_mobile,
+              "size-6!": !$is_mobile,
+            }'
+          />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        List View
+      </TooltipContent>
+    </Tooltip>
 
-    <Button
-      variant='ghost'
-      class='p-1! h-auto'
-      @click='active_view = ViewType.ROWS'
-    >
-      <icon-rows-fill
-        v-if='active_view === ViewType.ROWS'
-        class='size-12! text-teal-600 dark:text-teal-800'
-      />
-      <icon-rows
-        v-else
-        class='size-12!'
-      />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Button
+          variant='ghost'
+          class='p-1! h-auto'
+          @click='active_view = ViewType.ROWS'
+        >
+          <icon-rows-fill
+            v-if='active_view === ViewType.ROWS'
+            class='text-teal-600 dark:text-teal-800'
+            :class='$is_mobile ? "size-12!" : "size-6!"'
+          />
+          <icon-rows
+            v-else
+            :class='$is_mobile ? "size-12!" : "size-6!"'
+          />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        Row View
+      </TooltipContent>
+    </Tooltip>
 
-    <Button
-      variant='ghost'
-      class='p-1! h-auto'
-      @click='active_view = ViewType.GRID'
-    >
-      <icon-squares-four-fill
-        v-if='active_view === ViewType.GRID'
-        class='size-12! text-teal-600 dark:text-teal-800'
-      />
-      <icon-squares-four
-        v-else
-        class='size-12!'
-      />
-    </Button>
+    <Tooltip>
+      <TooltipTrigger as-child>
+        <Button
+          variant='ghost'
+          class='p-1! h-auto'
+          @click='active_view = ViewType.GRID'
+        >
+          <icon-squares-four-fill
+            v-if='active_view === ViewType.GRID'
+            class='text-teal-600 dark:text-teal-800'
+            :class='$is_mobile ? "size-12!" : "size-6!"'
+          />
+          <icon-squares-four
+            v-else
+            :class='$is_mobile ? "size-12!" : "size-6!"'
+          />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        Grid View
+      </TooltipContent>
+    </Tooltip>
   </section>
 </template>
 
@@ -52,8 +77,10 @@ import { get, set } from '@vueuse/core';
 import { onBeforeMount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
+import { useIsMobile } from 'composables/is_mobile.ts';
 import { ViewType } from 'types/view_type.ts';
 
+const $is_mobile = useIsMobile();
 const $route = useRoute();
 const $router = useRouter();
 
