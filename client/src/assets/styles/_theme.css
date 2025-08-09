@@ -52,10 +52,31 @@
   --color-shamrock-green-900: hsl(164deg 100% 86%);
 }
 
-[data-slot='select-item'] {
+[data-slot='select-item'],
+[data-slot='dropdown-menu-item'] {
   cursor: pointer;
 }
 
 :where([role='link'][aria-disabled='true' i], [role='link'][disabled]) {
   cursor: default;
+}
+
+[data-slot='tooltip-content'] {
+  z-index: 100;
+}
+
+.ghost-ext {
+  @apply bg-transparent! border-none!;
+
+  &.ghost-ext--active {
+    @apply text-cerise-red-500! hover:text-cerise-red-500! dark:text-cerise-red-600! hover:dark:text-cerise-red-600!;
+  }
+
+  @variant hover {
+    @apply bg-zinc-200! dark:bg-accent!;
+  }
+
+  @variant focus {
+    @apply bg-zinc-200! dark:bg-accent!;
+  }
 }

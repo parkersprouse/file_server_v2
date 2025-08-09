@@ -1,7 +1,7 @@
 <template>
   <Select v-model='active_view'>
     <SelectTrigger :class='{
-      "bg-transparent! hover:bg-input/50! border-none!": ghost,
+      "ghost-ext": ghost,
       [klass ?? ""]: true,
     }'>
       <SelectValue placeholder='View'>

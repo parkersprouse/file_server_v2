@@ -172,6 +172,10 @@
   }
 }
 
+#app {
+  min-height: 100vh;
+}
+
 .scrollbar-hidden {
   scrollbar-color: transparent transparent;
   scrollbar-width: none;

@@ -75,6 +75,10 @@ export default defineConfigWithVueTs(
       'import-x/external-module-folders': [
         'node_modules',
       ],
+      'import-x/ignore': [
+        String.raw`^\~icons/.*`,
+        String.raw`\*?raw`,
+      ],
       'import-x/parsers': {
         '@typescript-eslint/parser': ts_exts,
         espree: js_exts,

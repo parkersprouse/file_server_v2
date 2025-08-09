@@ -15,6 +15,10 @@
     "allowJs": true,
     "checkJs": true,
 
+    "types": [
+      "unplugin-icons/types/vue3"
+    ],
+
     /* Linting */
     "noFallthroughCasesInSwitch": true,
     "noUnusedLocals": true,

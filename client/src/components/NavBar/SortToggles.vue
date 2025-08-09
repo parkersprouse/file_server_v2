@@ -5,11 +5,13 @@
       class='p-1! h-auto'
       @click='active_dir = SortDir.ASC'
     >
+      <icon-sort-ascending-bold
+        v-if='active_dir === SortDir.ASC'
+        class='size-12! text-teal-700 dark:text-teal-600'
+      />
       <icon-sort-ascending
+        v-else
         class='size-12!'
-        :class='{
-          "text-teal-600 dark:text-teal-800": active_dir === SortDir.ASC,
-        }'
       />
     </Button>
     <Button
@@ -17,11 +19,13 @@
       class='p-1! h-auto'
       @click='active_dir = SortDir.DESC'
     >
+      <icon-sort-descending-bold
+        v-if='active_dir === SortDir.DESC'
+        class='size-12! text-teal-700 dark:text-teal-600'
+      />
       <icon-sort-descending
+        v-else
         class='size-12!'
-        :class='{
-          "text-teal-600 dark:text-teal-800": active_dir === SortDir.DESC,
-        }'
       />
     </Button>
   </section>
@@ -34,7 +38,7 @@
     >
       <icon-tag-fill
         v-if='active_key === SortKey.NAME'
-        class='size-12! text-teal-600 dark:text-teal-800'
+        class='size-12! text-teal-700 dark:text-teal-600'
       />
       <icon-tag
         v-else
@@ -49,7 +53,7 @@
     >
       <icon-timer-fill
         v-if='active_key === SortKey.DURATION'
-        class='size-12! text-teal-600 dark:text-teal-800'
+        class='size-12! text-teal-700 dark:text-teal-600'
       />
       <icon-timer
         v-else
@@ -62,9 +66,9 @@
       class='p-1! h-auto'
       @click='active_key = SortKey.MODIFIED'
     >
-      <icon-clock-counter-clockwise-duotone
+      <icon-clock-counter-clockwise-bold
         v-if='active_key === SortKey.MODIFIED'
-        class='size-12! text-teal-600 dark:text-teal-800'
+        class='size-12! text-teal-700 dark:text-teal-600'
       />
       <icon-clock-counter-clockwise
         v-else
@@ -79,7 +83,7 @@
     >
       <icon-file-plus-fill
         v-if='active_key === SortKey.CREATED'
-        class='size-12! text-teal-600 dark:text-teal-800'
+        class='size-12! text-teal-700 dark:text-teal-600'
       />
       <icon-file-plus
         v-else

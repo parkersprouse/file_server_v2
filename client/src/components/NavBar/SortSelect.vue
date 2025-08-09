@@ -1,7 +1,7 @@
 <template>
   <Select v-model='selection'>
     <SelectTrigger :class='{
-      "bg-transparent! hover:bg-input/50! border-none!": ghost,
+      "ghost-ext": ghost,
       [klass ?? ""]: true,
     }'>
       <SelectValue placeholder='Sort'>

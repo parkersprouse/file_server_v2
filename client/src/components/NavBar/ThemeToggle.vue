@@ -3,7 +3,8 @@
     <TooltipTrigger as-child>
       <Button
         variant='ghost'
-        class='p-1! h-auto'
+        class='p-1! h-auto ghost-ext'
+        :class='!$is_mobile ? "self-stretch" : ""'
         @click='$is_dark = !$is_dark'
       >
         <icon-sun-fill

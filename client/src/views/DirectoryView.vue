@@ -1,20 +1,39 @@
 <template>
-  <NavBar />
+  <!-- <ContextMenu>
+    <ContextMenuTrigger class='contents'> -->
+      <NavBar />
 
-  <main
-    class='z-0 mx-auto flex flex-col justify-start items-center
-           px-4 w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl'
-    :class='$is_mobile ? "scrollbar-hidden" : ""'
-    :style='{ paddingTop: toolbar_height }'
-  >
-    <DirectoryError v-if='error' />
-    <DirectoryLoading v-else-if='!files' />
-    <DirectoryEmpty v-else-if='Boolean(files) && files.length === 0' />
-    <DirectoryContent
-      v-else
-      :files='files'
-    />
-  </main>
+      <main
+        class='z-0 mx-auto flex flex-col justify-start items-center min-h-screen
+              px-4 w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl'
+        :class='$is_mobile ? "scrollbar-hidden" : ""'
+        :style='{ paddingTop: toolbar_height }'
+      >
+        <DirectoryError v-if='error' />
+        <DirectoryLoading v-else-if='!files' />
+        <DirectoryEmpty v-else-if='Boolean(files) && files.length === 0' />
+        <DirectoryContent
+          v-else
+          :files='files'
+        />
+      </main>
+    <!-- </ContextMenuTrigger>
+    <ContextMenuContent>
+      <ContextMenuItem>
+        <icon-list-dashes />
+        List
+      </ContextMenuItem>
+      <ContextMenuItem>
+        <icon-rows />
+        Rows
+      </ContextMenuItem>
+      <ContextMenuItem>
+        <icon-squares-four />
+        Grid
+      </ContextMenuItem>
+      <ContextMenuSeparator />
+    </ContextMenuContent>
+  </ContextMenu> -->
 </template>
 
 <script setup lang='ts'>

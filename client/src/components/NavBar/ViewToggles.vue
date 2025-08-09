@@ -7,16 +7,11 @@
       <TooltipTrigger as-child>
         <Button
           variant='ghost'
-          class='p-1! h-auto'
+          class='p-1! h-auto self-stretch ghost-ext'
+          :class='{ "ghost-ext--active": active_view === ViewType.LIST }'
           @click='active_view = ViewType.LIST'
         >
-          <icon-list-dashes
-            :class='{
-              "text-teal-600 dark:text-teal-800": active_view === ViewType.LIST,
-              "size-12!": $is_mobile,
-              "size-6!": !$is_mobile,
-            }'
-          />
+          <icon-list-dashes :class='[size_class]' />
         </Button>
       </TooltipTrigger>
       <TooltipContent>
@@ -28,18 +23,11 @@
       <TooltipTrigger as-child>
         <Button
           variant='ghost'
-          class='p-1! h-auto'
+          class='p-1! h-auto self-stretch ghost-ext'
+          :class='{ "ghost-ext--active": active_view === ViewType.ROWS }'
           @click='active_view = ViewType.ROWS'
         >
-          <icon-rows-fill
-            v-if='active_view === ViewType.ROWS'
-            class='text-teal-600 dark:text-teal-800'
-            :class='$is_mobile ? "size-12!" : "size-6!"'
-          />
-          <icon-rows
-            v-else
-            :class='$is_mobile ? "size-12!" : "size-6!"'
-          />
+          <icon-rows :class='[size_class]' />
         </Button>
       </TooltipTrigger>
       <TooltipContent>
@@ -51,18 +39,11 @@
       <TooltipTrigger as-child>
         <Button
           variant='ghost'
-          class='p-1! h-auto'
+          class='p-1! h-auto self-stretch ghost-ext'
+          :class='{ "ghost-ext--active": active_view === ViewType.GRID }'
           @click='active_view = ViewType.GRID'
         >
-          <icon-squares-four-fill
-            v-if='active_view === ViewType.GRID'
-            class='text-teal-600 dark:text-teal-800'
-            :class='$is_mobile ? "size-12!" : "size-6!"'
-          />
-          <icon-squares-four
-            v-else
-            :class='$is_mobile ? "size-12!" : "size-6!"'
-          />
+          <icon-squares-four :class='[size_class]' />
         </Button>
       </TooltipTrigger>
       <TooltipContent>
@@ -74,7 +55,7 @@
 
 <script setup lang='ts'>
 import { get, set } from '@vueuse/core';
-import { onBeforeMount, ref, watch } from 'vue';
+import { computed, onBeforeMount, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useIsMobile } from 'composables/is_mobile.ts';
@@ -85,6 +66,8 @@ const $route = useRoute();
 const $router = useRouter();
 
 const active_view = ref<ViewType>();
+
+const size_class = computed<string>(() => get($is_mobile) ? 'size-12!' : 'size-6!');
 
 watch(active_view, (new_value) => {
   if (!new_value) return;
