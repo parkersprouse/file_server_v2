@@ -105,9 +105,9 @@ import IconTimer from '~icons/ph/timer';
 
 import { ref } from 'vue';
 
-import { useStore } from '@/stores/global.ts';
-import { SortDir } from 'types/sort_dir.ts';
-import { SortKey } from 'types/sort_key.ts';
+import { SortDir } from 'enums/sort_dir.ts';
+import { SortKey } from 'enums/sort_key.ts';
+import { useStore } from 'stores/global.ts';
 
 const {
   class: klass = null,

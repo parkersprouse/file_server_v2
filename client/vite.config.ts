@@ -6,6 +6,7 @@ import UnpluginIconsResolver from 'unplugin-icons/resolver';
 import UnpluginIcons from 'unplugin-icons/vite';
 import UnpluginComponents from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vite';
+import { ViteToml } from 'vite-plugin-toml';
 import VueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
@@ -50,6 +51,7 @@ export default defineConfig({
     VueDevTools({
       launchEditor: 'code',
     }),
+    ViteToml({ namedExports: true }),
     Vue(),
     Tailwind(),
     UnpluginComponents({
@@ -76,7 +78,9 @@ export default defineConfig({
       assets: fileURLToPath(new URL('./src/assets', import.meta.url)),
       components: fileURLToPath(new URL('./src/components', import.meta.url)),
       composables: fileURLToPath(new URL('./src/composables', import.meta.url)),
+      enums: fileURLToPath(new URL('./src/enums', import.meta.url)),
       lib: fileURLToPath(new URL('./src/lib', import.meta.url)),
+      stores: fileURLToPath(new URL('./src/stores', import.meta.url)),
       types: fileURLToPath(new URL('./src/types', import.meta.url)),
       ui: fileURLToPath(new URL('./src/components/ui', import.meta.url)),
       utils: fileURLToPath(new URL('./src/lib/utils', import.meta.url)),

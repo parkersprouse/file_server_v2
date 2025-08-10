@@ -28,6 +28,17 @@ export default {
      * Base Stylelint rule customization:
      * https://stylelint.io/user-guide/rules
      */
+    'at-rule-no-unknown': [
+      true,
+      {
+        ignoreAtRules: [
+          'custom-variant',
+          'reference',
+          'theme',
+          'variant',
+        ],
+      },
+    ],
     'comment-empty-line-before': null,
     'declaration-block-no-duplicate-properties': [
       true,

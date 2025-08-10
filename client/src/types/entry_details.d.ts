@@ -1,4 +1,4 @@
-import type { EntryType } from 'types/entry_type.ts';
+import type { EntryType } from 'enums/entry_type.ts';
 
 export type EntryDetails = {
   created_at: string;

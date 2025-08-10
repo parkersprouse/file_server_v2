@@ -1,13 +1,16 @@
-import { get, set } from '@vueuse/core';
+import { get, set, useEventBus } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { onMounted, ref } from 'vue';
+import { onBeforeMount, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-import { SortDir } from 'types/sort_dir.ts';
-import { SortKey } from 'types/sort_key.ts';
-import { ViewType } from 'types/view_type.ts';
+import { EventBus } from 'enums/event_bus.ts';
+import { Events } from 'enums/events.ts';
+import { SortDir } from 'enums/sort_dir.ts';
+import { SortKey } from 'enums/sort_key.ts';
+import { ViewType } from 'enums/view_type.ts';
 
 export const useStore = defineStore('global', () => {
+  const $entries_bus = useEventBus<Events>(EventBus.Entries);
   const $route = useRoute();
   const $router = useRouter();
 
@@ -26,6 +29,7 @@ export const useStore = defineStore('global', () => {
         dir: get(active_dir),
       },
     });
+    $entries_bus.emit(Events.QueryUpdated);
   }
 
   async function setKey(key?: string): Promise<void> {
@@ -38,6 +42,7 @@ export const useStore = defineStore('global', () => {
         key: get(active_key),
       },
     });
+    $entries_bus.emit(Events.QueryUpdated);
   }
 
   async function setView(view?: string): Promise<void> {
@@ -50,9 +55,10 @@ export const useStore = defineStore('global', () => {
         view: get(active_view),
       },
     });
+    $entries_bus.emit(Events.QueryUpdated);
   }
 
-  onMounted(async () => {
+  onBeforeMount(async () => {
     const { dir, key, view } = $route.query;
     await setDir(dir as SortDir);
     await setKey(key as SortKey);

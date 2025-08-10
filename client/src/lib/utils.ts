@@ -2,8 +2,8 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { stringifyQuery } from 'vue-router';
 
-import type { Breadcrumb } from 'types/breadcrumb.d.ts';
 import type { ClassValue } from 'clsx';
+import type { Breadcrumb } from 'types/breadcrumb.d.ts';
 import type { LocationQuery, RouteLocationNormalizedLoadedGeneric } from 'vue-router';
 
 export function cn(...inputs: ClassValue[]): string {

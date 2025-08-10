@@ -60,8 +60,8 @@ import IconSquaresFour from '~icons/ph/squares-four';
 
 import { ref } from 'vue';
 
-import { useStore } from '@/stores/global.ts';
-import { ViewType } from 'types/view_type.ts';
+import { ViewType } from 'enums/view_type.ts';
+import { useStore } from 'stores/global.ts';
 
 const {
   class: klass = null,

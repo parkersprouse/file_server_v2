@@ -70,6 +70,7 @@ declare module 'vue' {
     DropdownMenuSubContent: typeof import('./src/components/ui/dropdown-menu/DropdownMenuSubContent.vue')['default']
     DropdownMenuSubTrigger: typeof import('./src/components/ui/dropdown-menu/DropdownMenuSubTrigger.vue')['default']
     DropdownMenuTrigger: typeof import('./src/components/ui/dropdown-menu/DropdownMenuTrigger.vue')['default']
+    EntryCard: typeof import('./src/components/directory/EntryCard.vue')['default']
     IconCircleFill: typeof import('~icons/ph/circle-fill')['default']
     IconClockCounterClockwise: typeof import('~icons/ph/clock-counter-clockwise')['default']
     IconDotsThree: typeof import('~icons/ph/dots-three')['default']
@@ -151,6 +152,9 @@ declare module 'vue' {
     TooltipContent: typeof import('./src/components/ui/tooltip/TooltipContent.vue')['default']
     TooltipProvider: typeof import('./src/components/ui/tooltip/TooltipProvider.vue')['default']
     TooltipTrigger: typeof import('./src/components/ui/tooltip/TooltipTrigger.vue')['default']
+    ViewGrid: typeof import('./src/components/directory/ViewGrid.vue')['default']
+    ViewList: typeof import('./src/components/directory/ViewList.vue')['default']
+    ViewRow: typeof import('./src/components/directory/ViewRow.vue')['default']
     ViewSelector: typeof import('./src/components/navbar/ViewSelector.vue')['default']
     ViewToggles: typeof import('./src/components/navbar/ViewToggles.vue')['default']
   }

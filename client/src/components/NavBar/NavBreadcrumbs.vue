@@ -3,8 +3,8 @@
     <BreadcrumbList>
       <BreadcrumbItem>
         <component
-          :href='at_root ? undefined : "/"'
-          :is='at_root ? BreadcrumbPage : BreadcrumbLink'
+          :to='at_root ? undefined : { path: "/", query: { ...$route.query } }'
+          :is='at_root ? BreadcrumbPage : RouterLink'
           class='inline-flex justify-center items-center gap-1'
         >
           [home]
@@ -17,8 +17,8 @@
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <component
-            :href='crumb.path'
-            :is='Boolean(crumb.path) ? BreadcrumbLink : BreadcrumbPage'
+            :to='{ path: crumb.path, query: { ...$route.query } }'
+            :is='Boolean(crumb.path) ? RouterLink : BreadcrumbPage'
           >
             {{ crumb.label }}
           </component>
@@ -30,20 +30,15 @@
 
 <script setup lang='ts'>
 import { computed } from 'vue';
-import { useRoute } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 
 import { breadcrumbify } from 'lib/utils.ts';
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from 'ui/breadcrumb/index.ts';
+import { BreadcrumbPage } from 'ui/breadcrumb/index.ts';
+
+import type { Breadcrumb } from 'types/breadcrumb.d.ts';
 
 const $route = useRoute();
 
-const at_root = computed(() => $route.path === '/');
-const breadcrumbs = computed(() => breadcrumbify($route).slice(1));
+const at_root = computed<boolean>(() => $route.path === '/');
+const breadcrumbs = computed<Breadcrumb[]>(() => breadcrumbify($route));
 </script>

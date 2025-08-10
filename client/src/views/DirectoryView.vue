@@ -4,17 +4,15 @@
       <NavBar />
 
       <main
-        class='z-0 mx-auto flex flex-col justify-start items-center min-h-screen
-              px-4 w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl'
         :class='$is_mobile ? "scrollbar-hidden" : ""'
-        :style='{ paddingTop: toolbar_height }'
+        :style='{ paddingTop: `calc(${toolbar_height} + 1rem)` }'
       >
         <DirectoryError v-if='error' />
-        <DirectoryLoading v-else-if='!files' />
-        <DirectoryEmpty v-else-if='Boolean(files) && files.length === 0' />
+        <DirectoryLoading v-else-if='!entries' />
+        <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
         <DirectoryContent
           v-else
-          :files='files'
+          :entries='entries'
         />
       </main>
     <!-- </ContextMenuTrigger>
@@ -37,18 +35,53 @@
 </template>
 
 <script setup lang='ts'>
-import { computed, ref } from 'vue';
+import { set, useEventBus } from '@vueuse/core';
+import { computed, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
 
-import { useStore } from '@/stores/global.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
+import { EventBus } from 'enums/event_bus.ts';
+import { Events } from 'enums/events.ts';
+import { http } from 'lib/http.ts';
+import { pathToRoute } from 'lib/utils.ts';
+import { useStore } from 'stores/global.ts';
 
 import type { EntryDetails } from 'types/entry_details.d.ts';
 
+const $entries_bus = useEventBus<Events>(EventBus.Entries);
 const $is_mobile = useIsMobile();
+const $route = useRoute();
 const $store = useStore();
 
-const error = ref(false);
-const files = ref<EntryDetails[]>();
+const error = ref<boolean>(false);
+const entries = ref<EntryDetails[]>();
 
 const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
+
+async function getEntries(): Promise<void> {
+  try {
+    const timer_id = setTimeout(() => set(entries, undefined), 150);
+    const res = await http.get(pathToRoute($route));
+    clearTimeout(timer_id);
+    set(entries, res.data);
+  } catch {
+    set(error, true);
+  }
+}
+
+onMounted(async () => {
+  await getEntries();
+  $entries_bus.on(async (event: Events) => {
+    if ([Events.PathUpdated, Events.QueryUpdated].includes(event)) await getEntries();
+  });
+});
 </script>
+
+<style>
+@reference '../assets/styles/index.css';
+
+main {
+  @apply flex flex-col justify-start items-center min-h-screen px-4 pb-4 z-0
+         mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl;
+}
+</style>

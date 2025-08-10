@@ -1,10 +1,10 @@
-/* stylelint-disable at-rule-no-unknown */
 @import '@fontsource-variable/inter/wght.css';
 @import '@fontsource-variable/inter/wght-italic.css';
 @import './_reset.css' layer(base);
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './_theme.css';
+@import './_entry.css';
 
 @custom-variant dark (&:is(.dark *));
 

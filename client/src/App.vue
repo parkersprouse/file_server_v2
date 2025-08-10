@@ -1,8 +1,5 @@
 <template>
-  <TooltipProvider
-    :delay-duration='100'
-    :disable-hoverable-content='true'
-  >
+  <TooltipProvider>
     <RouterView />
   </TooltipProvider>
 </template>

@@ -30,8 +30,8 @@
 </template>
 
 <script setup lang='ts'>
-import { useStore } from '@/stores/global.ts';
-import { ViewType } from 'types/view_type.ts';
+import { ViewType } from 'enums/view_type.ts';
+import { useStore } from 'stores/global.ts';
 
 const $store = useStore();
 </script>
