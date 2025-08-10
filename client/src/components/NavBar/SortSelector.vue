@@ -2,9 +2,8 @@
   <DropdownMenu :modal='false'>
     <DropdownMenuTrigger
       style='flex: 1 0 auto;'
-      class='flex flex-row flex-nowrap justify-center items-center self-stretch gap-1 w-auto h-auto p-1.5!'
+      class='ghost-ext flex flex-row flex-nowrap justify-center items-center self-stretch gap-1 w-auto h-auto p-1.5!'
       :class='{
-        "ghost-ext": ghost,
         [klass ?? ""]: true,
       }'
     >
@@ -113,10 +112,8 @@ import { SortKey } from 'types/sort_key.ts';
 
 const {
   class: klass = null,
-  ghost = false,
 } = defineProps<{
   class?: string;
-  ghost?: boolean;
 }>();
 
 const $route = useRoute();

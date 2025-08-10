@@ -20,17 +20,16 @@
       v-else
       class='flex justify-evenly items-center h-full'
     >
-      <!-- <ViewSelect ghost /> -->
       <Separator
         orientation='vertical'
         class='h-auto! self-stretch! mx-1 bg-zinc-300 dark:bg-zinc-700'
       />
-      <ViewToggles />
+      <ViewSelector />
       <Separator
         orientation='vertical'
         class='h-auto! self-stretch! mx-1 bg-zinc-300 dark:bg-zinc-700'
       />
-      <SortDropdown ghost />
+      <SortSelector />
       <Separator
         orientation='vertical'
         class='h-auto! self-stretch! mx-1 bg-zinc-300 dark:bg-zinc-700'

@@ -75,8 +75,4 @@
   @variant hover {
     @apply bg-zinc-200! dark:bg-accent!;
   }
-
-  @variant focus {
-    @apply bg-zinc-200! dark:bg-accent!;
-  }
 }

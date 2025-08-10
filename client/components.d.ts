@@ -8,6 +8,8 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    _SortSelect: typeof import('./src/components/navbar/_SortSelect.vue')['default']
+    _ViewSelect: typeof import('./src/components/navbar/_ViewSelect.vue')['default']
     Alert: typeof import('./src/components/ui/alert/Alert.vue')['default']
     AlertDescription: typeof import('./src/components/ui/alert/AlertDescription.vue')['default']
     AlertTitle: typeof import('./src/components/ui/alert/AlertTitle.vue')['default']
@@ -142,15 +144,14 @@ declare module 'vue' {
     SheetTitle: typeof import('./src/components/ui/sheet/SheetTitle.vue')['default']
     SheetTrigger: typeof import('./src/components/ui/sheet/SheetTrigger.vue')['default']
     Skeleton: typeof import('./src/components/ui/skeleton/Skeleton.vue')['default']
-    SortDropdown: typeof import('./src/components/navbar/SortDropdown.vue')['default']
-    SortSelect: typeof import('./src/components/navbar/SortSelect.vue')['default']
+    SortSelector: typeof import('./src/components/navbar/SortSelector.vue')['default']
     SortToggles: typeof import('./src/components/navbar/SortToggles.vue')['default']
     ThemeToggle: typeof import('./src/components/navbar/ThemeToggle.vue')['default']
     Tooltip: typeof import('./src/components/ui/tooltip/Tooltip.vue')['default']
     TooltipContent: typeof import('./src/components/ui/tooltip/TooltipContent.vue')['default']
     TooltipProvider: typeof import('./src/components/ui/tooltip/TooltipProvider.vue')['default']
     TooltipTrigger: typeof import('./src/components/ui/tooltip/TooltipTrigger.vue')['default']
-    ViewSelect: typeof import('./src/components/navbar/ViewSelect.vue')['default']
+    ViewSelector: typeof import('./src/components/navbar/ViewSelector.vue')['default']
     ViewToggles: typeof import('./src/components/navbar/ViewToggles.vue')['default']
   }
 }
