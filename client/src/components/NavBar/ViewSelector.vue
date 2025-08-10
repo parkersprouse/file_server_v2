@@ -8,50 +8,46 @@
       }'
     >
       <component
-        :is='icons[active_view]'
+        :is='icons[$store.active_view]'
         class='size-6!'
       />
     </DropdownMenuTrigger>
 
     <DropdownMenuContent>
       <DropdownMenuGroup>
-
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": active_view === ViewType.LIST }'
-          @click='active_view = ViewType.LIST'
+          :class='{ "ghost-ext--active": $store.active_view === ViewType.LIST }'
+          @click='$store.setView(ViewType.LIST)'
         >
           <icon-list-dashes
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": active_view === ViewType.LIST }'
+            :class='{ "ghost-ext--active": $store.active_view === ViewType.LIST }'
           />
           List View
         </DropdownMenuItem>
-
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": active_view === ViewType.ROWS }'
-          @click='active_view = ViewType.ROWS'
+          :class='{ "ghost-ext--active": $store.active_view === ViewType.ROWS }'
+          @click='$store.setView(ViewType.ROWS)'
         >
           <icon-rows
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": active_view === ViewType.ROWS }'
+            :class='{ "ghost-ext--active": $store.active_view === ViewType.ROWS }'
           />
           Rows View
         </DropdownMenuItem>
-
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": active_view === ViewType.GRID }'
-          @click='active_view = ViewType.GRID'
+          :class='{ "ghost-ext--active": $store.active_view === ViewType.GRID }'
+          @click='$store.setView(ViewType.GRID)'
         >
           <icon-squares-four
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": active_view === ViewType.GRID }'
+            :class='{ "ghost-ext--active": $store.active_view === ViewType.GRID }'
           />
           Grid View
         </DropdownMenuItem>
-
       </DropdownMenuGroup>
     </DropdownMenuContent>
   </DropdownMenu>
@@ -62,10 +58,9 @@ import IconListDashes from '~icons/ph/list-dashes';
 import IconRows from '~icons/ph/rows';
 import IconSquaresFour from '~icons/ph/squares-four';
 
-import { set } from '@vueuse/core';
-import { onBeforeMount, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref } from 'vue';
 
+import { useStore } from '@/stores/global.ts';
 import { ViewType } from 'types/view_type.ts';
 
 const {
@@ -74,29 +69,11 @@ const {
   class?: string;
 }>();
 
-const $route = useRoute();
-const $router = useRouter();
-
-const active_view = ref<ViewType>(ViewType.LIST);
+const $store = useStore();
 
 const icons = ref({
   grid: IconSquaresFour,
   list: IconListDashes,
   rows: IconRows,
-});
-
-watch(active_view, (new_value) => {
-  $router.push({
-    force: true,
-    query: {
-      ...$route.query,
-      view_type: new_value || undefined,
-    },
-  });
-});
-
-onBeforeMount(() => {
-  const view_type: ViewType = $route.query.view_type as ViewType;
-  if (Object.values(ViewType).includes(view_type)) set(active_view, view_type);
 });
 </script>

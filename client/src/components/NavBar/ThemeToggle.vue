@@ -1,17 +1,17 @@
 <template>
   <Button
     variant='ghost'
-    class='p-1! h-auto ghost-ext'
+    class='p-1.5! h-auto ghost-ext'
     :class='!$is_mobile ? "self-stretch" : ""'
     @click='$is_dark = !$is_dark'
   >
-    <icon-sun-fill
+    <icon-sun
       v-if='$is_dark'
-      :class='$is_mobile ? "size-8!" : "size-5!"'
+      :class='$is_mobile ? "size-12!" : "size-6!"'
     />
-    <icon-moon-fill
+    <icon-moon
       v-else
-      :class='$is_mobile ? "size-8!" : "size-5!"'
+      :class='$is_mobile ? "size-12!" : "size-6!"'
     />
   </Button>
 </template>

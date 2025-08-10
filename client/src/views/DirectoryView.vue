@@ -48,7 +48,7 @@ const $is_mobile = useIsMobile();
 const $store = useStore();
 
 const error = ref(false);
-const files = ref<EntryDetails[]>([]);
+const files = ref<EntryDetails[]>();
 
 const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
 </script>

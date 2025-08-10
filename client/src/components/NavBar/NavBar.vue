@@ -1,7 +1,7 @@
 <template>
   <Menubar
     id='toolbar'
-    class='z-10 fixed top-0 left-0 right-0 h-fit justify-between items-center border-x-0 border-t-0 py-0 px-1'
+    class='z-10 fixed top-0 left-0 right-0 h-fit justify-between items-center border-x-0 border-t-0 p-0'
   >
     <section class='flex justify-evenly items-center gap-2 h-full'>
       <NavBreadcrumbs />
@@ -22,17 +22,17 @@
     >
       <Separator
         orientation='vertical'
-        class='h-auto! self-stretch! mx-1 bg-zinc-300 dark:bg-zinc-700'
+        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
       />
       <ViewSelector />
       <Separator
         orientation='vertical'
-        class='h-auto! self-stretch! mx-1 bg-zinc-300 dark:bg-zinc-700'
+        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
       />
       <SortSelector />
       <Separator
         orientation='vertical'
-        class='h-auto! self-stretch! mx-1 bg-zinc-300 dark:bg-zinc-700'
+        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
       />
       <ThemeToggle />
     </section>

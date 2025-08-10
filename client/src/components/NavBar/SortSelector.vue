@@ -8,11 +8,11 @@
       }'
     >
       <component
-        :is='dir_icons[selected_dir]'
+        :is='dir_icons[$store.active_dir]'
         class='size-6!'
       />
       <component
-        :is='key_icons[selected_key]'
+        :is='key_icons[$store.active_key]'
         class='size-6!'
       />
     </DropdownMenuTrigger>
@@ -21,23 +21,23 @@
       <DropdownMenuGroup>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": selected_dir === SortDir.ASC }'
-          @click='selected_dir = SortDir.ASC'
+          :class='{ "ghost-ext--active": $store.active_dir === SortDir.ASC }'
+          @click='$store.setDir(SortDir.ASC)'
         >
           <icon-sort-ascending
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": selected_dir === SortDir.ASC }'
+            :class='{ "ghost-ext--active": $store.active_dir === SortDir.ASC }'
           />
           Ascending
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": selected_dir === SortDir.DESC }'
-          @click='selected_dir = SortDir.DESC'
+          :class='{ "ghost-ext--active": $store.active_dir === SortDir.DESC }'
+          @click='$store.setDir(SortDir.DESC)'
         >
           <icon-sort-descending
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": selected_dir === SortDir.DESC }'
+            :class='{ "ghost-ext--active": $store.active_dir === SortDir.DESC }'
           />
           Descending
         </DropdownMenuItem>
@@ -48,45 +48,45 @@
       <DropdownMenuGroup>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": selected_key === SortKey.NAME }'
-          @click='selected_key = SortKey.NAME'
+          :class='{ "ghost-ext--active": $store.active_key === SortKey.NAME }'
+          @click='$store.setKey(SortKey.NAME)'
         >
           <icon-tag
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": selected_key === SortKey.NAME }'
+            :class='{ "ghost-ext--active": $store.active_key === SortKey.NAME }'
           />
           Name
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": selected_key === SortKey.DURATION }'
-          @click='selected_key = SortKey.DURATION'
+          :class='{ "ghost-ext--active": $store.active_key === SortKey.DURATION }'
+          @click='$store.setKey(SortKey.DURATION)'
         >
           <icon-timer
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": selected_key === SortKey.DURATION }'
+            :class='{ "ghost-ext--active": $store.active_key === SortKey.DURATION }'
           />
           Duration
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": selected_key === SortKey.MODIFIED }'
-          @click='selected_key = SortKey.MODIFIED'
+          :class='{ "ghost-ext--active": $store.active_key === SortKey.MODIFIED }'
+          @click='$store.setKey(SortKey.MODIFIED)'
         >
           <icon-clock-counter-clockwise
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": selected_key === SortKey.MODIFIED }'
+            :class='{ "ghost-ext--active": $store.active_key === SortKey.MODIFIED }'
           />
           Last Modified At
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": selected_key === SortKey.CREATED }'
-          @click='selected_key = SortKey.CREATED'
+          :class='{ "ghost-ext--active": $store.active_key === SortKey.CREATED }'
+          @click='$store.setKey(SortKey.CREATED)'
         >
           <icon-file-plus
             class='size-5! ghost-ext'
-            :class='{ "ghost-ext--active": selected_key === SortKey.CREATED }'
+            :class='{ "ghost-ext--active": $store.active_key === SortKey.CREATED }'
           />
           Created At
         </DropdownMenuItem>
@@ -103,10 +103,9 @@ import IconSortDescending from '~icons/ph/sort-descending';
 import IconTag from '~icons/ph/tag';
 import IconTimer from '~icons/ph/timer';
 
-import { set } from '@vueuse/core';
-import { onBeforeMount, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref } from 'vue';
 
+import { useStore } from '@/stores/global.ts';
 import { SortDir } from 'types/sort_dir.ts';
 import { SortKey } from 'types/sort_key.ts';
 
@@ -116,11 +115,7 @@ const {
   class?: string;
 }>();
 
-const $route = useRoute();
-const $router = useRouter();
-
-const selected_dir = ref<SortDir>(SortDir.ASC);
-const selected_key = ref<SortKey>(SortKey.NAME);
+const $store = useStore();
 
 const dir_icons = ref({
   asc: IconSortAscending,
@@ -132,33 +127,5 @@ const key_icons = ref({
   duration: IconTimer,
   last_modified_at: IconClockCounterClockwise,
   name: IconTag,
-});
-
-watch(selected_dir, (new_value) => {
-  $router.push({
-    force: true,
-    query: {
-      ...$route.query,
-      dir: new_value || undefined,
-    },
-  });
-});
-
-watch(selected_key, (new_value) => {
-  $router.push({
-    force: true,
-    query: {
-      ...$route.query,
-      key: new_value || undefined,
-    },
-  });
-});
-
-onBeforeMount(() => {
-  const dir: SortDir = $route.query.dir as SortDir;
-  const key: SortKey = $route.query.key as SortKey;
-
-  if (Object.values(SortDir).includes(dir)) set(selected_dir, dir);
-  if (Object.values(SortKey).includes(key)) set(selected_key, key);
 });
 </script>

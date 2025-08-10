@@ -5,7 +5,7 @@
         variant='ghost'
         class='p-1! h-auto'
       >
-        <icon-gear-six-fill class='size-6! dark:text-muted-foreground' />
+        <icon-gear-duotone class='size-8! text-muted-foreground dark:[&_path]:[[opacity]]:opacity-50!' />
       </Button>
     </SheetTrigger>
 

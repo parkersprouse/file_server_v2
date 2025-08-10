@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import type { HTMLAttributes } from 'vue'
 import { reactiveOmit } from '@vueuse/core'
-import { ChevronRight } from 'lucide-vue-next'
 import { MenubarSubTrigger, type MenubarSubTriggerProps, useForwardProps } from 'reka-ui'
 import { cn } from '@/lib/utils'
 
@@ -22,6 +21,6 @@ const forwardedProps = useForwardProps(delegatedProps)
     )"
   >
     <slot />
-    <ChevronRight class="ml-auto size-4" />
+    <icon-caret-right class="ml-auto size-4" />
   </MenubarSubTrigger>
 </template>
