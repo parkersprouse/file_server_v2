@@ -46,7 +46,7 @@ import { http } from 'lib/http.ts';
 import { pathToRoute } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 
-import type { EntryDetails } from 'types/entry_details.d.ts';
+import type { Entry } from 'types/entry.d.ts';
 
 const $entries_bus = useEventBus<Events>(EventBus.Entries);
 const $is_mobile = useIsMobile();
@@ -54,7 +54,7 @@ const $route = useRoute();
 const $store = useStore();
 
 const error = ref<boolean>(false);
-const entries = ref<EntryDetails[]>();
+const entries = ref<Entry[]>();
 
 const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
 

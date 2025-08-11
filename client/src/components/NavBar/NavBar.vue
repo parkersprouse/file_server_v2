@@ -43,8 +43,8 @@
 import { useThrottleFn } from '@vueuse/core';
 import { onMounted, onUnmounted } from 'vue';
 
-import { useStore } from 'stores/global.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
+import { useStore } from 'stores/global.ts';
 
 const $is_mobile = useIsMobile();
 const $store = useStore();

@@ -9,10 +9,10 @@
 </template>
 
 <script setup lang='ts'>
-import type { EntryDetails } from '@/types/entry_details.d.ts';
+import type { Entry } from 'types/entry.d.ts';
 
 const { entries } = defineProps<{
-  entries: EntryDetails[];
+  entries: Entry[];
 }>();
 </script>
 
@@ -20,11 +20,23 @@ const { entries } = defineProps<{
 @reference '../../assets/styles/index.css';
 
 .entries--grid {
-  /* @apply mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl; */
   @apply w-full flex flex-row flex-wrap justify-start items-stretch gap-4;
 
   & .entry {
-    @apply flex-[calc(calc(25%-1rem)+0.25rem)] w-[calc(calc(25%-1rem)+0.25rem)] grow-0 shrink min-h-[250px];
+    @apply grow-0 shrink h-auto aspect-square
+      xl:flex-[calc(calc(calc(100%/6)-1rem)+calc(1rem/6))] xl:max-w-[calc(calc(calc(100%/6)-1rem)+calc(1rem/6))]
+      lg:flex-[calc(calc(20%-1rem)+0.2rem)] lg:max-w-[calc(calc(20%-1rem)+0.2rem)]
+      md:flex-[calc(calc(25%-1rem)+0.25rem)] md:max-w-[calc(calc(25%-1rem)+0.25rem)]
+      sm:flex-[calc(calc(calc(100%/3)-1rem)+calc(1rem/3))] sm:max-w-[calc(calc(calc(100%/3)-1rem)+calc(1rem/3))]
+      flex-[calc(calc(50%-1rem)+0.5rem)] max-w-[calc(calc(50%-1rem)+0.5rem)] min-h-[200px];
+
+    & .entry-name {
+      @apply text-sm;
+    }
+
+    & .entry-last-modified {
+      @apply text-[0.65rem];
+    }
   }
 }
 </style>

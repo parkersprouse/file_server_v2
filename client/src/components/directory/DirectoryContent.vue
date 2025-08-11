@@ -17,10 +17,10 @@
 import { ViewType } from 'enums/view_type.ts';
 import { useStore } from 'stores/global.ts';
 
-import type { EntryDetails } from 'types/entry_details.d.ts';
+import type { Entry } from 'types/entry.d.ts';
 
 const { entries } = defineProps<{
-  entries: EntryDetails[];
+  entries: Entry[];
 }>();
 
 const $store = useStore();

@@ -10,9 +10,9 @@
 </template>
 
 <script setup lang='ts'>
-import type { EntryDetails } from '@/types/entry_details.d.ts';
+import type { Entry } from 'types/entry.d.ts';
 
 const { entries } = defineProps<{
-  entries: EntryDetails[];
+  entries: Entry[];
 }>();
 </script>

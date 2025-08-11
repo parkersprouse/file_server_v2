@@ -1,19 +1,21 @@
 <template>
   <component
-    :is='isDir(entry) ? RouterLink : "div"'
-    v-bind='{
-      to: isDir(entry) ? buildRoute(entry) : undefined,
-    }'
+    :is='isDir(entry) ? RouterLink : "a"'
+    v-bind='getEntryBindings(entry)'
     class='entry'
   >
+  <!-- :class='$is_mobile ? "size-10!" : "size-18!"' -->
     <Card class='p-0! h-full! gap-2!'>
-      <CardContent class='p-0! grow shrink-0 text-center'>
-        {{ entry.file_type || entry.entry_type }}
+      <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink-0'>
+        <component
+          :is='fileTypeToIcon(entry.file_type || entry.entry_type)'
+          class='size-1/2'
+        />
       </CardContent>
       <CardFooter class='flex flex-col flex-nowrap justify-center items-start p-0! grow-0'>
         <div
-          class='max-w-full w-full text-nowrap whitespace-nowrap text-ellipsis
-                 overflow-y-clip overflow-x-scroll scrollbar-hidden'
+          class='entry-name max-w-full w-full text-nowrap whitespace-nowrap text-ellipsis
+                 overflow-y-clip overflow-x-scroll scrollbar-hidden py-1 px-2'
         >
           {{ entry.name }}
         </div>
@@ -52,28 +54,49 @@
 <script setup lang='ts'>
 import { RouterLink, useRoute } from 'vue-router';
 
-import { EntryType } from 'enums/entry_type.ts';
+// import { useIsMobile } from 'composables/is_mobile.ts';
 import { absolute, relative } from 'lib/datetime.ts';
+import { buildEntryRoute, fileTypeToIcon, isDir, toFileUrl } from 'lib/entry_helpers.ts';
 
-import type { EntryDetails } from 'types/entry_details.d.ts';
-import type { RouteLocationNormalizedLoadedGeneric } from 'vue-router';
+import type { Entry } from 'types/entry.d.ts';
 
 defineProps<{
-  entry: EntryDetails;
+  entry: Entry;
 }>();
 
+// const $is_mobile = useIsMobile();
 const $route = useRoute();
 
-function buildRoute(entry: EntryDetails): RouteLocationNormalizedLoadedGeneric {
-  return {
-    path: entry.path,
-    query: {
-      ...$route.query,
-    },
-  } as RouteLocationNormalizedLoadedGeneric;
-}
-
-function isDir(entry: EntryDetails): boolean {
-  return entry.entry_type === EntryType.DIR;
+function getEntryBindings(entry: Entry): object {
+  // :href='isFile(entry) ? toFileUrl(entry) : undefined'
+  // :to='isDir(entry) ? buildEntryRoute(entry, $route) : undefined'
+  if (isDir(entry)) return { to: buildEntryRoute(entry, $route) };
+  return { href: toFileUrl(entry) };
 }
 </script>
+
+<style>
+@reference '../../assets/styles/index.css';
+
+.entry {
+  @apply transition-none!;
+
+  & .entry-last-modified {
+    @apply transition-none text-muted-foreground border-b-0 border-l-0;
+  }
+
+  @variant hover {
+    @apply text-cerise-red-500! dark:text-cerise-red-600!;
+
+    & [data-slot='card'] {
+      /* @apply bg-zinc-200! dark:bg-accent!; */
+      @apply border-cerise-red-500! dark:border-cerise-red-600!;
+    }
+
+    & .entry-last-modified,
+    & [data-slot^='card-'] {
+      @apply text-cerise-red-500! dark:text-cerise-red-600!;
+    }
+  }
+}
+</style>
