@@ -33,7 +33,8 @@ pub async fn handle(req: HttpRequest, data: Data<AppState>) -> Either<HttpRespon
   }
   // Or if it points to a file
   if metadata.is_file() {
-    let result: Result<NamedFile, io::Error> = read_file::read(&path).await;
+    let force_download = req.uri().query() == Some("download");
+    let result: Result<NamedFile, io::Error> = read_file::read(&path, force_download).await;
     if result.is_err() {
       return Left(HttpResponse::InternalServerError().finish());
     }

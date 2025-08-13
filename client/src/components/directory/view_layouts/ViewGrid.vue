@@ -17,7 +17,7 @@ const { entries } = defineProps<{
 </script>
 
 <style>
-@reference '../../assets/styles/index.css';
+@reference '../../../assets/styles/index.css';
 
 .entries--grid {
   @apply w-full flex flex-row flex-wrap justify-start items-stretch gap-4;
