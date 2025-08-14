@@ -1,7 +1,10 @@
-use crate::AppState;
-use crate::services::{read_dir, read_file};
-use crate::structs::entry_details::EntryDetails;
-use crate::util;
+use crate::{
+  AppState,
+  enums::disposition_kind::DispositionKind,
+  services::{read_dir, read_file},
+  structs::entry_details::EntryDetails,
+  util,
+};
 use actix_files::NamedFile;
 use actix_web::{
   Either::{self, Left, Right},
@@ -31,14 +34,19 @@ pub async fn handle(req: HttpRequest, data: Data<AppState>) -> Either<HttpRespon
     }
     return Left(HttpResponse::Ok().json(result.unwrap()));
   }
+
   // Or if it points to a file
   if metadata.is_file() {
-    let force_download = req.uri().query() == Some("download");
-    let result: Result<NamedFile, io::Error> = read_file::read(&path, force_download).await;
-    if result.is_err() {
-      return Left(HttpResponse::InternalServerError().finish());
+    let disposition: DispositionKind = match req.uri().query() {
+      Some("download") => DispositionKind::Attachment,
+      Some("inline") => DispositionKind::Inline,
+      _ => DispositionKind::Auto,
+    };
+
+    match read_file::read(&path, disposition).await {
+      Ok(result) => return Right(result),
+      Err(_) => return Left(HttpResponse::InternalServerError().finish()),
     }
-    return Right(result.unwrap());
   }
 
   // Otherwise, 404

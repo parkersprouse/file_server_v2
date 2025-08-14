@@ -42,3 +42,9 @@ const $route = useRoute();
 const at_root = computed<boolean>(() => $route.path === '/');
 const breadcrumbs = computed<Breadcrumb[]>(() => breadcrumbify($route));
 </script>
+
+<style>
+nav li::before {
+  display: none;
+}
+</style>

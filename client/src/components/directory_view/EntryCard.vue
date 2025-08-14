@@ -52,8 +52,8 @@
 </template>
 
 <script setup lang='ts'>
-import DirEntry from 'components/directory/DirEntry.vue';
-import FileEntry from 'components/directory/FileEntry.vue';
+import DirEntry from 'components/directory_view/DirEntry.vue';
+import FileEntry from 'components/directory_view/FileEntry.vue';
 import { absolute, relative } from 'lib/datetime.ts';
 import { fileTypeToIcon, isDir } from 'lib/entry_helpers.ts';
 

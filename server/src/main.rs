@@ -9,6 +9,9 @@ use app_config::AppConfig;
 use std::io;
 
 mod app_config;
+mod enums {
+  pub mod disposition_kind;
+}
 mod services {
   pub mod read_dir;
   pub mod read_file;
