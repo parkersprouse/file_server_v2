@@ -1,75 +1,86 @@
 <template>
-  <Dialog>
-    <DialogTrigger as-child>
+  <PreviewDialog
+    ref='preview'
+    class_actions='preview-dialog__actions--text'
+    :class_content='[
+      "preview-dialog__content--text",
+      text_body ? "border" : "",
+    ].join(" ")'
+    class_wrapper='preview-dialog__wrapper--text'
+    :entry='entry'
+  >
+    <template #trigger>
       <a
         href='#'
         class='entry'
+        @click='preview?.open()'
       >
         <slot name='default' />
       </a>
-    </DialogTrigger>
-    <DialogScrollContent class='text-file-dialog'>
-      <DialogHeader class='file-dialog--header'>
-        <VisuallyHidden>
-          <DialogTitle />
-          <DialogDescription />
-        </VisuallyHidden>
-        <a
-          :href='`${toFileUrl(entry)}?download`'
-          download
-          class='ghost-ext h-auto! p-1!'
-        >
-          <icon-download-simple class='size-4' />
-        </a>
-        <DialogClose>
-          <Button
-            variant='ghost'
-            class='ghost-ext h-auto! p-1!'
-          >
-            <icon-x class='size-4' />
-          </Button>
-        </DialogClose>
-      </DialogHeader>
-      <div class='file-dialog--content text-primary! bg-primary!'>
-        <object
-          :data='toFileUrl(entry)'
-          class='w-full! h-full! text-primary! bg-primary!'
-        />
-      </div>
-    </DialogScrollContent>
-  </Dialog>
+    </template>
+    <template #default>
+      <div
+        v-if='text_body'
+        v-text='text_body'
+      />
+      <object
+        v-else-if='use_fallback'
+        :data='entry.url'
+      />
+    </template>
+  </PreviewDialog>
 </template>
 
 <script setup lang='ts'>
-import { VisuallyHidden } from 'reka-ui';
+import { set } from '@vueuse/core';
+import { onMounted, ref, useTemplateRef } from 'vue';
 
-import { toFileUrl } from 'lib/entry_helpers.ts';
+import { http } from 'lib/http.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
+
+const use_fallback = ref<boolean>(false);
+const preview = useTemplateRef('preview');
+const text_body = ref<string>();
+
+onMounted(async () => {
+  try {
+    const text = await http.get(entry.url);
+    set(text_body, text.data);
+  } catch (err) {
+    console.log(err);
+    set(use_fallback, true);
+  }
+});
 </script>
 
 <style>
 @reference '../../../assets/styles/index.css';
 
-.text-file-dialog {
-  @apply flex! flex-col! flex-nowrap! justify-between items-stretch! gap-0!
-         max-w-[90%]! sm:max-w-xl! md:max-w-2xl! lg:max-w-4xl! xl:max-w-6xl! 2xl:max-w-7xl!
-         text-primary! p-0! w-full! h-full! max-h-[90%]!;
+.preview-dialog__wrapper--text {
+  @apply h-[90%] w-[90%];
 
-  & .file-dialog--header {
-    @apply flex flex-row flex-nowrap items-center justify-end self-end grow-0 shrink flex-auto px-1! pt-1!;
+  & .preview-dialog__actions--text {
+    @apply pt-0;
   }
 
-  & .file-dialog--content {
-    @apply w-full h-full grow shrink flex-auto;
-  }
+  & .preview-dialog__content--text {
+    @apply grow shrink w-full h-full bg-accent text-primary overflow-hidden;
 
-  & .dialog--close {
-    @apply hidden;
+    & div,
+    & object {
+      @apply w-full h-full overflow-auto;
+    }
+
+    & div {
+      @apply wrap-normal p-4;
+      white-space: pre-wrap;
+      white-space: preserve;
+    }
   }
 }
 </style>

@@ -14,7 +14,7 @@ function absolute(iso: string | Dayjs): string {
 }
 
 function relative(iso: string | Dayjs): string {
-  return dayjs(iso).fromNow();
+  return dayjs(iso).fromNow(true);
 }
 
 export {

@@ -42,6 +42,7 @@ import { useRoute } from 'vue-router';
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { EventBus } from 'enums/event_bus.ts';
 import { Events } from 'enums/events.ts';
+import { toFileUrl } from 'lib/entry_helpers.ts';
 import { http } from 'lib/http.ts';
 import { pathToRoute } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
@@ -63,7 +64,10 @@ async function getEntries(): Promise<void> {
     const timer_id = setTimeout(() => set(entries, undefined), 150);
     const res = await http.get(pathToRoute($route));
     clearTimeout(timer_id);
-    set(entries, res.data);
+    set(entries, res.data.map((entry: Entry) => {
+      entry.url = toFileUrl(entry);
+      return entry;
+    }));
   } catch {
     set(error, true);
   }

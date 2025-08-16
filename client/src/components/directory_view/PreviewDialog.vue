@@ -3,39 +3,48 @@
   <dialog
     ref='dialog'
     class='preview-dialog'
+    :class='class_root'
   >
     <div
       class='preview-dialog__wrapper'
+      :class='class_wrapper'
     >
       <div
         ref='dialog_actions'
         class='preview-dialog__actions'
+        :class='class_actions'
       >
+        <slot name='actions_start' />
         <a
-          :href='`${file_url}?download`'
+          aria-label='Download file'
+          :href='`${entry.url}?download`'
           download
           class='ghost-ext h-auto! p-1!'
         >
-          <icon-download-simple class='size-5' />
+          <icon-download-simple />
         </a>
         <a
-          :href='`${file_url}?inline`'
+          aria-label='Open file in new tab'
+          :href='`${entry.url}?inline`'
           target='_blank'
           class='ghost-ext h-auto! p-1!'
         >
-          <icon-arrow-square-out class='size-5' />
+          <icon-arrow-square-out />
         </a>
         <Button
+          aria-label='Close file preview'
           variant='ghost'
           class='ghost-ext h-auto! p-1!'
           @click='close'
         >
-          <icon-x class='size-5' />
+          <icon-x />
         </Button>
+        <slot name='actions_end' />
       </div>
       <div
         ref='dialog_content'
         class='preview-dialog__content'
+        :class='class_content'
       >
         <slot name='default' />
       </div>
@@ -44,15 +53,24 @@
 </template>
 
 <script setup lang='ts'>
-import { get, onClickOutside, onKeyStroke, set, useEventListener, useMutationObserver } from '@vueuse/core';
-import { computed, ref, useTemplateRef } from 'vue';
-
-import { toFileUrl } from 'lib/entry_helpers.ts';
+// , useEventListener, useMutationObserver
+import { get, onClickOutside, onKeyStroke, set } from '@vueuse/core';
+import { ref, useTemplateRef } from 'vue';
 
 import type { Entry } from 'types/entry.d.ts';
 
-const { entry } = defineProps<{
+const {
+  class_actions = '',
+  class_content = '',
+  class_root = '',
+  class_wrapper = '',
+  entry,
+} = defineProps<{
   entry: Entry;
+  class_actions?: string;
+  class_content?: string;
+  class_root?: string;
+  class_wrapper?: string;
 }>();
 
 defineExpose({
@@ -64,15 +82,20 @@ const dialog_actions = useTemplateRef<HTMLDivElement>('dialog_actions');
 const dialog_content = useTemplateRef<HTMLDivElement>('dialog_content');
 const is_open = ref<boolean>(false);
 
-const file_url = computed<string>(() => toFileUrl(entry));
-
 function open(): void {
-  get(dialog)!.showModal();
+  const dialog_ele = get(dialog);
+  if (!dialog_ele) return;
+  dialog_ele.showModal();
   document.body.classList.add('overflow-hidden!');
+  set(is_open, true);
 }
 
 function close(): void {
-  get(dialog)!.close();
+  const dialog_ele = get(dialog);
+  if (!dialog_ele) return;
+  dialog_ele.close();
+  document.body.classList.remove('overflow-hidden!');
+  set(is_open, false);
 }
 
 onClickOutside(dialog_content, () => {
@@ -83,49 +106,68 @@ onKeyStroke('Escape', async () => {
   if (get(is_open)) close();
 }, { dedupe: true });
 
-useEventListener(dialog, 'close', () => {
-  document.body.classList.remove('overflow-hidden!');
-});
+// useEventListener(dialog, 'close', () => {
+//   document.body.classList.remove('overflow-hidden!');
+// });
 
-useMutationObserver(dialog, (changes) => {
-  set(is_open, (changes[0].target as HTMLDialogElement).hasAttribute('open'));
-}, {
-  attributeFilter: ['open'],
-  subtree: false,
-});
+// useMutationObserver(dialog, (changes) => {
+//   set(is_open, (changes[0].target as HTMLDialogElement).hasAttribute('open'));
+// }, {
+//   attributeFilter: ['open'],
+//   subtree: false,
+// });
 </script>
 
 <style>
 @reference '../../assets/styles/index.css';
 
-.preview-dialog {
-  @apply fixed inset-0 hidden w-screen h-screen max-w-screen max-h-screen m-0 p-0 border-none z-[1000] cursor-pointer;
+@layer app {
+  .preview-dialog {
+    @apply fixed inset-0 hidden w-screen h-screen max-w-screen max-h-screen m-0 p-0 border-none z-[1000] cursor-pointer;
 
-  &[open] {
-    @apply flex flex-row flex-nowrap items-center justify-center;
+    &[open] {
+      @apply flex flex-row flex-nowrap items-center justify-center;
 
-    &::backdrop {
-      @apply bg-black/85 z-[999] max-w-screen max-h-screen w-screen h-screen;
-    }
-  }
-
-  & .preview-dialog__wrapper {
-    @apply flex flex-col flex-nowrap items-center justify-center max-w-[90%] max-h-[90%] h-fit w-fit;
-
-    & .preview-dialog__actions {
-      @apply flex flex-row flex-nowrap items-center justify-center pb-1 h-fit shrink-0 grow;
+      &::backdrop {
+        @apply bg-black/85 z-[999] max-w-screen max-h-screen w-screen h-screen;
+      }
     }
 
-    & .preview-dialog__content {
-      @apply flex flex-row flex-nowrap items-center justify-center grow-0 shrink
-             w-auto h-auto max-w-full max-h-full overflow-auto cursor-auto;
+    & .preview-dialog__wrapper {
+      @apply flex flex-col flex-nowrap items-center justify-center max-w-screen max-h-screen h-auto w-auto;
 
-      & img {
-        @apply max-w-full max-h-full object-contain;
+      & .preview-dialog__actions {
+        @apply flex flex-row flex-nowrap items-center justify-center py-1 h-fit shrink grow-0 gap-1 sm:gap-0;
+
+        & svg.icon {
+          @apply size-7 sm:size-5;
+        }
+
+        & a,
+        & button {
+          @apply text-muted-foreground;
+
+          @variant hover {
+            @apply text-primary;
+          }
+        }
       }
 
-      & video {
-        @apply max-w-full max-h-full object-contain;
+      & .preview-dialog__content {
+        @apply flex flex-row flex-nowrap items-center justify-center grow-0 shrink
+               w-auto h-auto max-w-full max-h-full overflow-auto cursor-auto;
+
+        & img {
+          @apply max-w-full max-h-full object-contain;
+        }
+
+        & video {
+          @apply max-w-full max-h-full object-contain;
+        }
+
+        & object {
+          @apply w-full h-full max-w-full max-h-full;
+        }
       }
     }
   }

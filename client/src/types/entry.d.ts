@@ -9,4 +9,5 @@ export type Entry = {
   last_modified_at: string;
   name: string;
   path: string;
+  url: string;
 };

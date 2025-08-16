@@ -31,7 +31,7 @@
   </TextViewer>
   <a
     v-else
-    :href='toFileUrl(entry)'
+    :href='entry.url'
     download
     class='entry'
   >
@@ -41,7 +41,6 @@
 
 <script setup lang='ts'>
 import { FileType } from 'enums/file_type.ts';
-import { toFileUrl } from 'lib/entry_helpers.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 

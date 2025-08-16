@@ -14,7 +14,7 @@
     </template>
     <template #default>
       <video
-        :src='toFileUrl(entry)'
+        :src='entry.url'
         controls
       />
     </template>
@@ -23,8 +23,6 @@
 
 <script setup lang='ts'>
 import { useTemplateRef } from 'vue';
-
-import { toFileUrl } from 'lib/entry_helpers.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 

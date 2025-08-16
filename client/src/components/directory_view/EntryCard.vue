@@ -5,20 +5,28 @@
   >
     <template #default>
       <Card class='p-0! h-full! gap-2!'>
-        <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink-0'>
+        <CardContent class='flex flex-row flex-nowrap justify-center items-center
+                            p-0! grow shrink'
+        >
+          <img
+            v-if='thumbnail'
+            :src='thumbnail'
+            class='w-auto h-auto object-contain aspect-square'
+          >
           <component
+            v-else
             :is='fileTypeToIcon(entry.file_type || entry.entry_type)'
-            class='size-1/2'
+            class='size-1/2 aspect-square'
           />
         </CardContent>
         <CardFooter class='flex flex-col flex-nowrap justify-center items-start p-0! grow-0'>
           <div
             class='entry-name max-w-full w-full text-nowrap whitespace-nowrap text-ellipsis
-                  overflow-y-clip overflow-x-scroll scrollbar-hidden py-1 px-2'
+                  overflow-y-hidden overflow-x-scroll scrollbar-hidden py-1 px-2'
           >
             {{ entry.name }}
           </div>
-          <div class='flex flex-row flex-wrap justify-between items-center'>
+          <div class='flex flex-row flex-nowrap justify-between items-center w-full'>
             <Tooltip
               :delay-duration='500'
               :disable-closing-trigger='true'
@@ -28,7 +36,7 @@
               <TooltipTrigger as-child>
                 <Badge
                   variant='outline'
-                  class='entry-last-modified'
+                  class='entry-meta entry-meta__last-modified'
                 >
                   <icon-clock-counter-clockwise />
                   {{ relative(entry.last_modified_at) }}
@@ -41,7 +49,9 @@
             <Badge
               v-if='Boolean(entry.duration)'
               variant='outline'
+              class='entry-meta entry-meta__duration'
             >
+              <icon-timer />
               {{ entry.duration }}
             </Badge>
           </div>
@@ -61,6 +71,7 @@ import type { Entry } from 'types/entry.d.ts';
 
 defineProps<{
   entry: Entry;
+  thumbnail?: string;
 }>();
 </script>
 
@@ -70,19 +81,26 @@ defineProps<{
 .entry {
   @apply transition-none!;
 
-  & .entry-last-modified {
-    @apply transition-none text-muted-foreground border-b-0 border-l-0;
+  & .entry-meta {
+    @apply transition-none text-muted-foreground border-b-0 shrink grow-0 gap-[0.15rem];
+  }
+
+  & .entry-meta__last-modified {
+    @apply border-l-0;
+  }
+
+  & .entry-meta__duration {
+    @apply border-r-0;
   }
 
   @variant hover {
     @apply text-cerise-red-500! dark:text-cerise-red-600!;
 
     & [data-slot='card'] {
-      /* @apply bg-zinc-200! dark:bg-accent!; */
       @apply border-cerise-red-500! dark:border-cerise-red-600!;
     }
 
-    & .entry-last-modified,
+    & .entry-meta,
     & [data-slot^='card-'] {
       @apply text-cerise-red-500! dark:text-cerise-red-600!;
     }

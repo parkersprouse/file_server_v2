@@ -1,3 +1,5 @@
+@layer theme, base, components, utilities, app;
+
 @import '@fontsource-variable/inter/wght.css';
 @import '@fontsource-variable/inter/wght-italic.css';
 @import './_reset.css' layer(base);
@@ -168,6 +170,8 @@
       'Apple Color Emoji', /* - macOS emoji ------------ */
       'Segoe UI Emoji'; /* ---- Windows emoji ---------- */
     /* stylelint-enable */
+
+    tab-size: 4;
   }
 }
 
@@ -192,10 +196,10 @@
   overscroll-behavior: auto;
 
   &[class$='only-x'] {
-    overflow-y: clip;
+    overflow-y: hidden;
   }
 
   &[class$='only-y'] {
-    overflow-x: clip;
+    overflow-x: hidden;
   }
 }
