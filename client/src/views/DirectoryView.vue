@@ -1,37 +1,18 @@
 <template>
-  <!-- <ContextMenu>
-    <ContextMenuTrigger class='contents'> -->
-      <NavBar />
+  <NavBar />
 
-      <main
-        :class='$is_mobile ? "scrollbar-hidden" : ""'
-        :style='{ paddingTop: `calc(${toolbar_height} + 1rem)` }'
-      >
-        <DirectoryError v-if='error' />
-        <DirectoryLoading v-else-if='!entries' />
-        <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
-        <DirectoryContent
-          v-else
-          :entries='entries'
-        />
-      </main>
-    <!-- </ContextMenuTrigger>
-    <ContextMenuContent>
-      <ContextMenuItem>
-        <icon-list-dashes />
-        List
-      </ContextMenuItem>
-      <ContextMenuItem>
-        <icon-rows />
-        Rows
-      </ContextMenuItem>
-      <ContextMenuItem>
-        <icon-squares-four />
-        Grid
-      </ContextMenuItem>
-      <ContextMenuSeparator />
-    </ContextMenuContent>
-  </ContextMenu> -->
+  <main
+    :class='$is_mobile ? "scrollbar-hidden" : ""'
+    :style='{ paddingTop: `calc(${toolbar_height} + 1rem)` }'
+  >
+    <DirectoryError v-if='error' />
+    <DirectoryLoading v-else-if='!entries' />
+    <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
+    <DirectoryContent
+      v-else
+      :entries='entries'
+    />
+  </main>
 </template>
 
 <script setup lang='ts'>

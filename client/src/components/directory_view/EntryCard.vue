@@ -5,9 +5,7 @@
   >
     <template #default>
       <Card class='p-0! h-full! gap-2!'>
-        <CardContent class='flex flex-row flex-nowrap justify-center items-center
-                            p-0! grow shrink'
-        >
+        <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink'>
           <img
             v-if='thumbnail'
             :src='thumbnail'
@@ -103,6 +101,10 @@ defineProps<{
     & .entry-meta,
     & [data-slot^='card-'] {
       @apply text-cerise-red-500! dark:text-cerise-red-600!;
+    }
+
+    & .entry-meta {
+      @apply border-cerise-red-500/50! dark:border-cerise-red-600/50!;
     }
   }
 }

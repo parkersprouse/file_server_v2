@@ -52,7 +52,8 @@
 }
 
 [data-slot='select-item'],
-[data-slot='dropdown-menu-item'] {
+[data-slot='dropdown-menu-item'],
+[data-slot='context-menu-item'] {
   cursor: pointer;
 }
 
