@@ -10,44 +10,45 @@
       :class='class_wrapper'
     >
       <div
-        ref='dialog_actions'
-        class='preview-dialog__actions'
-        :class='class_actions'
-      >
-        <slot name='actions_start' />
-        <a
-          aria-label='Download file'
-          :href='`${entry.url}?download`'
-          download
-          class='ghost-ext h-auto! p-1!'
-        >
-          <icon-download-simple />
-        </a>
-        <a
-          aria-label='Open file in new tab'
-          :href='`${entry.url}?inline`'
-          target='_blank'
-          class='ghost-ext h-auto! p-1!'
-        >
-          <icon-arrow-square-out />
-        </a>
-        <Button
-          aria-label='Close file preview'
-          variant='ghost'
-          class='ghost-ext h-auto! p-1!'
-          @click='close'
-        >
-          <icon-x />
-        </Button>
-        <slot name='actions_end' />
-      </div>
-      <div
         ref='dialog_content'
         class='preview-dialog__content'
         :class='class_content'
       >
         <slot name='default' />
       </div>
+    </div>
+
+    <div
+      ref='dialog_actions'
+      class='preview-dialog__actions'
+      :class='class_actions'
+    >
+      <slot name='actions_start' />
+      <a
+        aria-label='Download file'
+        :href='`${entry.url}?download`'
+        download
+        class='ghost-ext h-auto! p-1!'
+      >
+        <icon-download-simple />
+      </a>
+      <a
+        aria-label='Open file in new tab'
+        :href='`${entry.url}?inline`'
+        target='_blank'
+        class='ghost-ext h-auto! p-1!'
+      >
+        <icon-arrow-square-out />
+      </a>
+      <Button
+        aria-label='Close file preview'
+        variant='ghost'
+        class='ghost-ext h-auto! p-1!'
+        @click='close'
+      >
+        <icon-x />
+      </Button>
+      <slot name='actions_end' />
     </div>
   </dialog>
 </template>
@@ -123,7 +124,8 @@ onKeyStroke('Escape', async () => {
 
 @layer app {
   .preview-dialog {
-    @apply fixed inset-0 hidden w-screen h-screen max-w-screen max-h-screen m-0 p-0 border-none z-[1000] cursor-pointer;
+    @apply fixed left-1/2 top-1/2 -translate-1/2 hidden w-screen h-screen max-w-screen max-h-screen
+           m-0 p-0 border-none z-[1000] cursor-pointer;
 
     &[open] {
       @apply flex flex-row flex-nowrap items-center justify-center;
@@ -136,25 +138,8 @@ onKeyStroke('Escape', async () => {
     & .preview-dialog__wrapper {
       @apply flex flex-col flex-nowrap items-center justify-center max-w-screen max-h-screen h-auto w-auto;
 
-      & .preview-dialog__actions {
-        @apply flex flex-row flex-nowrap items-center justify-center py-1 h-fit shrink grow-0 gap-1 sm:gap-0;
-
-        & svg.icon {
-          @apply size-7 sm:size-5;
-        }
-
-        & a,
-        & button {
-          @apply text-muted-foreground;
-
-          @variant hover {
-            @apply text-primary;
-          }
-        }
-      }
-
       & .preview-dialog__content {
-        @apply flex flex-row flex-nowrap items-center justify-center grow-0 shrink
+        @apply flex flex-row flex-nowrap items-center justify-center
                w-auto h-auto max-w-full max-h-full overflow-auto cursor-auto;
 
         & img {
@@ -167,6 +152,25 @@ onKeyStroke('Escape', async () => {
 
         & object {
           @apply w-full h-full max-w-full max-h-full;
+        }
+      }
+    }
+
+    & .preview-dialog__actions {
+      @apply flex flex-row flex-nowrap items-center justify-center
+              gap-1 sm:gap-0 absolute right-0 top-0 bg-background
+              border-l border-b border-zinc-300 dark:border-zinc-700;
+
+      & svg.icon {
+        @apply size-7 sm:size-6;
+      }
+
+      & a,
+      & button {
+        @apply text-muted-foreground;
+
+        @variant hover {
+          @apply text-primary;
         }
       }
     }

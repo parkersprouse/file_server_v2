@@ -1,34 +1,11 @@
 <template>
-  <ImageViewer
-    v-if='isType(entry, FileType.IMAGE)'
+  <component
+    v-if='Boolean(component_type)'
+    :is='component_type'
     :entry='entry'
   >
     <slot name='default' />
-  </ImageViewer>
-  <VideoViewer
-    v-else-if='isType(entry, FileType.VIDEO)'
-    :entry='entry'
-  >
-    <slot name='default' />
-  </VideoViewer>
-  <AudioViewer
-    v-else-if='isType(entry, FileType.AUDIO)'
-    :entry='entry'
-  >
-    <slot name='default' />
-  </AudioViewer>
-  <DocumentViewer
-    v-else-if='isType(entry, [FileType.DOCUMENT, FileType.SPREADSHEET])'
-    :entry='entry'
-  >
-    <slot name='default' />
-  </DocumentViewer>
-  <TextViewer
-    v-else-if='isType(entry, FileType.TEXT)'
-    :entry='entry'
-  >
-    <slot name='default' />
-  </TextViewer>
+  </component>
   <a
     v-else
     :href='entry.url'
@@ -40,16 +17,31 @@
 </template>
 
 <script setup lang='ts'>
+import { get } from '@vueuse/core';
+import { computed, ref } from 'vue';
+
+import AudioViewer from 'components/directory_view/file_viewers/AudioViewer.vue';
+import DocumentViewer from 'components/directory_view/file_viewers/DocumentViewer.vue';
+import ImageViewer from 'components/directory_view/file_viewers/ImageViewer.vue';
+import TextViewer from 'components/directory_view/file_viewers/TextViewer.vue';
+import VideoViewer from 'components/directory_view/file_viewers/VideoViewer.vue';
 import { FileType } from 'enums/file_type.ts';
 
 import type { Entry } from 'types/entry.d.ts';
+import type { Component } from 'vue';
 
-defineProps<{
+const { entry } = defineProps<{
   entry: Entry;
 }>();
 
-function isType(entry: Entry, type: FileType | FileType[]): boolean {
-  if (Array.isArray(type)) return type.includes(entry.file_type);
-  return entry.file_type === type;
-}
+const type_component_mapping = ref<{ [index: string]: Component; }>({
+  [FileType.AUDIO]: AudioViewer,
+  [FileType.DOCUMENT]: DocumentViewer,
+  [FileType.IMAGE]: ImageViewer,
+  [FileType.SPREADSHEET]: DocumentViewer,
+  [FileType.TEXT]: TextViewer,
+  [FileType.VIDEO]: VideoViewer,
+});
+
+const component_type = computed<Component>(() => get(type_component_mapping)[entry.file_type]);
 </script>

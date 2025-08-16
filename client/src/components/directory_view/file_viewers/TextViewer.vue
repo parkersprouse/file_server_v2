@@ -1,7 +1,6 @@
 <template>
   <PreviewDialog
     ref='preview'
-    class_actions='preview-dialog__actions--text'
     :class_content='[
       "preview-dialog__content--text",
       text_body ? "border" : "",
@@ -27,6 +26,7 @@
         v-else-if='use_fallback'
         :data='entry.url'
       />
+      <LoadingIcon v-else />
     </template>
   </PreviewDialog>
 </template>
@@ -51,8 +51,7 @@ onMounted(async () => {
   try {
     const text = await http.get(entry.url);
     set(text_body, text.data);
-  } catch (err) {
-    console.log(err);
+  } catch {
     set(use_fallback, true);
   }
 });
@@ -64,12 +63,8 @@ onMounted(async () => {
 .preview-dialog__wrapper--text {
   @apply h-[90%] w-[90%];
 
-  & .preview-dialog__actions--text {
-    @apply pt-0;
-  }
-
   & .preview-dialog__content--text {
-    @apply grow shrink w-full h-full bg-accent text-primary overflow-hidden;
+    @apply w-full h-full bg-accent text-primary overflow-hidden;
 
     & div,
     & object {

@@ -1,7 +1,6 @@
 <template>
   <PreviewDialog
     ref='preview'
-    class_actions='preview-dialog__actions--doc'
     class_content='preview-dialog__content--doc'
     class_wrapper='preview-dialog__wrapper--doc'
     :entry='entry'
@@ -39,12 +38,8 @@ const preview = useTemplateRef('preview');
 .preview-dialog__wrapper--doc {
   @apply h-[90%] w-[90%];
 
-  & .preview-dialog__actions--doc {
-    @apply pt-0;
-  }
-
   & .preview-dialog__content--doc {
-    @apply grow shrink w-full h-full;
+    @apply w-full h-full;
 
     & object {
       @apply w-full h-full;
