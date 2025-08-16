@@ -7,7 +7,7 @@
       <a
         href='#'
         class='entry'
-        @click='preview?.open()'
+        @click.prevent='preview?.open()'
       >
         <slot name='default' />
       </a>
