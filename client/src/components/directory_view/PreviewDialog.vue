@@ -54,12 +54,14 @@
 </template>
 
 <script setup lang='ts'>
-// , useEventListener, useMutationObserver
-import { get, onClickOutside, onKeyStroke, set } from '@vueuse/core';
+import { get, onClickOutside, onKeyStroke, set, useEventListener, useMutationObserver } from '@vueuse/core';
 import { ref, useTemplateRef } from 'vue';
 
 import type { Entry } from 'types/entry.d.ts';
 
+// eslint-disable-next-line @stylistic/max-len -- temp
+// :class='cn("z-50 overflow-hidden rounded-md border bg-popover px-3 py-1.5 text-sm text-popover-foreground shadow-md animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2", props.class)'
+// import { cn } from 'lib/utils';
 const {
   class_actions = '',
   class_content = '',
@@ -88,15 +90,10 @@ function open(): void {
   if (!dialog_ele) return;
   dialog_ele.showModal();
   document.body.classList.add('overflow-hidden!');
-  set(is_open, true);
 }
 
 function close(): void {
-  const dialog_ele = get(dialog);
-  if (!dialog_ele) return;
-  dialog_ele.close();
-  document.body.classList.remove('overflow-hidden!');
-  set(is_open, false);
+  get(dialog)?.close();
 }
 
 onClickOutside(dialog_content, () => {
@@ -107,16 +104,16 @@ onKeyStroke('Escape', async () => {
   if (get(is_open)) close();
 }, { dedupe: true });
 
-// useEventListener(dialog, 'close', () => {
-//   document.body.classList.remove('overflow-hidden!');
-// });
+useEventListener(dialog, 'close', () => {
+  document.body.classList.remove('overflow-hidden!');
+});
 
-// useMutationObserver(dialog, (changes) => {
-//   set(is_open, (changes[0].target as HTMLDialogElement).hasAttribute('open'));
-// }, {
-//   attributeFilter: ['open'],
-//   subtree: false,
-// });
+useMutationObserver(dialog, (changes) => {
+  set(is_open, (changes[0].target as HTMLDialogElement).hasAttribute('open'));
+}, {
+  attributeFilter: ['open'],
+  subtree: false,
+});
 </script>
 
 <style>

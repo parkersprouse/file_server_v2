@@ -9,16 +9,34 @@ import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { ViewType } from 'enums/view_type.ts';
 
+// import type { TooltipPayload } from 'types/tooltip_payload.d.ts';
+
 export const useStore = defineStore('global', () => {
   const $entries_bus = useEventBus<Events>(EventBus.Entries);
   const $route = useRoute();
   const $router = useRouter();
 
+
+  /*-- State --*/
+
+  // page layout
+  const toolbar_height = ref<number>(0);
+
+  // directory view settings
   const active_dir = ref<SortDir>(SortDir.ASC);
   const active_key = ref<SortKey>(SortKey.NAME);
   const active_view = ref<ViewType>(ViewType.LIST);
+
+  // preview dialog settings
   const img_mask_inverted = ref<boolean>(false);
-  const toolbar_height = ref<number>(0);
+
+  // tooltip
+  // const tooltip_content = ref<string | TooltipPayload>();
+  // const tooltip_element = ref<HTMLElement>();
+  // const tooltip_trigger = ref<HTMLElement>();
+
+
+  /*-- Functions --*/
 
   async function setDir(dir?: string): Promise<void> {
     const is_valid = Boolean(dir) && Object.values(SortDir).includes(dir as SortDir);
@@ -73,6 +91,9 @@ export const useStore = defineStore('global', () => {
     active_view,
     img_mask_inverted,
     toolbar_height,
+    // tooltip_content,
+    // tooltip_element,
+    // tooltip_trigger,
 
     /*-- Functions --*/
     setDir,

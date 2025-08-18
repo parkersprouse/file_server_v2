@@ -20,30 +20,19 @@
         <CardFooter class='flex flex-col flex-nowrap justify-center items-start p-0! grow-0'>
           <div
             class='entry-name max-w-full w-full text-nowrap whitespace-nowrap text-ellipsis
-                  overflow-y-hidden overflow-x-scroll scrollbar-hidden py-1 px-2'
+                    overflow-y-hidden overflow-x-scroll scrollbar-hidden py-1 px-2'
           >
             {{ entry.name }}
           </div>
           <div class='flex flex-row flex-nowrap justify-between items-center w-full'>
-            <Tooltip
-              :delay-duration='500'
-              :disable-closing-trigger='true'
-              :disable-hoverable-content='true'
-              :skip-delay-duration='300'
+            <Badge
+              variant='outline'
+              class='entry-meta entry-meta__last-modified'
             >
-              <TooltipTrigger as-child>
-                <Badge
-                  variant='outline'
-                  class='entry-meta entry-meta__last-modified'
-                >
-                  <icon-clock-counter-clockwise />
-                  {{ relative(entry.last_modified_at) }}
-                </Badge>
-              </TooltipTrigger>
-              <TooltipContent>
-                Last modified on <span>{{ absolute(entry.last_modified_at) }}</span>
-              </TooltipContent>
-            </Tooltip>
+              <!-- v-tooltip='{ value: `Last modified on <span>${absolute(entry.last_modified_at)}</span>` }' -->
+              <icon-clock-counter-clockwise />
+              {{ relative(entry.last_modified_at) }}
+            </Badge>
             <Badge
               v-if='Boolean(entry.duration)'
               variant='outline'
@@ -62,7 +51,7 @@
 <script setup lang='ts'>
 import DirEntry from 'components/directory_view/DirEntry.vue';
 import FileEntry from 'components/directory_view/FileEntry.vue';
-import { absolute, relative } from 'lib/datetime.ts';
+import { absolute as _, relative } from 'lib/datetime.ts';
 import { fileTypeToIcon, isDir } from 'lib/entry_helpers.ts';
 
 import type { Entry } from 'types/entry.d.ts';

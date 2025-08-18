@@ -1,32 +1,33 @@
 <template>
-  <ContextMenu v-if='Boolean(component_type)'>
-    <ContextMenuTrigger class='contents'>
-      <component
-        :is='component_type'
-        :entry='entry'
-      >
+  <component
+    v-if='Boolean(component_type)'
+    :is='component_type'
+    :entry='entry'
+  >
+    <ContextMenu>
+      <ContextMenuTrigger class='contents'>
         <slot name='default' />
-      </component>
-    </ContextMenuTrigger>
-    <ContextMenuContent>
-      <ContextMenuItem
-        as='a'
-        :href='`${entry.url}?inline`'
-        target='_blank'
-      >
-        <icon-arrow-square-out />
-        Open in New Tab
-      </ContextMenuItem>
-      <ContextMenuItem
-        as='a'
-        :href='`${entry.url}?download`'
-        download
-      >
-        <icon-download-simple />
-        Download
-      </ContextMenuItem>
-    </ContextMenuContent>
-  </ContextMenu>
+      </ContextMenuTrigger>
+      <ContextMenuContent>
+        <ContextMenuItem
+          as='a'
+          :href='`${entry.url}?inline`'
+          target='_blank'
+        >
+          <icon-arrow-square-out />
+          Open in New Tab
+        </ContextMenuItem>
+        <ContextMenuItem
+          as='a'
+          :href='`${entry.url}?download`'
+          download
+        >
+          <icon-download-simple />
+          Download
+        </ContextMenuItem>
+      </ContextMenuContent>
+    </ContextMenu>
+  </component>
   <a
     v-else
     :href='entry.url'

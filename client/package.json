@@ -43,6 +43,7 @@
     "component:add": "pnpm exec shadcn-vue add"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.7.3",
     "@fontsource-variable/inter": "^5.2.6",
     "@tailwindcss/vite": "^4.1.11",
     "@vueuse/core": "^13.6.0",
