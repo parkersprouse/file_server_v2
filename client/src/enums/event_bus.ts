@@ -1,3 +1,4 @@
 export enum EventBus {
-  Entries = 'entries',
+  Entry = 'entries',
+  PreviewDialog = 'preview_dialog',
 };

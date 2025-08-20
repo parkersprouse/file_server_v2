@@ -1,6 +1,5 @@
 <template>
   <PreviewDialog
-    ref='preview'
     :class_content='[
       "preview-dialog__content--text",
       text_body ? "border" : "",
@@ -8,15 +7,6 @@
     class_wrapper='preview-dialog__wrapper--text'
     :entry='entry'
   >
-    <template #trigger>
-      <a
-        href='#'
-        class='entry'
-        @click.prevent='preview?.open()'
-      >
-        <slot name='default' />
-      </a>
-    </template>
     <template #default>
       <div
         v-if='text_body'
@@ -33,7 +23,7 @@
 
 <script setup lang='ts'>
 import { set } from '@vueuse/core';
-import { onMounted, ref, useTemplateRef } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { http } from 'lib/http.ts';
 
@@ -44,7 +34,6 @@ const { entry } = defineProps<{
 }>();
 
 const use_fallback = ref<boolean>(false);
-const preview = useTemplateRef('preview');
 const text_body = ref<string>();
 
 onMounted(async () => {

@@ -50,6 +50,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.13",
+    "emittery": "^1.2.0",
     "pinia": "^3.0.3",
     "reka-ui": "^2.4.0",
     "sanitize.css": "^13.0.0",
@@ -108,7 +109,9 @@
       ]
     },
     "onlyBuiltDependencies": [
+      "@tailwindcss/oxide",
       "esbuild",
+      "unrs-resolver",
       "vue-demi"
     ]
   }

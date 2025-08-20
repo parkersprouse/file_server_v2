@@ -49,6 +49,7 @@ export default defineConfig({
   html: {},
   plugins: [
     VueDevTools({
+      componentInspector: false,
       launchEditor: 'code',
     }),
     ViteToml({ namedExports: true }),

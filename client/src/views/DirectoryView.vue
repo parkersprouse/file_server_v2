@@ -16,21 +16,22 @@
 </template>
 
 <script setup lang='ts'>
-import { set, useEventBus } from '@vueuse/core';
-import { computed, onMounted, ref } from 'vue';
+import { get, set } from '@vueuse/core';
+import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
+import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
-import { EventBus } from 'enums/event_bus.ts';
-import { Events } from 'enums/events.ts';
 import { toFileUrl } from 'lib/entry_helpers.ts';
 import { http } from 'lib/http.ts';
 import { pathToRoute } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { Entry } from 'types/entry.d.ts';
+import type { UnsubscribeFunction } from 'emittery';
 
-const $entries_bus = useEventBus<Events>(EventBus.Entries);
+const event_unsubs = ref<UnsubscribeFunction[]>([]);
+const $event_bus = useEventBus();
 const $is_mobile = useIsMobile();
 const $route = useRoute();
 const $store = useStore();
@@ -56,9 +57,13 @@ async function getEntries(): Promise<void> {
 
 onMounted(async () => {
   await getEntries();
-  $entries_bus.on(async (event: Events) => {
-    if ([Events.PathUpdated, Events.QueryUpdated].includes(event)) await getEntries();
-  });
+  get(event_unsubs).push(
+    $event_bus.on(['path_updated', 'query_updated'], getEntries)
+  );
+});
+
+onUnmounted(() => {
+  for (const unsub of get(event_unsubs)) unsub();
 });
 </script>
 

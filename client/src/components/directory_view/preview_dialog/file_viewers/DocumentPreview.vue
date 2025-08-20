@@ -1,19 +1,9 @@
 <template>
   <PreviewDialog
-    ref='preview'
     class_content='preview-dialog__content--doc'
     class_wrapper='preview-dialog__wrapper--doc'
     :entry='entry'
   >
-    <template #trigger>
-      <a
-        href='#'
-        class='entry'
-        @click.prevent='preview?.open()'
-      >
-        <slot name='default' />
-      </a>
-    </template>
     <template #default>
       <object :data='entry.url' />
     </template>
@@ -21,15 +11,11 @@
 </template>
 
 <script setup lang='ts'>
-import { useTemplateRef } from 'vue';
-
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
-
-const preview = useTemplateRef('preview');
 </script>
 
 <style>

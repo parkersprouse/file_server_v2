@@ -1,31 +1,11 @@
-/* eslint-disable @typescript-eslint/no-explicit-any -- n/a */
-import { useEventBus as vueUseEventBus } from '@vueuse/core';
+import { get } from '@vueuse/core';
+import Emittery from 'emittery';
+import { computed } from 'vue';
 
-import type { EventBusKey, UseEventBusReturn } from '@vueuse/core';
+import type { AppEvent } from 'types/app_event.d.ts';
 
-/*
-const bus = useEventBus<string>('news')
-
-function listener(event: string) {
-  console.log(`news: ${event}`)
-}
-
-// listen to an event
-const unsubscribe = bus.on(listener)
-
-// fire an event
-bus.emit('The Tokyo Olympics has begun')
-
-// unregister the listener
-unsubscribe()
-// or
-bus.off(listener)
-
-// clearing all listeners
-bus.reset()
-*/
-
-// ------------
+const emittery = new Emittery<AppEvent>();
+const event_bus = computed<Emittery<AppEvent>>(() => emittery);
 
 /**
  * @example
@@ -33,11 +13,10 @@ bus.reset()
  *   ...
  *   const $event_bus = useEventBus();
  *   ...
- *   const unsub = $event_bus.on('my_event', () => { console.log('respond'); });
+ *   const unsub = $event_bus.on(<event: AppEvent>, () => { console.log('respond'); });
  *   ...
  *   unsub();
  */
-export function useEventBus<T>(key: EventBusKey<T>): UseEventBusReturn<T, any> {
-  return vueUseEventBus(key);
+export function useEventBus(): Emittery<AppEvent> {
+  return get(event_bus);
 }
-/* eslint-enable @typescript-eslint/no-explicit-any */

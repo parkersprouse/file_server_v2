@@ -1,19 +1,9 @@
 <template>
   <PreviewDialog
-    ref='preview'
     :class_content='class_content'
     :class_wrapper='is_svg ? "preview-dialog__wrapper--svg" : ""'
     :entry='entry'
   >
-    <template #trigger>
-      <a
-        href='#'
-        class='entry'
-        @click.prevent='preview?.open()'
-      >
-        <slot name='default' />
-      </a>
-    </template>
     <template #actions_start>
       <Button
         aria-label='Invert colors'
@@ -21,7 +11,6 @@
         class='ghost-ext h-auto! p-1!'
         @click='invert_colors = !invert_colors'
       >
-        <!-- <icon-checkerboard /> -->
         <icon-circle-half />
       </Button>
     </template>
@@ -33,7 +22,7 @@
 
 <script setup lang='ts'>
 import { get } from '@vueuse/core';
-import { computed, useTemplateRef } from 'vue';
+import { computed } from 'vue';
 
 import { useStore } from 'stores/global.ts';
 
@@ -44,8 +33,6 @@ const { entry } = defineProps<{
 }>();
 
 const $store = useStore();
-
-const preview = useTemplateRef('preview');
 
 const class_content = computed<string>(() => ([
   get(invert_colors) ? 'invert' : '',
