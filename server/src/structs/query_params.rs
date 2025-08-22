@@ -17,8 +17,7 @@ impl QueryParams {
     let mut dir: String = SortDir::ASC.into();
     let mut key: String = SortKey::NAME.into();
 
-    if extraction.is_ok() {
-      let params = extraction.unwrap();
+    if let Ok(params) = extraction {
       dir = params.get(Self::DIR).map_or_else(|| SortDir::ASC, |v| v).to_owned();
       key = params.get(Self::KEY).map_or_else(|| SortKey::NAME, |v| v).to_owned();
     }

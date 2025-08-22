@@ -1,68 +1,49 @@
 <template>
-  <img :src='entry.url'>
+  <img
+    :src='entry.url'
+    :class='{
+      invert: $store.img_mask_inverted,
+    }'
+  >
 </template>
 
 <script setup lang='ts'>
-import { get } from '@vueuse/core';
-import { computed, h, resolveComponent, withModifiers } from 'vue';
-
 import { useStore } from 'stores/global.ts';
 
 import type { Entry } from 'types/entry.d.ts';
-import type { FileTypeAttrs } from 'types/file_type_attrs.d.ts';
-import type { ComputedRef } from 'vue';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
 
 const $store = useStore();
-
-const attributes: ComputedRef<FileTypeAttrs> = computed(() => ({
-  actions: {
-    start: h(
-      'Button',
-      {
-        'aria-label': 'Invert colors',
-        class: 'ghost-ext h-auto! p-1!',
-        onClick: withModifiers(() => {
-          $store.img_mask_inverted = !$store.img_mask_inverted;
-        }, ['prevent']),
-        variant: 'ghost',
-      },
-      h(resolveComponent('icon-circle-half')),
-    ),
-  },
-  content: {
-    bindings: {
-      entry: get(entry),
-    },
-    class: [
-      get(entry)?.name.endsWith('svg') ? 'preview-dialog__content--svg' : '',
-      $store.img_mask_inverted ? 'invert' : '',
-    ].join(' '),
-  },
-  wrapper: {
-    class: get(entry)?.name.endsWith('svg') ? 'preview-dialog__wrapper--svg' : '',
-  },
-}));
-
-defineExpose({
-  attributes,
-});
 </script>
 
 <style>
 @reference '../../../../assets/styles/index.css';
 
-.preview-dialog__wrapper--svg {
-  @apply h-full w-full;
+@layer app {
+  .preview-dialog {
+    & .preview-dialog__wrapper {
+      & .preview-dialog__content {
+        & img {
+          @apply max-w-full max-h-full object-contain;
+        }
+      }
+    }
 
-  & .preview-dialog__content--svg {
-    @apply grow shrink;
+    &.preview-dialog--svg {
+      & .preview-dialog__wrapper {
+        @apply h-full w-full;
 
-    & img {
-      @apply w-full h-full;
+        & .preview-dialog__content {
+          @apply grow shrink;
+
+          & img {
+            @apply w-full h-full;
+          }
+        }
+      }
     }
   }
 }
