@@ -1,8 +1,8 @@
 <template>
-  <div :class='cn("preview-dialog__wrapper", props.class)'>
+  <div :class='cn("preview-dialog__wrapper", props.class_wrapper)'>
     <div
       ref='content'
-      :class='cn("preview-dialog__content", props.class)'
+      :class='cn("preview-dialog__content", props.class_content)'
     >
       <slot name='default' />
     </div>
@@ -10,28 +10,12 @@
 </template>
 
 <script setup lang='ts'>
-import { onClickOutside } from '@vueuse/core';
-import { onMounted, useTemplateRef } from 'vue';
-
 import { cn } from 'lib/utils.ts';
 
 import type { HTMLAttributes } from 'vue';
 
 const props = defineProps<{
-  class?: HTMLAttributes['class'];
+  class_content?: HTMLAttributes['class'];
+  class_wrapper?: HTMLAttributes['class'];
 }>();
-
-const $emit = defineEmits<{
-  close: [];
-}>();
-
-const content = useTemplateRef<HTMLDivElement>('content');
-
-onMounted(() => {
-  const action = document.querySelector('.preview-dialog__actions') as HTMLDivElement;
-
-  onClickOutside(content, () => {
-    $emit('close');
-  }, { ignore: [action] });
-});
 </script>

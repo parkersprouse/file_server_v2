@@ -1,24 +1,16 @@
 <template>
-  <PreviewDialog
-    :class_content='[
-      "preview-dialog__content--text",
-      text_body ? "border" : "",
-    ].join(" ")'
-    class_wrapper='preview-dialog__wrapper--text'
-    :entry='entry'
-  >
-    <template #default>
-      <div
-        v-if='text_body'
-        v-text='text_body'
-      />
-      <object
-        v-else-if='use_fallback'
-        :data='entry.url'
-      />
-      <LoadingIcon v-else />
-    </template>
-  </PreviewDialog>
+  <!--
+    class_content: text_body ? 'border' : ''
+  -->
+  <div
+    v-if='text_body'
+    v-text='text_body'
+  />
+  <object
+    v-else-if='use_fallback'
+    :data='entry.url'
+  />
+  <LoadingIcon v-else />
 </template>
 
 <script setup lang='ts'>
@@ -47,7 +39,7 @@ onMounted(async () => {
 </script>
 
 <style>
-@reference '../../../assets/styles/index.css';
+@reference '../../../../assets/styles/index.css';
 
 .preview-dialog__wrapper--text {
   @apply h-[90%] w-[90%];

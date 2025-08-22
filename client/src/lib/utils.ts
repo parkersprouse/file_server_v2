@@ -6,6 +6,7 @@ import type { ClassValue } from 'clsx';
 import type { Breadcrumb } from 'types/breadcrumb.d.ts';
 import type { LocationQuery, RouteLocationNormalizedLoadedGeneric } from 'vue-router';
 
+// duplicate of the tailwind function that merges static CSS classes with dynamic ones
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
@@ -20,6 +21,13 @@ export function buildPath(
     label: part,
     path: index < length ? `/${parts.slice(0, index + 1).join('/')}${query}` : undefined,
   }));
+}
+
+export function capitalize(str: string): string {
+  return str
+    .split(/\s+/g)
+    .map((word) => `${word[0].toUpperCase()}${word.substring(1).toLowerCase()}`)
+    .join(' ');
 }
 
 export function formatQuery(query: LocationQuery): string {

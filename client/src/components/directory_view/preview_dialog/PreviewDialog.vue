@@ -1,30 +1,74 @@
 <template>
   <dialog
-    v-if='entry'
     ref='dialog'
     :class='cn("preview-dialog", props.class)'
+    @click='async (event) => await onClickDialog(event)'
   >
-    <PreviewDialogContent @close='async () => await close()'>
-      <slot name='default' />
+    <PreviewDialogContent
+      :class_content='file_component_attributes?.content?.class'
+      :class_wrapper='file_component_attributes?.wrapper?.class'
+    >
+      <component
+        v-if='entry'
+        :is='file_component_name'
+        v-bind='file_component_attributes?.content?.bindings ?? {}'
+        ref='content_body'
+      />
     </PreviewDialogContent>
 
-    <PreviewDialogActions :entry='entry'>
-      <slot name='actions_start' />
-      <slot name='actions_end' />
+    <PreviewDialogActions
+      v-if='entry'
+      :entry='entry'
+    >
+      <template
+        v-if='Boolean(file_component_attributes?.actions?.start)'
+        #actions_start
+      >
+        <template v-if='Array.isArray(file_component_attributes!.actions!.start)'>
+          <component
+            v-for='(ele, index) in file_component_attributes?.actions?.start'
+            :key='`${index}.${ele.name}`'
+            :is='ele'
+          />
+        </template>
+        <component :is='file_component_attributes!.actions!.start' />
+      </template>
+      <template
+        v-if='Boolean(file_component_attributes?.actions?.end)'
+        #actions_end
+      >
+        <template v-if='Array.isArray(file_component_attributes!.actions!.end)'>
+          <component
+            v-for='(ele, index) in file_component_attributes!.actions!.end'
+            :key='`${index}.${ele.name}`'
+            :is='ele'
+          />
+        </template>
+        <component :is='file_component_attributes!.actions!.end' />
+      </template>
     </PreviewDialogActions>
   </dialog>
 </template>
 
 <script setup lang='ts'>
+import '~icons/ph/circle-half';
+
 import { get, onKeyStroke, set, useMutationObserver } from '@vueuse/core';
-import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { computed, h, onMounted, onUnmounted, ref, resolveComponent, useTemplateRef } from 'vue';
 
+import 'components/directory_view/preview_dialog/file_viewers/AudioPreview.vue';
+import 'components/directory_view/preview_dialog/file_viewers/DocumentPreview.vue';
+import 'components/directory_view/preview_dialog/file_viewers/ImagePreview.vue';
+import 'components/directory_view/preview_dialog/file_viewers/TextPreview.vue';
+import 'components/directory_view/preview_dialog/file_viewers/VideoPreview.vue';
+import 'components/ui/button/index.ts';
 import { useEventBus } from 'composables/event_bus.ts';
-import { cn } from 'lib/utils.ts';
+import { capitalize, cn } from 'lib/utils.ts';
 
-import type { Entry } from 'types/entry.d.ts';
-import type { HTMLAttributes } from 'vue';
 import type { UnsubscribeFunction } from 'emittery';
+import type { Entry } from 'types/entry.d.ts';
+import type { FileTypeAttrs } from 'types/file_type_attrs.d.ts';
+import type { Component, HTMLAttributes } from 'vue';
 
 const props = defineProps<{
   class?: HTMLAttributes['class'];
@@ -33,9 +77,17 @@ const props = defineProps<{
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 
+const content_body = useTemplateRef<Component>('content_body');
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 const entry = ref<Entry>();
+const file_component_attributes = ref<FileTypeAttrs>();
 const is_open = ref<boolean>(false);
+
+const file_component_name = computed<string | undefined>(() => {
+  const file_entry = get(entry);
+  if (!file_entry) return;
+  return `${capitalize(file_entry.file_type)}Preview`;
+});
 
 onKeyStroke('Escape', async () => await close(), { dedupe: true });
 
@@ -47,30 +99,46 @@ useMutationObserver(dialog, (changes) => {
   subtree: false,
 });
 
-function open(): void {
+async function open(new_entry: Entry): Promise<void> {
   if (get(is_open)) return;
   const dialog_ele = get(dialog);
   if (!dialog_ele) return;
-  dialog_ele.showModal();
   document.body.classList.add('overflow-hidden!');
+  set(entry, new_entry);
+  const file_type_component = h(resolveComponent(get(file_component_name)!));
+  // if (typeof file_type_component === 'string') return;
+  console.log(file_type_component);
+  console.log(typeof file_type_component);
+  // console.log((file_type_component as typeof file_type_component).attributes);
+  // set(
+  //   file_component_attributes,
+  //   (file_type_component as typeof file_type_component).attributes as FileTypeAttrs,
+  // );
+  console.log(get(file_component_attributes));
+  dialog_ele.showModal();
 }
 
 async function close(): Promise<void> {
   if (!get(is_open)) return;
   const dialog_ele = get(dialog);
   if (!dialog_ele) return;
+  set(entry, undefined);
   document.body.classList.remove('overflow-hidden!');
-  await $event_bus.emit('hide_dialog');
   dialog_ele.close();
+}
+
+async function onClickDialog(event: Event): Promise<void> {
+  const target = event.target as HTMLDivElement;
+  if (!target) return;
+  if (['preview-dialog', 'preview-dialog__wrapper'].some((klass) => target.classList.contains(klass))) {
+    await close();
+  }
 }
 
 onMounted(() => {
   get(event_unsubs).push(
-    $event_bus.on('show_dialog', (new_entry) => {
-      set(entry, new_entry);
-      // but first need to replace <slot>s in template with appropriate elements for special entry type provided
-      open();
-    })
+    $event_bus.on('show_dialog', async (new_entry) => await open(new_entry)),
+    $event_bus.on('hide_dialog', async () => await close()),
   );
 });
 

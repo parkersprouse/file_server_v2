@@ -1,32 +1,16 @@
 <template>
-  <PreviewDialog
-    :class_content='class_content'
-    :class_wrapper='is_svg ? "preview-dialog__wrapper--svg" : ""'
-    :entry='entry'
-  >
-    <template #actions_start>
-      <Button
-        aria-label='Invert colors'
-        variant='ghost'
-        class='ghost-ext h-auto! p-1!'
-        @click='invert_colors = !invert_colors'
-      >
-        <icon-circle-half />
-      </Button>
-    </template>
-    <template #default>
-      <img :src='entry.url'>
-    </template>
-  </PreviewDialog>
+  <img :src='entry.url'>
 </template>
 
 <script setup lang='ts'>
 import { get } from '@vueuse/core';
-import { computed } from 'vue';
+import { computed, h, resolveComponent, withModifiers } from 'vue';
 
 import { useStore } from 'stores/global.ts';
 
 import type { Entry } from 'types/entry.d.ts';
+import type { FileTypeAttrs } from 'types/file_type_attrs.d.ts';
+import type { ComputedRef } from 'vue';
 
 const { entry } = defineProps<{
   entry: Entry;
@@ -34,21 +18,42 @@ const { entry } = defineProps<{
 
 const $store = useStore();
 
-const class_content = computed<string>(() => ([
-  get(invert_colors) ? 'invert' : '',
-  get(is_svg) ? 'preview-dialog__content--svg' : '',
-].join(' ')));
+const attributes: ComputedRef<FileTypeAttrs> = computed(() => ({
+  actions: {
+    start: h(
+      'Button',
+      {
+        'aria-label': 'Invert colors',
+        class: 'ghost-ext h-auto! p-1!',
+        onClick: withModifiers(() => {
+          $store.img_mask_inverted = !$store.img_mask_inverted;
+        }, ['prevent']),
+        variant: 'ghost',
+      },
+      h(resolveComponent('icon-circle-half')),
+    ),
+  },
+  content: {
+    bindings: {
+      entry: get(entry),
+    },
+    class: [
+      get(entry)?.name.endsWith('svg') ? 'preview-dialog__content--svg' : '',
+      $store.img_mask_inverted ? 'invert' : '',
+    ].join(' '),
+  },
+  wrapper: {
+    class: get(entry)?.name.endsWith('svg') ? 'preview-dialog__wrapper--svg' : '',
+  },
+}));
 
-const is_svg = computed<boolean>(() => entry.name.endsWith('svg'));
-
-const invert_colors = computed<boolean>({
-  get: () => $store.img_mask_inverted,
-  set: (new_value) => { $store.img_mask_inverted = new_value; },
+defineExpose({
+  attributes,
 });
 </script>
 
 <style>
-@reference '../../../assets/styles/index.css';
+@reference '../../../../assets/styles/index.css';
 
 .preview-dialog__wrapper--svg {
   @apply h-full w-full;

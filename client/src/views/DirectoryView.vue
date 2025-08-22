@@ -27,8 +27,8 @@ import { http } from 'lib/http.ts';
 import { pathToRoute } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 
-import type { Entry } from 'types/entry.d.ts';
 import type { UnsubscribeFunction } from 'emittery';
+import type { Entry } from 'types/entry.d.ts';
 
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $event_bus = useEventBus();
@@ -57,9 +57,7 @@ async function getEntries(): Promise<void> {
 
 onMounted(async () => {
   await getEntries();
-  get(event_unsubs).push(
-    $event_bus.on(['path_updated', 'query_updated'], getEntries)
-  );
+  get(event_unsubs).push($event_bus.on(['path_updated', 'query_updated'], getEntries));
 });
 
 onUnmounted(() => {

@@ -6,7 +6,7 @@
     <slot name='actions_start' />
     <a
       aria-label='Download file'
-      :href='`${props.entry.url}?download`'
+      :href='`${entry.url}?download`'
       download
       class='ghost-ext h-auto! p-1!'
     >
@@ -14,7 +14,7 @@
     </a>
     <a
       aria-label='Open file in new tab'
-      :href='`${props.entry.url}?inline`'
+      :href='`${entry.url}?inline`'
       target='_blank'
       class='ghost-ext h-auto! p-1!'
     >
@@ -33,6 +33,9 @@
 </template>
 
 <script setup lang='ts'>
+import { set } from '@vueuse/core';
+import { ref, watch } from 'vue';
+
 import { useEventBus } from 'composables/event_bus.ts';
 import { cn } from 'lib/utils.ts';
 
@@ -45,4 +48,10 @@ const props = defineProps<{
 }>();
 
 const $event_bus = useEventBus();
+
+const entry = ref<Entry>(props.entry);
+
+watch(() => props.entry, (new_value) => {
+  set(entry, new_value);
+});
 </script>
