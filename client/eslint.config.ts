@@ -39,7 +39,7 @@ export default defineConfigWithVueTs(
    * https://eslint.org/docs/latest/use/configure/configuration-files-new
    */
   globalIgnores([
-    '!rsbuild.config.*',
+    'components.d.ts',
     '**/bin/**/*',
     '**/coverage/**',
     '**/dist-ssr/**',

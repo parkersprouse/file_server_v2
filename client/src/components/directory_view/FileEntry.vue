@@ -2,7 +2,7 @@
   <ContextMenu>
     <ContextMenuTrigger class='contents'>
       <a
-        v-if='is_special'
+        v-if='can_preview'
         href='#'
         class='entry'
         @click.prevent='async () => await $event_bus.emit("show_dialog", entry)'
@@ -43,7 +43,6 @@
 import { computed } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
-import { FileType } from 'enums/file_type.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -53,5 +52,5 @@ const { entry } = defineProps<{
 
 const $event_bus = useEventBus();
 
-const is_special = computed<boolean>(() => Object.values(FileType).includes(entry.file_type));
+const can_preview = computed<boolean>(() => Boolean(entry.preview_type));
 </script>

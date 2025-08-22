@@ -1,29 +1,13 @@
 <template>
-  <PreviewDialog
-    :class_content='class_content'
-    :class_wrapper='is_svg ? "preview-dialog__wrapper--svg" : ""'
-    :entry='entry'
+  <img
+    :src='entry.url'
+    :class='{
+      invert: $store.img_mask_inverted,
+    }'
   >
-    <template #actions_start>
-      <Button
-        aria-label='Invert colors'
-        variant='ghost'
-        class='ghost-ext h-auto! p-1!'
-        @click='invert_colors = !invert_colors'
-      >
-        <icon-circle-half />
-      </Button>
-    </template>
-    <template #default>
-      <img :src='entry.url'>
-    </template>
-  </PreviewDialog>
 </template>
 
 <script setup lang='ts'>
-import { get } from '@vueuse/core';
-import { computed } from 'vue';
-
 import { useStore } from 'stores/global.ts';
 
 import type { Entry } from 'types/entry.d.ts';
@@ -33,31 +17,33 @@ const { entry } = defineProps<{
 }>();
 
 const $store = useStore();
-
-const class_content = computed<string>(() => ([
-  get(invert_colors) ? 'invert' : '',
-  get(is_svg) ? 'preview-dialog__content--svg' : '',
-].join(' ')));
-
-const is_svg = computed<boolean>(() => entry.name.endsWith('svg'));
-
-const invert_colors = computed<boolean>({
-  get: () => $store.img_mask_inverted,
-  set: (new_value) => { $store.img_mask_inverted = new_value; },
-});
 </script>
 
 <style>
-@reference '../../../assets/styles/index.css';
+@reference '../../../../assets/styles/index.css';
 
-.preview-dialog__wrapper--svg {
-  @apply h-full w-full;
+@layer app {
+  .preview-dialog {
+    & .preview-dialog__wrapper {
+      & .preview-dialog__content {
+        & img {
+          @apply max-w-full max-h-full object-contain;
+        }
+      }
+    }
 
-  & .preview-dialog__content--svg {
-    @apply grow shrink;
+    &.preview-dialog--svg {
+      & .preview-dialog__wrapper {
+        @apply h-full w-full;
 
-    & img {
-      @apply w-full h-full;
+        & .preview-dialog__content {
+          @apply grow shrink;
+
+          & img {
+            @apply w-full h-full;
+          }
+        }
+      }
     }
   }
 }

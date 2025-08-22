@@ -1,34 +1,40 @@
 <template>
   <dialog
-    v-if='entry'
     ref='dialog'
-    :class='cn("preview-dialog", props.class)'
+    :class='cn("preview-dialog", preview_type?.class)'
+    @click='async (event) => await onClickDialog(event)'
   >
-    <PreviewDialogContent @close='async () => await close()'>
-      <slot name='default' />
+    <PreviewDialogContent v-if='entry'>
+      <component
+        :is='preview_type?.type'
+        :entry='entry'
+      />
     </PreviewDialogContent>
 
-    <PreviewDialogActions :entry='entry'>
-      <slot name='actions_start' />
-      <slot name='actions_end' />
-    </PreviewDialogActions>
+    <PreviewDialogActions
+      v-if='entry'
+      :entry='entry'
+    />
   </dialog>
 </template>
 
 <script setup lang='ts'>
 import { get, onKeyStroke, set, useMutationObserver } from '@vueuse/core';
-import { onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
+import AudioPreview from 'components/directory_view/preview_dialog/file_viewers/AudioPreview.vue';
+import DocumentPreview from 'components/directory_view/preview_dialog/file_viewers/DocumentPreview.vue';
+import ImagePreview from 'components/directory_view/preview_dialog/file_viewers/ImagePreview.vue';
+import TextPreview from 'components/directory_view/preview_dialog/file_viewers/TextPreview.vue';
+import VideoPreview from 'components/directory_view/preview_dialog/file_viewers/VideoPreview.vue';
 import { useEventBus } from 'composables/event_bus.ts';
+import { PreviewType } from 'enums/preview_type.ts';
 import { cn } from 'lib/utils.ts';
 
-import type { Entry } from 'types/entry.d.ts';
-import type { HTMLAttributes } from 'vue';
 import type { UnsubscribeFunction } from 'emittery';
-
-const props = defineProps<{
-  class?: HTMLAttributes['class'];
-}>();
+import type { Entry } from 'types/entry.d.ts';
+import type { PreviewTypeAttrs } from 'types/preview_type_attrs.d.ts';
+import type { PreviewTypeAttrsMapping } from 'types/preview_type_attrs_mapping.d.ts';
 
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
@@ -36,6 +42,41 @@ const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 const entry = ref<Entry>();
 const is_open = ref<boolean>(false);
+
+const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
+  const file_entry = get(entry);
+  if (!file_entry?.preview_type) return;
+  const mapping: PreviewTypeAttrsMapping = {
+    [PreviewType.AUDIO]: {
+      class: 'preview-dialog--audio',
+      type: AudioPreview,
+    },
+    [PreviewType.DOCUMENT]: {
+      class: 'preview-dialog--doc',
+      type: DocumentPreview,
+    },
+    [PreviewType.IMAGE]: {
+      class: [
+        'preview-dialog--image',
+        file_entry.name.endsWith('.svg') ? 'preview-dialog--svg' : '',
+      ].join(' ').trim(),
+      type: ImagePreview,
+    },
+    [PreviewType.SPREADSHEET]: {
+      class: 'preview-dialog--doc',
+      type: DocumentPreview,
+    },
+    [PreviewType.TEXT]: {
+      class: 'preview-dialog--text',
+      type: TextPreview,
+    },
+    [PreviewType.VIDEO]: {
+      class: 'preview-dialog--video',
+      type: VideoPreview,
+    },
+  };
+  return mapping[file_entry.preview_type];
+});
 
 onKeyStroke('Escape', async () => await close(), { dedupe: true });
 
@@ -47,12 +88,13 @@ useMutationObserver(dialog, (changes) => {
   subtree: false,
 });
 
-function open(): void {
+function open(new_entry: Entry): void {
   if (get(is_open)) return;
   const dialog_ele = get(dialog);
   if (!dialog_ele) return;
-  dialog_ele.showModal();
   document.body.classList.add('overflow-hidden!');
+  set(entry, new_entry);
+  dialog_ele.showModal();
 }
 
 async function close(): Promise<void> {
@@ -60,17 +102,25 @@ async function close(): Promise<void> {
   const dialog_ele = get(dialog);
   if (!dialog_ele) return;
   document.body.classList.remove('overflow-hidden!');
-  await $event_bus.emit('hide_dialog');
+  set(entry, undefined);
   dialog_ele.close();
+}
+
+async function onClickDialog(event: Event): Promise<void> {
+  const target = event.target as HTMLDivElement;
+  if (!target) return;
+  if ([
+    'preview-dialog',
+    'preview-dialog__wrapper',
+  ].some((klass) => target.classList.contains(klass))) {
+    await close();
+  }
 }
 
 onMounted(() => {
   get(event_unsubs).push(
-    $event_bus.on('show_dialog', (new_entry) => {
-      set(entry, new_entry);
-      // but first need to replace <slot>s in template with appropriate elements for special entry type provided
-      open();
-    })
+    $event_bus.on('show_dialog', (new_entry) => open(new_entry)),
+    $event_bus.on('hide_dialog', async () => await close()),
   );
 });
 
@@ -92,46 +142,6 @@ onUnmounted(() => {
 
       &::backdrop {
         @apply bg-black/85 z-[999] max-w-screen max-h-screen w-screen h-screen;
-      }
-    }
-
-    & .preview-dialog__wrapper {
-      @apply flex flex-col flex-nowrap items-center justify-center max-w-screen max-h-screen h-auto w-auto;
-
-      & .preview-dialog__content {
-        @apply flex flex-row flex-nowrap items-center justify-center
-               w-auto h-auto max-w-full max-h-full overflow-auto cursor-auto;
-
-        & img {
-          @apply max-w-full max-h-full object-contain;
-        }
-
-        & video {
-          @apply max-w-full max-h-full object-contain;
-        }
-
-        & object {
-          @apply w-full h-full max-w-full max-h-full;
-        }
-      }
-    }
-
-    & .preview-dialog__actions {
-      @apply flex flex-row flex-nowrap items-center justify-center
-              gap-1 sm:gap-0 absolute right-0 top-0 bg-background
-              border-l border-b border-zinc-300 dark:border-zinc-700;
-
-      & svg.icon {
-        @apply size-7 sm:size-6;
-      }
-
-      & a,
-      & button {
-        @apply text-muted-foreground;
-
-        @variant hover {
-          @apply text-primary;
-        }
       }
     }
   }

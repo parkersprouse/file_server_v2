@@ -56,7 +56,7 @@ where
       let mut path_buf = PathBuf::new();
       path_buf.push(&path);
 
-      let file_type = EntryDetails::file_type(EntryType::stringify(&file_meta.file_type()).into(), &path_buf);
+      let file_type = EntryDetails::file_type(EntryType::stringify(&file_meta.file_type()), &path_buf);
 
       if ["audio", "document", "image", "spreadsheet", "text", "video"].contains(&file_type.as_str()) {
         disposition = DispositionType::Inline;
