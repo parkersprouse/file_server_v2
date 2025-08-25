@@ -70,21 +70,18 @@ watch(() => props.entry, (new_value) => {
 
 @layer app {
   .preview-dialog {
-    & .preview-dialog__actions {
-      @apply flex flex-row flex-nowrap items-center justify-center
-              gap-1 sm:gap-0 absolute right-0 top-0 bg-background
-              border-l border-b border-zinc-300 dark:border-zinc-700;
+    & .preview-dialog__header {
+      & .preview-dialog__actions {
+        @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
+               bg-background border-b border-l border-zinc-300 dark:border-zinc-800;
 
-      & svg.icon {
-        @apply size-7 sm:size-6;
-      }
+        & svg.icon {
+          @apply size-7 sm:size-6;
+        }
 
-      & a,
-      & button {
-        @apply text-muted-foreground;
-
-        @variant hover {
-          @apply text-primary;
+        & a,
+        & button {
+          @apply dark:text-muted-foreground dark:hover:text-primary;
         }
       }
     }

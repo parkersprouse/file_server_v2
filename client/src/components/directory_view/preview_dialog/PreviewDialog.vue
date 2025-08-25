@@ -4,17 +4,19 @@
     :class='cn("preview-dialog", preview_type?.class)'
     @click='async (event) => await onClickDialog(event)'
   >
-    <PreviewDialogContent v-if='entry'>
-      <component
-        :is='preview_type?.type'
-        :entry='entry'
-      />
-    </PreviewDialogContent>
+    <template v-if='entry'>
+      <div class='preview-dialog__header'>
+        <PreviewDialogTitle :entry='entry' />
+        <PreviewDialogActions :entry='entry' />
+      </div>
 
-    <PreviewDialogActions
-      v-if='entry'
-      :entry='entry'
-    />
+      <PreviewDialogContent>
+        <component
+          :is='preview_type?.type'
+          :entry='entry'
+        />
+      </PreviewDialogContent>
+    </template>
   </dialog>
 </template>
 
@@ -143,6 +145,10 @@ onUnmounted(() => {
       &::backdrop {
         @apply bg-black/85 z-[999] max-w-screen max-h-screen w-screen h-screen;
       }
+    }
+
+    & .preview-dialog__header {
+      @apply absolute left-0 top-0 w-screen z-[1001] flex flex-row flex-nowrap items-stretch justify-between gap-0;
     }
   }
 }
