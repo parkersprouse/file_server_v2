@@ -44,7 +44,19 @@ const breadcrumbs = computed<Breadcrumb[]>(() => breadcrumbify($route));
 </script>
 
 <style>
-nav li::before {
-  display: none;
+@reference '../../assets/styles/index.css';
+
+nav li {
+  &::before {
+    @apply hidden;
+  }
+
+  & a {
+    @apply border-b border-transparent border-dotted;
+
+    @variant hover {
+      @apply border-primary;
+    }
+  }
 }
 </style>

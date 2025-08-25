@@ -2,7 +2,7 @@
   <section class='flex flex-row flex-nowrap justify-center items-center w-full gap-4'>
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_view === ViewType.LIST }'
       @click='$store.setView(ViewType.LIST)'
     >
@@ -11,7 +11,7 @@
 
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_view === ViewType.ROWS }'
       @click='$store.setView(ViewType.ROWS)'
     >
@@ -20,7 +20,7 @@
 
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_view === ViewType.GRID }'
       @click='$store.setView(ViewType.GRID)'
     >

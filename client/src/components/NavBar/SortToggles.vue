@@ -2,7 +2,7 @@
   <section class='flex flex-row flex-nowrap justify-center items-center gap-2 w-full'>
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_dir === SortDir.ASC }'
       @click='$store.setDir(SortDir.ASC)'
     >
@@ -10,7 +10,7 @@
     </Button>
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_dir === SortDir.DESC }'
       @click='$store.setDir(SortDir.DESC)'
     >
@@ -23,7 +23,7 @@
   <section class='flex flex-row flex-nowrap justify-center items-center gap-2 w-full'>
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_key === SortKey.NAME }'
       @click='$store.setKey(SortKey.NAME)'
     >
@@ -32,7 +32,7 @@
 
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_key === SortKey.DURATION }'
       @click='$store.setKey(SortKey.DURATION)'
     >
@@ -41,7 +41,7 @@
 
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_key === SortKey.MODIFIED }'
       @click='$store.setKey(SortKey.MODIFIED)'
     >
@@ -50,7 +50,7 @@
 
     <Button
       variant='ghost'
-      class='p-1! h-auto ghost-ext'
+      class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": $store.active_key === SortKey.CREATED }'
       @click='$store.setKey(SortKey.CREATED)'
     >

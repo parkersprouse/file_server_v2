@@ -17,7 +17,7 @@
       />
     </DropdownMenuTrigger>
 
-    <DropdownMenuContent>
+    <DropdownMenuContent class='p-0!'>
       <DropdownMenuGroup>
         <DropdownMenuItem
           class='ghost-ext'

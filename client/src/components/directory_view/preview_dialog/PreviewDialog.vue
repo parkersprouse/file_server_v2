@@ -5,7 +5,12 @@
     @click='async (event) => await onClickDialog(event)'
   >
     <template v-if='entry'>
-      <div class='preview-dialog__header'>
+      <div
+        class='preview-dialog__header'
+        :class='{
+          "justify-end!": $is_mobile,
+        }'
+      >
         <PreviewDialogTitle :entry='entry' />
         <PreviewDialogActions :entry='entry' />
       </div>
@@ -30,6 +35,7 @@ import ImagePreview from 'components/directory_view/preview_dialog/file_viewers/
 import TextPreview from 'components/directory_view/preview_dialog/file_viewers/TextPreview.vue';
 import VideoPreview from 'components/directory_view/preview_dialog/file_viewers/VideoPreview.vue';
 import { useEventBus } from 'composables/event_bus.ts';
+import { useIsMobile } from 'composables/is_mobile.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { cn } from 'lib/utils.ts';
 
@@ -40,6 +46,7 @@ import type { PreviewTypeAttrsMapping } from 'types/preview_type_attrs_mapping.d
 
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
+const $is_mobile = useIsMobile();
 
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 const entry = ref<Entry>();
@@ -148,7 +155,7 @@ onUnmounted(() => {
     }
 
     & .preview-dialog__header {
-      @apply absolute left-0 top-0 w-screen z-[1001] flex flex-row flex-nowrap items-stretch justify-between gap-0;
+      @apply absolute left-0 top-0 w-screen flex flex-row flex-nowrap items-stretch justify-between gap-0;
     }
   }
 }
