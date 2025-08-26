@@ -25,7 +25,7 @@
           @click='$store.setDir(SortDir.ASC)'
         >
           <icon-sort-ascending
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_dir === SortDir.ASC }'
           />
           Ascending
@@ -36,7 +36,7 @@
           @click='$store.setDir(SortDir.DESC)'
         >
           <icon-sort-descending
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_dir === SortDir.DESC }'
           />
           Descending
@@ -52,7 +52,7 @@
           @click='$store.setKey(SortKey.NAME)'
         >
           <icon-tag
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_key === SortKey.NAME }'
           />
           Name
@@ -63,7 +63,7 @@
           @click='$store.setKey(SortKey.DURATION)'
         >
           <icon-timer
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_key === SortKey.DURATION }'
           />
           Duration
@@ -74,7 +74,7 @@
           @click='$store.setKey(SortKey.MODIFIED)'
         >
           <icon-clock-counter-clockwise
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_key === SortKey.MODIFIED }'
           />
           Last Modified At
@@ -85,7 +85,7 @@
           @click='$store.setKey(SortKey.CREATED)'
         >
           <icon-file-plus
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_key === SortKey.CREATED }'
           />
           Created At

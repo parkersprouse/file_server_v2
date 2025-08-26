@@ -21,7 +21,7 @@
           @click='$store.setView(ViewType.LIST)'
         >
           <icon-list-dashes
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_view === ViewType.LIST }'
           />
           List View
@@ -32,7 +32,7 @@
           @click='$store.setView(ViewType.ROWS)'
         >
           <icon-rows
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_view === ViewType.ROWS }'
           />
           Rows View
@@ -43,7 +43,7 @@
           @click='$store.setView(ViewType.GRID)'
         >
           <icon-squares-four
-            class='size-5! ghost-ext'
+            class='size-6! ghost-ext'
             :class='{ "ghost-ext--active": $store.active_view === ViewType.GRID }'
           />
           Grid View
