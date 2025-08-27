@@ -90,7 +90,9 @@ const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
 onKeyStroke('Escape', async () => await close(), { dedupe: true });
 
 useMutationObserver(dialog, (changes) => {
-  const dialog_ele = changes[0].target as HTMLDialogElement;
+  const change = changes[0];
+  if (!change) return;
+  const dialog_ele = change.target as HTMLDialogElement;
   set(is_open, dialog_ele.hasAttribute('open'));
 }, {
   attributeFilter: ['open'],

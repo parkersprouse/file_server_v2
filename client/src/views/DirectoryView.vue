@@ -1,18 +1,25 @@
 <template>
   <NavBar />
 
-  <main
-    :class='$is_mobile ? "scrollbar-hidden" : ""'
-    :style='{ paddingTop: `calc(${toolbar_height} + 1rem)` }'
+  <section
+    class='w-screen overflow-y-auto overflow-x-hidden relative'
+    :style='{
+      height: `calc(100vh - ${toolbar_height})`,
+      minHeight: `calc(100vh - ${toolbar_height})`,
+      maxHeight: `calc(100vh - ${toolbar_height})`,
+      top: toolbar_height,
+    }'
   >
-    <DirectoryError v-if='error' />
-    <DirectoryLoading v-else-if='!entries' />
-    <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
-    <DirectoryContent
-      v-else
-      :entries='entries'
-    />
-  </main>
+    <main>
+      <DirectoryError v-if='error' />
+      <DirectoryLoading v-else-if='!entries' />
+      <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
+      <DirectoryContent
+        v-else
+        :entries='entries'
+      />
+    </main>
+  </section>
 </template>
 
 <script setup lang='ts'>
@@ -21,7 +28,6 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
-import { useIsMobile } from 'composables/is_mobile.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { toFileUrl } from 'lib/entry_helpers.ts';
 import { http } from 'lib/http.ts';
@@ -33,7 +39,6 @@ import type { Entry } from 'types/entry.d.ts';
 
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $event_bus = useEventBus();
-const $is_mobile = useIsMobile();
 const $route = useRoute();
 const $store = useStore();
 
@@ -74,7 +79,7 @@ onUnmounted(() => {
 @reference '../assets/styles/index.css';
 
 main {
-  @apply flex flex-col justify-start items-center min-h-screen px-4 pb-4 z-0
-         mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl;
+  @apply flex flex-col justify-start items-center min-h-full p-4 z-0
+         mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl relative;
 }
 </style>

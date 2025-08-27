@@ -6,6 +6,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './_theme.css';
+@import './_scrollbar.css';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -151,8 +152,25 @@
     @apply border-border outline-ring/50;
   }
 
+  html {
+    width: 100vw;
+    min-width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+  }
+
   body {
     @apply bg-background text-foreground;
+
+    width: 100vw;
+    min-width: 100vw;
+    max-width: 100vw;
+    height: 100vh;
+    min-height: 100vh;
+    max-height: 100vh;
+
     /* stylelint-disable -- Unsure where, but there's a bug in Stylelint that removes comments between
                             values when running `--fix`, but it doesn't seem to be associated with a
                             specific rule, so we just have to disable Stylelint for the whole attribute.
@@ -176,19 +194,12 @@
 }
 
 #app {
+  width: 100vw;
+  min-width: 100vw;
+  max-width: 100vw;
+  height: 100vh;
   min-height: 100vh;
-}
-
-.scrollbar-hidden {
-  scrollbar-color: transparent transparent;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-    width: 0;
-    height: 0;
-    background: transparent;
-  }
+  max-height: 100vh;
 }
 
 [class^='scroll-only-'] {

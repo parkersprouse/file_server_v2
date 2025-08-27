@@ -21,7 +21,8 @@ export function buildPath(
 export function capitalize(str: string): string {
   return str
     .split(/\s+/g)
-    .map((word) => `${word[0].toUpperCase()}${word.substring(1).toLowerCase()}`)
+    .filter((part) => part.length > 0)
+    .map((word) => `${word[0]!.toUpperCase()}${word.substring(1).toLowerCase()}`)
     .join(' ');
 }
 
