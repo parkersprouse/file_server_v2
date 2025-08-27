@@ -1,22 +1,13 @@
 <template>
-  <img
-    :src='entry.url'
-    :class='{
-      invert: $store.img_mask_inverted,
-    }'
-  >
+  <img :src='entry.url'>
 </template>
 
 <script setup lang='ts'>
-import { useStore } from 'stores/global.ts';
-
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
-
-const $store = useStore();
 </script>
 
 <style>

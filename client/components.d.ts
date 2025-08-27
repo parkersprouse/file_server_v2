@@ -76,7 +76,7 @@ declare module 'vue' {
     EntryCard: typeof import('./src/components/directory_view/EntryCard.vue')['default']
     FileEntry: typeof import('./src/components/directory_view/FileEntry.vue')['default']
     IconArrowSquareOut: typeof import('~icons/ph/arrow-square-out')['default']
-    IconCircleHalf: typeof import('~icons/ph/circle-half')['default']
+    IconCheckerboard: typeof import('~icons/ph/checkerboard')['default']
     IconClockCounterClockwise: typeof import('~icons/ph/clock-counter-clockwise')['default']
     IconDotsThree: typeof import('~icons/ph/dots-three')['default']
     IconDownloadSimple: typeof import('~icons/ph/download-simple')['default']

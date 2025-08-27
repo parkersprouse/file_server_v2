@@ -5,13 +5,12 @@
       :entry='entry'
     />
     <Button
-      v-if='is_image'
       variant='ghost'
       aria-label='Invert colors'
       class='ghost-ext h-auto!'
-      @click.prevent='() => { $store.img_mask_inverted = !$store.img_mask_inverted; }'
+      @click.prevent='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'
     >
-      <icon-circle-half />
+      <icon-checkerboard />
     </Button>
     <a
       aria-label='Download file'
@@ -41,12 +40,11 @@
 </template>
 
 <script setup lang='ts'>
-import { get, set } from '@vueuse/core';
-import { computed, ref, watch } from 'vue';
+import { set } from '@vueuse/core';
+import { ref, watch } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
-import { FileType } from 'enums/file_type.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { Entry } from 'types/entry.d.ts';
@@ -60,8 +58,6 @@ const $is_mobile = useIsMobile();
 const $store = useStore();
 
 const entry = ref<Entry>(props.entry);
-
-const is_image = computed<boolean>(() => get(entry).file_type === FileType.IMAGE);
 
 watch(() => props.entry, (new_value) => {
   set(entry, new_value);

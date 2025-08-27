@@ -16,7 +16,7 @@ export const useStore = defineStore('global', () => {
   const active_dir = ref<SortDir>(SortDir.ASC);
   const active_key = ref<SortKey>(SortKey.NAME);
   const active_view = ref<ViewType>(ViewType.LIST);
-  const img_mask_inverted = ref<boolean>(false);
+  const preview_bg_enabled = ref<boolean>(false);
   const toolbar_height = ref<number>(0);
 
   async function setDir(dir?: string): Promise<void> {
@@ -70,7 +70,7 @@ export const useStore = defineStore('global', () => {
     active_dir,
     active_key,
     active_view,
-    img_mask_inverted,
+    preview_bg_enabled,
     toolbar_height,
 
     /*-- Functions --*/

@@ -1,7 +1,11 @@
 <template>
   <dialog
     ref='dialog'
-    :class='cn("preview-dialog", preview_type?.class)'
+    :class='cn(
+      "preview-dialog",
+      [$store.preview_bg_enabled ? "bg-zinc-300 dark:bg-zinc-700" : ""].join(" "),
+      preview_type?.class,
+    )'
     @click='async (event) => await onClickDialog(event)'
   >
     <template v-if='entry'>
@@ -38,6 +42,7 @@ import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { cn } from 'lib/utils.ts';
+import { useStore } from 'stores/global.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
 import type { Entry } from 'types/entry.d.ts';
@@ -47,6 +52,7 @@ import type { PreviewTypeAttrsMapping } from 'types/preview_type_attrs_mapping.d
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $is_mobile = useIsMobile();
+const $store = useStore();
 
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 const entry = ref<Entry>();
