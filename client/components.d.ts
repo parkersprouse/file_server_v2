@@ -126,6 +126,8 @@ declare module 'vue' {
     PreviewDialogTitleButton: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogTitleButton.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    ScrollArea: typeof import('./src/components/ui/scroll-area/ScrollArea.vue')['default']
+    ScrollBar: typeof import('./src/components/ui/scroll-area/ScrollBar.vue')['default']
     Select: typeof import('./src/components/ui/select/Select.vue')['default']
     SelectContent: typeof import('./src/components/ui/select/SelectContent.vue')['default']
     SelectGroup: typeof import('./src/components/ui/select/SelectGroup.vue')['default']
