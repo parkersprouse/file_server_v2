@@ -1,10 +1,10 @@
 <template>
   <ViewRow
-    v-if='$store.active_view === ViewType.ROWS'
+    v-if='view === ViewType.ROWS'
     :entries='entries'
   />
   <ViewGrid
-    v-else-if='$store.active_view === ViewType.GRID'
+    v-else-if='view === ViewType.GRID'
     :entries='entries'
   />
   <ViewList
@@ -14,8 +14,10 @@
 </template>
 
 <script setup lang='ts'>
+import { computed } from 'vue';
+
 import { ViewType } from 'enums/view_type.ts';
-import { useStore } from 'stores/global.ts';
+import { useRouterStore } from 'stores/router.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -23,5 +25,7 @@ const { entries } = defineProps<{
   entries: Entry[];
 }>();
 
-const $store = useStore();
+const $store = useRouterStore();
+
+const view = computed<ViewType>(() => $store.view);
 </script>

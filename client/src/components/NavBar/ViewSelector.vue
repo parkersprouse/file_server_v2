@@ -3,12 +3,10 @@
     <DropdownMenuTrigger
       style='flex: 1 0 auto;'
       class='flex flex-row flex-nowrap justify-center items-center self-stretch gap-1 w-auto h-auto p-1.5! ghost-ext'
-      :class='{
-        [klass ?? ""]: true,
-      }'
+      :class='props.class ?? ""'
     >
       <component
-        :is='icons[$store.active_view]'
+        :is='icons[$store.view]'
         class='size-6!'
       />
     </DropdownMenuTrigger>
@@ -17,34 +15,34 @@
       <DropdownMenuGroup>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": $store.active_view === ViewType.LIST }'
-          @click='$store.setView(ViewType.LIST)'
+          :class='{ "ghost-ext--active": $store.view === ViewType.LIST }'
+          @click='$store.view = ViewType.LIST'
         >
           <icon-list-dashes
             class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.active_view === ViewType.LIST }'
+            :class='{ "ghost-ext--active": $store.view === ViewType.LIST }'
           />
           List View
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": $store.active_view === ViewType.ROWS }'
-          @click='$store.setView(ViewType.ROWS)'
+          :class='{ "ghost-ext--active": $store.view === ViewType.ROWS }'
+          @click='$store.view = ViewType.ROWS'
         >
           <icon-rows
             class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.active_view === ViewType.ROWS }'
+            :class='{ "ghost-ext--active": $store.view === ViewType.ROWS }'
           />
           Rows View
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
-          :class='{ "ghost-ext--active": $store.active_view === ViewType.GRID }'
-          @click='$store.setView(ViewType.GRID)'
+          :class='{ "ghost-ext--active": $store.view === ViewType.GRID }'
+          @click='$store.view = ViewType.GRID'
         >
           <icon-squares-four
             class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.active_view === ViewType.GRID }'
+            :class='{ "ghost-ext--active": $store.view === ViewType.GRID }'
           />
           Grid View
         </DropdownMenuItem>
@@ -61,15 +59,15 @@ import IconSquaresFour from '~icons/ph/squares-four';
 import { ref } from 'vue';
 
 import { ViewType } from 'enums/view_type.ts';
-import { useStore } from 'stores/global.ts';
+import { useRouterStore } from 'stores/router.ts';
 
-const {
-  class: klass = null,
-} = defineProps<{
-  class?: string;
+import type { HTMLAttributes } from 'vue';
+
+const props = defineProps<{
+  class?: HTMLAttributes['class'];
 }>();
 
-const $store = useStore();
+const $store = useRouterStore();
 
 const icons = ref({
   grid: IconSquaresFour,

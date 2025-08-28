@@ -3,8 +3,8 @@
     <Button
       variant='ghost'
       class='h-auto ghost-ext'
-      :class='{ "ghost-ext--active": $store.active_view === ViewType.LIST }'
-      @click='$store.setView(ViewType.LIST)'
+      :class='{ "ghost-ext--active": $store.view === ViewType.LIST }'
+      @click='$store.view = ViewType.LIST'
     >
       <icon-list-dashes class='size-12!' />
     </Button>
@@ -12,8 +12,8 @@
     <Button
       variant='ghost'
       class='h-auto ghost-ext'
-      :class='{ "ghost-ext--active": $store.active_view === ViewType.ROWS }'
-      @click='$store.setView(ViewType.ROWS)'
+      :class='{ "ghost-ext--active": $store.view === ViewType.ROWS }'
+      @click='$store.view = ViewType.ROWS'
     >
       <icon-rows class='size-12!' />
     </Button>
@@ -21,8 +21,8 @@
     <Button
       variant='ghost'
       class='h-auto ghost-ext'
-      :class='{ "ghost-ext--active": $store.active_view === ViewType.GRID }'
-      @click='$store.setView(ViewType.GRID)'
+      :class='{ "ghost-ext--active": $store.view === ViewType.GRID }'
+      @click='$store.view = ViewType.GRID'
     >
       <icon-squares-four class='size-12!' />
     </Button>
@@ -31,7 +31,7 @@
 
 <script setup lang='ts'>
 import { ViewType } from 'enums/view_type.ts';
-import { useStore } from 'stores/global.ts';
+import { useRouterStore } from 'stores/router.ts';
 
-const $store = useStore();
+const $store = useRouterStore();
 </script>
