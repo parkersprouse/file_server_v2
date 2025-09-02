@@ -121,8 +121,13 @@
 }
 
 * {
-  /* This is awful for accessibility and shouldn't be done in projects that people will actually use */
+  /* This is unacceptable for accessibility and shouldn't be done in projects that people will actually use */
   outline: none !important;
+
+  /* Prevent "Flash of Unstyled Content" (FOUC) for custom components */
+  &:not(:defined) {
+    opacity: 0;
+  }
 
   &:active,
   &:focus,
@@ -191,6 +196,10 @@
 
     tab-size: 4;
   }
+}
+
+@utility container {
+  @apply mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl;
 }
 
 #app {

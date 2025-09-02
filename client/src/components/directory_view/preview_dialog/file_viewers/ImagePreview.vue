@@ -1,13 +1,25 @@
 <template>
-  <img :src='entry.url'>
+  <object
+    v-if='is_svg'
+    :data='entry.url'
+    type='image/svg+xml'
+  />
+  <img
+    v-else
+    :src='entry.url'
+  >
 </template>
 
 <script setup lang='ts'>
+import { computed } from 'vue';
+
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
+
+const is_svg = computed<boolean>(() => entry.name.endsWith('.svg'));
 </script>
 
 <style>
@@ -15,24 +27,18 @@ const { entry } = defineProps<{
 
 @layer app {
   .preview-dialog {
-    & .preview-dialog__wrapper {
-      & .preview-dialog__content {
-        & img {
-          @apply max-w-full max-h-full object-contain;
-        }
+    & .preview-dialog__content {
+      & img {
+        @apply max-w-full max-h-full object-contain;
       }
     }
 
     &.preview-dialog--svg {
-      & .preview-dialog__wrapper {
-        @apply h-full w-full;
+      & .preview-dialog__content {
+        @apply h-auto w-auto grow shrink;
 
-        & .preview-dialog__content {
-          @apply grow shrink;
-
-          & img {
-            @apply w-full h-full;
-          }
+        & object {
+          @apply w-full h-full;
         }
       }
     }

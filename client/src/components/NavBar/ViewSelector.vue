@@ -18,10 +18,7 @@
           :class='{ "ghost-ext--active": $store.view === ViewType.LIST }'
           @click='$store.view = ViewType.LIST'
         >
-          <icon-list-dashes
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.view === ViewType.LIST }'
-          />
+          <icon-list-dashes class='size-6!' />
           List View
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -29,10 +26,7 @@
           :class='{ "ghost-ext--active": $store.view === ViewType.ROWS }'
           @click='$store.view = ViewType.ROWS'
         >
-          <icon-rows
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.view === ViewType.ROWS }'
-          />
+          <icon-rows class='size-6!' />
           Rows View
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -40,10 +34,7 @@
           :class='{ "ghost-ext--active": $store.view === ViewType.GRID }'
           @click='$store.view = ViewType.GRID'
         >
-          <icon-squares-four
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.view === ViewType.GRID }'
-          />
+          <icon-squares-four class='size-6!' />
           Grid View
         </DropdownMenuItem>
       </DropdownMenuGroup>

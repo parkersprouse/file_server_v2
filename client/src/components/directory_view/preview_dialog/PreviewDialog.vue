@@ -3,7 +3,7 @@
     ref='dialog'
     :class='cn(
       "preview-dialog",
-      [$store.preview_bg_enabled ? "bg-zinc-300 dark:bg-zinc-700" : ""].join(" "),
+      `${$store.preview_bg_enabled && "preview-dialog--opaque-bg" || ""}`,
       preview_type?.class,
     )'
     @click='async (event) => await onClickDialog(event)'
@@ -128,7 +128,7 @@ async function onClickDialog(event: Event): Promise<void> {
   if (!target) return;
   if ([
     'preview-dialog',
-    'preview-dialog__wrapper',
+    'preview-dialog__content',
   ].some((klass) => target.classList.contains(klass))) {
     await close();
   }
@@ -155,11 +155,15 @@ onUnmounted(() => {
            m-0 p-0 border-none z-[1000] cursor-pointer;
 
     &[open] {
-      @apply flex flex-row flex-nowrap items-center justify-center;
+      @apply flex flex-col flex-nowrap place-content-center;
 
       &::backdrop {
-        @apply bg-black/85 z-[999] max-w-screen max-h-screen w-screen h-screen;
+        @apply z-[999] bg-black/85 max-w-screen max-h-screen w-screen h-screen;
       }
+    }
+
+    &.preview-dialog--opaque-bg::backdrop {
+      @apply bg-zinc-500/85 dark:bg-zinc-700/85;
     }
 
     & .preview-dialog__header {

@@ -32,10 +32,23 @@ export default {
       true,
       {
         ignoreAtRules: [
+          /** tailwind v4 */
           'custom-variant',
+          'plugin',
           'reference',
+          'source',
           'theme',
+          'utility',
           'variant',
+          /** tailwind v3 */
+          'apply',
+          'config',
+          'layer',
+          'tailwind',
+          /** tailwind v1 & v2 */
+          'responsive',
+          'screen',
+          'variants',
         ],
       },
     ],
@@ -49,6 +62,13 @@ export default {
     'declaration-empty-line-before': null,
     'declaration-property-value-no-unknown': true,
     'font-family-name-quotes': 'always-unless-keyword',
+    'function-no-unknown': [
+      true,
+      {
+        /** tailwind */
+        ignoreFunctions: ['theme'],
+      },
+    ],
     'function-url-quotes': [
       'always',
       {

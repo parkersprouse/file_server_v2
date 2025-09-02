@@ -1,8 +1,83 @@
 <template>
-  <video
-    :src='entry.url'
-    controls
-  />
+  <media-controller
+    autohide='2'
+    autohideovercontrols
+    keyboardbackwardseekoffset='5'
+    keyboardforwardseekoffset='5'
+  >
+    <video
+      slot='media'
+      :src='entry.url'
+      muted
+    />
+
+    <div slot='centered-chrome'>
+      <media-seek-backward-button
+        notooltip
+        seekoffset='5'
+        class='preview-video-player__control'
+      >
+        <ricon-replay-5-fill slot='icon' />
+      </media-seek-backward-button>
+      <media-play-button
+        notooltip
+        class='preview-video-player__control'
+      >
+        <ricon-play-fill slot='play' />
+        <ricon-pause-fill slot='pause' />
+      </media-play-button>
+      <media-seek-forward-button
+        notooltip
+        seekoffset='5'
+        class='preview-video-player__control'
+      >
+        <ricon-forward-5-fill slot='icon' />
+      </media-seek-forward-button>
+    </div>
+
+    <media-control-bar>
+      <media-play-button class='preview-video-player__control'>
+        <ricon-play-fill slot='play' />
+        <ricon-pause-fill slot='pause' />
+      </media-play-button>
+      <media-mute-button class='preview-video-player__control'>
+        <ricon-volume-up-fill slot='high' />
+        <ricon-volume-up-fill slot='medium' />
+        <ricon-volume-down-fill slot='low' />
+        <ricon-volume-mute-fill slot='off' />
+      </media-mute-button>
+      <media-seek-backward-button
+        seekoffset='5'
+        class='preview-video-player__control'
+      >
+        <span slot='tooltip-content'>Back 5s</span>
+        <ricon-replay-5-fill slot='icon' />
+      </media-seek-backward-button>
+      <media-time-range>
+        <div
+          slot='current'
+          part='arrow'
+        />
+      </media-time-range>
+      <media-time-display
+        showduration
+        class='preview-video-player__control'
+      />
+      <media-seek-forward-button
+        seekoffset='5'
+        class='preview-video-player__control'
+      >
+        <span slot='tooltip-content'>Forward 5s</span>
+        <ricon-forward-5-fill slot='icon' />
+      </media-seek-forward-button>
+      <media-fullscreen-button class='preview-video-player__control'>
+        <span slot='tooltip-enter'>Fullscreen</span>
+        <span slot='tooltip-exit'>Leave Fullscreen</span>
+        <ricon-fullscreen-fill slot='enter' />
+        <ricon-fullscreen-exit-fill slot='exit' />
+      </media-fullscreen-button>
+    </media-control-bar>
+  </media-controller>
 </template>
 
 <script setup lang='ts'>
@@ -16,12 +91,73 @@ const { entry } = defineProps<{
 <style>
 @reference '../../../../assets/styles/index.css';
 
+@utility desktop-video-player {
+  [slot='centered-chrome'] {
+    @apply hidden;
+  }
+
+  media-control-bar {
+    media-seek-backward-button,
+    media-play-button,
+    media-seek-forward-button,
+    media-mute-button {
+      @apply inline-flex;
+    }
+  }
+}
+
+@utility mobile-video-player {
+  [slot='centered-chrome'] {
+    @apply flex;
+  }
+
+  media-control-bar {
+    media-seek-backward-button,
+    media-play-button,
+    media-seek-forward-button,
+    media-mute-button {
+      @apply hidden;
+    }
+  }
+}
+
 @layer app {
-  .preview-dialog {
-    & .preview-dialog__wrapper {
-      & .preview-dialog__content {
-        & video {
-          @apply max-w-full max-h-full object-contain;
+  .preview-dialog--video {
+    & .preview-dialog__content {
+      & media-controller {
+        @apply w-auto h-auto mobile-video-player;
+
+        & [slot='media'] {
+          @apply object-contain aspect-auto;
+        }
+
+        & [slot='centered-chrome'] {
+          @apply flex flex-row flex-nowrap justify-evenly items-center w-full;
+          background-color: transparent;
+
+          & .preview-video-player__control {
+            @apply bg-transparent;
+
+            & svg {
+              @apply size-12!;
+            }
+          }
+        }
+
+        &[breakpointsm] {
+          @apply mobile-video-player;
+        }
+
+        &[breakpointmd] {
+          @apply desktop-video-player;
+        }
+
+        &[breakpointlg] {
+          @apply desktop-video-player;
+        }
+
+        &[breakpointxl] {
+          @apply desktop-video-player;
         }
       }
     }

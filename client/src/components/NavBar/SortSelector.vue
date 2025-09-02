@@ -22,10 +22,7 @@
           :class='{ "ghost-ext--active": $store.dir === SortDir.ASC }'
           @click='$store.dir = SortDir.ASC'
         >
-          <icon-sort-ascending
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.dir === SortDir.ASC }'
-          />
+          <icon-sort-ascending class='size-6!' />
           Ascending
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -33,10 +30,7 @@
           :class='{ "ghost-ext--active": $store.dir === SortDir.DESC }'
           @click='$store.dir = SortDir.DESC'
         >
-          <icon-sort-descending
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.dir === SortDir.DESC }'
-          />
+          <icon-sort-descending class='size-6!' />
           Descending
         </DropdownMenuItem>
       </DropdownMenuGroup>
@@ -49,10 +43,7 @@
           :class='{ "ghost-ext--active": $store.key === SortKey.NAME }'
           @click='$store.key = SortKey.NAME'
         >
-          <icon-tag
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.key === SortKey.NAME }'
-          />
+          <icon-tag class='size-6!' />
           Name
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -60,10 +51,7 @@
           :class='{ "ghost-ext--active": $store.key === SortKey.DURATION }'
           @click='$store.key = SortKey.DURATION'
         >
-          <icon-timer
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.key === SortKey.DURATION }'
-          />
+          <icon-timer class='size-6!' />
           Duration
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -71,10 +59,7 @@
           :class='{ "ghost-ext--active": $store.key === SortKey.MODIFIED }'
           @click='$store.key = SortKey.MODIFIED'
         >
-          <icon-clock-counter-clockwise
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.key === SortKey.MODIFIED }'
-          />
+          <icon-clock-counter-clockwise class='size-6!' />
           Last Modified At
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -82,10 +67,7 @@
           :class='{ "ghost-ext--active": $store.key === SortKey.CREATED }'
           @click='$store.key = SortKey.CREATED'
         >
-          <icon-file-plus
-            class='size-6! ghost-ext'
-            :class='{ "ghost-ext--active": $store.key === SortKey.CREATED }'
-          />
+          <icon-file-plus class='size-6!' />
           Created At
         </DropdownMenuItem>
       </DropdownMenuGroup>

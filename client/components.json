@@ -17,5 +17,5 @@
     "lib": "@/lib",
     "types": "@/types"
   },
-  "iconLibrary": "phosphor"
+  "iconLibrary": "ph"
 }

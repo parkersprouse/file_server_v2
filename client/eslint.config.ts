@@ -866,6 +866,13 @@ export default defineConfigWithVueTs(
           svg: 'always',
         },
       ],
+      'vue/no-deprecated-slot-attribute': [
+        'error',
+        {
+          ignore: ['/^media/'],
+          ignoreParents: ['/^media/'],
+        },
+      ],
       'vue/prop-name-casing': 'off',
       'vue/require-default-prop': 'error',
       'vue/v-on-event-hyphenation': ['error', 'never'],

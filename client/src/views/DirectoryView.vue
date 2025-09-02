@@ -10,7 +10,7 @@
       top: toolbar_height,
     }'
   >
-    <main>
+    <main class='container'>
       <DirectoryError v-if='error' />
       <DirectoryLoading v-else-if='!entries' />
       <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />

@@ -20,7 +20,7 @@
       variant='outline'
       class='preview-dialog__title--compact'
     >
-      <icon-tag class='size-3! shrink-0!' />
+      <icon-tag class='size-4! shrink-0!' />
       {{ entry.name }}
     </Badge>
   </div>
@@ -78,9 +78,9 @@ onUnmounted(() => {
         @apply absolute max-w-screen w-screen px-4;
 
         & .preview-dialog__title--compact {
-          @apply bg-background border border-zinc-300 dark:border-zinc-800
-                flex flex-nowrap flex-row gap-2 items-center justify-center
-                max-w-full p-1 px-2 py-1 text-foreground! w-full whitespace-pre-line text-center;
+          @apply bg-background border border-zinc-300 dark:border-zinc-800 text-sm!
+                 flex flex-nowrap flex-row gap-2 items-center justify-center
+                 max-w-full p-1 px-2 py-1 text-foreground! w-full whitespace-pre-line text-center;
         }
       }
     }

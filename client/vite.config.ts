@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 
+// import VueDevTools from 'vite-plugin-vue-devtools';
 import Tailwind from '@tailwindcss/vite';
 import Vue from '@vitejs/plugin-vue';
 import UnpluginIconsResolver from 'unplugin-icons/resolver';
@@ -7,14 +8,16 @@ import UnpluginIcons from 'unplugin-icons/vite';
 import UnpluginComponents from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vite';
 import { ViteToml } from 'vite-plugin-toml';
-import VueDevTools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
 export default defineConfig({
   appType: 'spa',
   build: {
     assetsDir: '.',
+    copyPublicDir: true,
+    emptyOutDir: true,
     minify: 'esbuild',
+    outDir: 'dist',
     rollupOptions: {
       output: {
         // Manually define the chunks that dependencies will be bundled
@@ -38,31 +41,50 @@ export default defineConfig({
         },
       },
     },
-    sourcemap: true,
+    sourcemap: false,
     target: 'es2020',
   },
   css: {
-    devSourcemap: true,
+    devSourcemap: false,
     modules: false,
-    transformer: 'lightningcss',
+    // Tailwind seems to have some issues with lightningcss:
+    //   https://github.com/tailwindlabs/tailwindcss/issues/14205
+    // transformer: 'lightningcss',
+    transformer: 'postcss',
   },
   html: {},
   plugins: [
+    Tailwind(),
+    /* Disabling this only disables the floating button in the app - not the devtools tab */
+    /*
     VueDevTools({
       componentInspector: true,
       launchEditor: 'code',
     }),
-    ViteToml({ namedExports: true }),
-    Vue(),
-    Tailwind(),
+    */
+    ViteToml({
+      namedExports: true,
+    }),
+    Vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag.startsWith('media-'),
+        },
+      },
+    }),
     UnpluginComponents({
       resolvers: [
         UnpluginIconsResolver({
-          // With this alias and prefixes disabled, icons can be used like `<icon-{name} />`
           alias: {
+            // With this alias and prefixes disabled, icons can be used like `<icon-{name} />`
             icon: 'ph',
+            // ^ but `<ricon-{name} />`
+            ricon: 'ri',
           },
-          enabledCollections: ['ph'],
+          enabledCollections: [
+            'ri',
+            'ph',
+          ],
           prefix: false,
         }),
       ],
@@ -73,6 +95,9 @@ export default defineConfig({
       scale: 1,
     }),
   ],
+  preview: {
+    open: false,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
