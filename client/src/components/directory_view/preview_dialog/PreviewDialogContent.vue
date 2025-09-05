@@ -1,11 +1,16 @@
 <template>
-  <div class='preview-dialog__content'>
+  <div
+    class='preview-dialog__content'
+    :class='{
+      "bg-zinc-300!": alt_background_active,
+    }'
+  >
     <slot name='default' />
   </div>
 </template>
 
 <script setup lang='ts'>
-import { get } from '@vueuse/core';
+import { get, useToggle } from '@vueuse/core';
 import { onMounted, onUnmounted, ref } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -14,11 +19,12 @@ import type { UnsubscribeFunction } from 'emittery';
 
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
+const [alt_background_active, toggleAltBackground] = useToggle(false);
 
 onMounted(async () => {
   get(event_unsubs).push(
-    $event_bus.on('show_text_preview_fallback', () => {
-      console.log('showing text fallback');
+    $event_bus.on('toggle_dialog_content_bg', () => {
+      toggleAltBackground();
     }),
   );
 });
