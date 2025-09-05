@@ -11,7 +11,11 @@
       muted
     />
 
-    <div slot='centered-chrome'>
+    <media-loading-indicator slot='centered-chrome' />
+    <div
+      slot='centered-chrome'
+      class='mobile-controls'
+    >
       <media-seek-backward-button
         notooltip
         seekoffset='5'
@@ -92,23 +96,30 @@ const { entry } = defineProps<{
 @reference '../../../../assets/styles/index.css';
 
 @utility desktop-video-player {
-  [slot='centered-chrome'] {
+  .mobile-controls[slot='centered-chrome'] {
     @apply hidden;
   }
 
   media-control-bar {
-    media-seek-backward-button,
-    media-play-button,
-    media-seek-forward-button,
-    media-mute-button {
-      @apply inline-flex;
+    & .preview-video-player__control {
+      display: var(--media-control-display, inline-flex);
+      flex-flow: row nowrap;
     }
   }
 }
 
 @utility mobile-video-player {
-  [slot='centered-chrome'] {
-    @apply flex;
+  .mobile-controls[slot='centered-chrome'] {
+    @apply flex flex-row flex-nowrap justify-evenly items-center w-full;
+    background-color: transparent;
+
+    & .preview-video-player__control {
+      @apply bg-transparent;
+
+      & svg {
+        @apply size-12!;
+      }
+    }
   }
 
   media-control-bar {
@@ -125,39 +136,28 @@ const { entry } = defineProps<{
   .preview-dialog--video {
     & .preview-dialog__content {
       & media-controller {
-        @apply w-auto h-auto mobile-video-player;
+        @apply w-auto h-auto mobile-video-player md:desktop-video-player;
 
         & [slot='media'] {
           @apply object-contain aspect-auto;
         }
 
-        & [slot='centered-chrome'] {
-          @apply flex flex-row flex-nowrap justify-evenly items-center w-full;
-          background-color: transparent;
+        & media-loading-indicator[slot='centered-chrome'] {
+          --media-loading-indicator-transition-delay: 500ms;
 
-          & .preview-video-player__control {
-            @apply bg-transparent;
+          @apply hidden w-full h-full;
+        }
 
-            & svg {
-              @apply size-12!;
-            }
+        &[medialoading]:not([mediapaused]) {
+          & media-loading-indicator[slot='centered-chrome'] {
+            --media-loading-indicator-opacity: 1;
+
+            @apply flex flex-row flex-nowrap justify-center items-center bg-black/50;
           }
-        }
 
-        &[breakpointsm] {
-          @apply mobile-video-player;
-        }
-
-        &[breakpointmd] {
-          @apply desktop-video-player;
-        }
-
-        &[breakpointlg] {
-          @apply desktop-video-player;
-        }
-
-        &[breakpointxl] {
-          @apply desktop-video-player;
+          & .mobile-controls[slot='centered-chrome'] {
+            @apply hidden;
+          }
         }
       }
     }

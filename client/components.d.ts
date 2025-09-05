@@ -96,7 +96,7 @@ declare module 'vue' {
     IconWarning: typeof import('~icons/ph/warning')['default']
     IconX: typeof import('~icons/ph/x')['default']
     ImagePreview: typeof import('./src/components/directory_view/preview_dialog/file_viewers/ImagePreview.vue')['default']
-    LoadingIcon: typeof import('./src/components/LoadingIcon.vue')['default']
+    LoadingIndicator: typeof import('./src/components/LoadingIndicator.vue')['default']
     Menubar: typeof import('./src/components/ui/menubar/Menubar.vue')['default']
     MenubarCheckboxItem: typeof import('./src/components/ui/menubar/MenubarCheckboxItem.vue')['default']
     MenubarContent: typeof import('./src/components/ui/menubar/MenubarContent.vue')['default']

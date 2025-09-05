@@ -60,13 +60,24 @@ export default {
       },
     ],
     'declaration-empty-line-before': null,
-    'declaration-property-value-no-unknown': true,
+    'declaration-property-value-no-unknown': [
+      true,
+      {
+        ignoreProperties: {
+          '/.+/': ['/v-bind\(.+\)/']
+        },
+      },
+    ],
     'font-family-name-quotes': 'always-unless-keyword',
     'function-no-unknown': [
       true,
       {
-        /** tailwind */
-        ignoreFunctions: ['theme'],
+        ignoreFunctions: [
+          /** tailwind */
+          'theme',
+          /** vue */
+          'v-bind'
+        ],
       },
     ],
     'function-url-quotes': [

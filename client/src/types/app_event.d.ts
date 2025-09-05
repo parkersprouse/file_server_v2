@@ -7,4 +7,5 @@ export type AppEvent = {
   query_updated: undefined;
   resize_preview_actions: DOMRect;
   show_dialog: Entry;
+  show_text_preview_fallback: undefined;
 };

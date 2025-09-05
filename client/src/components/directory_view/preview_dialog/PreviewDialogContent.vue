@@ -5,6 +5,27 @@
 </template>
 
 <script setup lang='ts'>
+import { get } from '@vueuse/core';
+import { onMounted, onUnmounted, ref } from 'vue';
+
+import { useEventBus } from 'composables/event_bus.ts';
+
+import type { UnsubscribeFunction } from 'emittery';
+
+const $event_bus = useEventBus();
+const event_unsubs = ref<UnsubscribeFunction[]>([]);
+
+onMounted(async () => {
+  get(event_unsubs).push(
+    $event_bus.on('show_text_preview_fallback', () => {
+      console.log('showing text fallback');
+    }),
+  );
+});
+
+onUnmounted(() => {
+  for (const unsub of get(event_unsubs)) unsub();
+});
 </script>
 
 <style>

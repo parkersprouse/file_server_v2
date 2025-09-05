@@ -86,19 +86,25 @@ const { entry } = defineProps<{
   }
 
   media-control-bar {
-    media-seek-backward-button,
-    media-play-button,
-    media-seek-forward-button,
-    media-mute-button,
-    media-volume-range {
-      @apply inline-flex;
+    & .preview-audio-player__control {
+      display: var(--media-control-display, inline-flex);
+      flex-flow: row nowrap;
     }
   }
 }
 
 @utility mobile-audio-player {
   [slot='centered-chrome'] {
-    @apply flex;
+    @apply flex flex-row flex-nowrap justify-evenly items-center w-full;
+    background-color: var(--media-control-background);
+
+    & .preview-audio-player__control {
+      @apply not-hover:bg-transparent flex-1;
+
+      & svg {
+        @apply size-12!;
+      }
+    }
   }
 
   media-control-bar {
@@ -118,39 +124,11 @@ const { entry } = defineProps<{
       @apply container;
 
       & media-controller {
-        @apply w-full h-full border border-zinc-700/85 dark:border-zinc-800 mobile-audio-player;
+        @apply w-full h-full border border-zinc-700/85 dark:border-zinc-800
+               mobile-audio-player md:desktop-audio-player;
 
         & [slot='media'] {
           @apply w-full h-full inline-block!;
-        }
-
-        &[breakpointsm] {
-          @apply mobile-audio-player;
-        }
-
-        &[breakpointmd] {
-          @apply desktop-audio-player;
-        }
-
-        &[breakpointlg] {
-          @apply desktop-audio-player;
-        }
-
-        &[breakpointxl] {
-          @apply desktop-audio-player;
-        }
-
-        & [slot='centered-chrome'] {
-          @apply flex flex-row flex-nowrap justify-evenly items-center;
-          background-color: var(--media-control-background);
-
-          & .preview-audio-player__control {
-            @apply not-hover:bg-transparent flex-1;
-
-            & svg {
-              @apply size-12!;
-            }
-          }
         }
       }
     }
