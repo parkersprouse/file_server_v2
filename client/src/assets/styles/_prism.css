@@ -1,0 +1,13 @@
+@import '../../vendor/prism/prism.min.css';
+@import '../../vendor/prism/themes/one-dark.css';
+/* @import '../../vendor/prism/themes/vsc-dark-plus.css'; */
+
+pre[class*='language-'] {
+  @apply rounded-none; /* bg-accent */
+
+  & code {
+    & a.url-link {
+      text-decoration: underline;
+    }
+  }
+}

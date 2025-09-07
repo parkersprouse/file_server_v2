@@ -1,6 +1,6 @@
 <template>
   <div
-    class='preview-dialog__content'
+    class='preview-dialog__content match-braces language-none'
     :class='{
       "bg-zinc-300!": alt_background_active,
     }'
@@ -22,11 +22,11 @@ const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const [alt_background_active, toggleAltBackground] = useToggle(false);
 
 onMounted(async () => {
-  get(event_unsubs).push(
-    $event_bus.on('toggle_dialog_content_bg', () => {
-      toggleAltBackground();
-    }),
-  );
+  const toggle_bg_unsub = $event_bus.on('toggle_dialog_content_bg', () => {
+    toggleAltBackground();
+  });
+
+  get(event_unsubs).push(toggle_bg_unsub);
 });
 
 onUnmounted(() => {
@@ -41,11 +41,7 @@ onUnmounted(() => {
   .preview-dialog {
     & .preview-dialog__content {
       @apply flex flex-col flex-nowrap place-content-center z-[1005] px-4
-             w-fit h-auto max-w-screen max-h-screen overflow-hidden cursor-pointer self-center;
-
-      & * {
-        cursor: initial;
-      }
+             w-fit h-auto max-w-screen max-h-screen overflow-hidden self-center;
 
       & object {
         @apply w-full h-full max-w-full max-h-full;
@@ -69,13 +65,8 @@ onUnmounted(() => {
           @apply w-full;
 
           & [class$='-player__control'] {
-            @apply cursor-pointer;
             /* figure out how to not have tailwind override media chrome's styles */
             padding: 0.5rem;
-
-            & * {
-              @apply cursor-pointer;
-            }
 
             & svg {
               @apply shrink-0;

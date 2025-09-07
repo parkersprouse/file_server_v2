@@ -39,13 +39,15 @@ export default defineConfigWithVueTs(
    * https://eslint.org/docs/latest/use/configure/configuration-files-new
    */
   globalIgnores([
-    'components.d.ts',
     '**/bin/**/*',
     '**/coverage/**',
     '**/dist-ssr/**',
     '**/dist/**/*',
     '**/node_modules/**/*',
+    'components.d.ts',
+    'public/**/*',
     'src/components/ui/**/*',
+    'src/vendor/**/*',
   ]),
   {
     files: exts.map((ext) => `**/*${ext}`),
@@ -60,7 +62,7 @@ export default defineConfigWithVueTs(
       parserOptions: {
         ecmaVersion: 'latest',
         parser: {
-          js: '@typescript-eslint/parser',
+          js: 'espree',
           ts: '@typescript-eslint/parser',
         },
         project: './tsconfig.json',
@@ -623,7 +625,7 @@ export default defineConfigWithVueTs(
       'import-x/newline-after-import': [
         'error',
         {
-          considerComments: true,
+          considerComments: false,
           count: 1,
         },
       ],

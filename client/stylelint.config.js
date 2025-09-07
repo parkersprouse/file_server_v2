@@ -8,8 +8,10 @@ export default {
   ignoreFiles: [
     '**/node_modules/',
     'dist/**/*',
+    'public/**/*',
     'src/assets/styles/_apple.css',
     'src/components/ui/**/*',
+    'src/vendor/**/*',
   ],
   overrides: [
     {
@@ -64,7 +66,7 @@ export default {
       true,
       {
         ignoreProperties: {
-          '/.+/': ['/v-bind\(.+\)/']
+          '/.+/': [/v-bind\(.+\)/],
         },
       },
     ],
@@ -76,7 +78,7 @@ export default {
           /** tailwind */
           'theme',
           /** vue */
-          'v-bind'
+          'v-bind',
         ],
       },
     ],

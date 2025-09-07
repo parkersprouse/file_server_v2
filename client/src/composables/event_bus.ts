@@ -5,7 +5,6 @@ import { computed } from 'vue';
 import type { AppEvent } from 'types/app_event.d.ts';
 
 const emittery = new Emittery<AppEvent>();
-const event_bus = computed<Emittery<AppEvent>>(() => emittery);
 
 /**
  * @example
@@ -18,5 +17,6 @@ const event_bus = computed<Emittery<AppEvent>>(() => emittery);
  *   unsub();
  */
 export function useEventBus(): Emittery<AppEvent> {
+  const event_bus = computed<Emittery<AppEvent>>(() => emittery);
   return get(event_bus);
 }

@@ -1,25 +1,13 @@
 <template>
-  <div v-if='text_body'>
-    <pre v-text='text_body' />
-  </div>
-  <object
-    v-else-if='use_fallback'
-    :data='entry.url'
+  <pre
+    :data-src='entry.url'
+    data-toolbar-order='copy-to-clipboard,show-language'
+    class='match-braces line-numbers'
   />
-  <div
-    v-else
-    class='flex flex-row flex-nowrap justify-center items-center'
-  >
-    <LoadingIndicator />
-  </div>
 </template>
 
 <script setup lang='ts'>
-import { set } from '@vueuse/core';
-import { onMounted, ref } from 'vue';
-
-import { useEventBus } from 'composables/event_bus.ts';
-import { http } from 'lib/http.ts';
+import { onMounted } from 'vue';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -27,19 +15,8 @@ const { entry } = defineProps<{
   entry: Entry;
 }>();
 
-const $event_bus = useEventBus();
-
-const use_fallback = ref<boolean>(false);
-const text_body = ref<string>();
-
-onMounted(async () => {
-  try {
-    const text = await http.get(entry.url);
-    set(text_body, text.data);
-  } catch {
-    await $event_bus.emit('toggle_dialog_content_bg');
-    set(use_fallback, true);
-  }
+onMounted(() => {
+  window.Prism.plugins.fileHighlight.highlight();
 });
 </script>
 
@@ -50,16 +27,13 @@ onMounted(async () => {
   & .preview-dialog__content {
     @apply h-[90%] w-[90%] bg-accent text-primary overflow-hidden p-0;
 
-    & div,
-    & object {
+    & > div,
+    & > object {
       @apply w-full h-full overflow-auto;
     }
 
-    & div {
-      & pre {
-        /* @apply wrap-normal whitespace-pre-wrap whitespace-[preseve] */
-        @apply font-mono p-4;
-      }
+    & pre {
+      @apply font-mono h-full w-full m-0;
     }
   }
 }
