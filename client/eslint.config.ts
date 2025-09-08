@@ -623,7 +623,7 @@ export default defineConfigWithVueTs(
       'import-x/newline-after-import': [
         'error',
         {
-          considerComments: true,
+          considerComments: false,
           count: 1,
         },
       ],

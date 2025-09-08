@@ -64,7 +64,7 @@ export default {
       true,
       {
         ignoreProperties: {
-          '/.+/': ['/v-bind\(.+\)/']
+          '/.+/': [/v-bind\(.+\)/],
         },
       },
     ],
@@ -76,7 +76,7 @@ export default {
           /** tailwind */
           'theme',
           /** vue */
-          'v-bind'
+          'v-bind',
         ],
       },
     ],
