@@ -40,12 +40,12 @@ import type { Entry } from 'types/entry.d.ts';
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $event_bus = useEventBus();
 const $route = useRoute();
-const $store = useStore();
+const $store = await useStore();
 
 const error = ref<boolean>(false);
 const entries = ref<Entry[]>();
 
-const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
+const toolbar_height = computed<string>(() => `${get($store.toolbar_height) ?? 0}px`);
 
 async function getEntries(): Promise<void> {
   try {

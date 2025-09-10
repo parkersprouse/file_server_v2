@@ -8,7 +8,7 @@
       variant='ghost'
       aria-label='Invert colors'
       class='ghost-ext h-auto!'
-      @click.prevent='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'
+      @click.prevent='() => { set($store.preview_bg_enabled, !get($store.preview_bg_enabled)); }'
     >
       <icon-checkerboard />
     </Button>
@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang='ts'>
-import { set } from '@vueuse/core';
+import { get, set } from '@vueuse/core';
 import { ref, watch } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -55,7 +55,7 @@ const props = defineProps<{
 
 const $event_bus = useEventBus();
 const $is_mobile = useIsMobile();
-const $store = useStore();
+const $store = await useStore();
 
 const entry = ref<Entry>(props.entry);
 

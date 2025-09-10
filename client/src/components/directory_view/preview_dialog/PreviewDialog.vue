@@ -3,7 +3,7 @@
     ref='dialog'
     :class='cn(
       "preview-dialog",
-      `${$store.preview_bg_enabled && "preview-dialog--opaque-bg" || ""}`,
+      `${get($store.preview_bg_enabled) && "preview-dialog--opaque-bg" || ""}`,
       preview_type?.class,
     )'
     @click='async (event) => await onClickDialog(event)'
@@ -52,7 +52,7 @@ import type { PreviewTypeAttrsMapping } from 'types/preview_type_attrs_mapping.d
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $is_mobile = useIsMobile();
-const $store = useStore();
+const $store = await useStore();
 
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 const entry = ref<Entry>();

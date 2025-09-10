@@ -40,19 +40,23 @@
 </template>
 
 <script setup lang='ts'>
-import { useThrottleFn } from '@vueuse/core';
+import { get, set, useThrottleFn } from '@vueuse/core';
 import { onMounted, onUnmounted } from 'vue';
 
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { useStore } from 'stores/global.ts';
 
 const $is_mobile = useIsMobile();
-const $store = useStore();
+const $store = await useStore();
 
 const onResize = useThrottleFn((entries) => {
   const entry = entries[0];
-  const target = entry.target as HTMLElement;
-  $store.toolbar_height = target.offsetHeight;
+  const { target } = entry;
+  if (target && $store.toolbar_height) {
+    console.log(target);
+    console.log(get($store));
+    set($store.toolbar_height, (target as HTMLElement).offsetHeight);
+  }
 }, 100);
 
 const observer = new ResizeObserver((entries) => onResize(entries));
