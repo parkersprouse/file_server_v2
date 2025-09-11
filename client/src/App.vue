@@ -2,6 +2,7 @@
   <TooltipProvider>
     <RouterView />
   </TooltipProvider>
+
   <PreviewDialog />
 </template>
 

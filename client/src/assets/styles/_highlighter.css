@@ -1,0 +1,34 @@
+@import '@highlightjs/cdn-assets/styles/github-dark-dimmed.min.css';
+
+.preview-dialog--text {
+  & pre {
+    & code {
+      counter-increment: step 0;
+      counter-reset: step;
+
+      /* & span::before {
+        content: counter(step);
+        counter-increment: step;
+
+        display: inline-block;
+
+        width: 1rem;
+        margin-right: 1.5rem;
+
+        color: var(--color-muted-foreground);
+        text-align: right;
+      } */
+    }
+  }
+}
+
+.hljs-lang {
+  user-select: none;
+
+  color: #fff;
+  text-align: center;
+
+  background: #333;
+
+  -webkit-touch-callout: none;
+}

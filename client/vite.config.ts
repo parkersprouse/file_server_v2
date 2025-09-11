@@ -1,6 +1,5 @@
 import { fileURLToPath } from 'node:url';
 
-// import VueDevTools from 'vite-plugin-vue-devtools';
 import Tailwind from '@tailwindcss/vite';
 import Vue from '@vitejs/plugin-vue';
 import UnpluginIconsResolver from 'unplugin-icons/resolver';
@@ -55,13 +54,6 @@ export default defineConfig({
   html: {},
   plugins: [
     Tailwind(),
-    /* Disabling this only disables the floating button in the app - not the devtools tab */
-    /*
-    VueDevTools({
-      componentInspector: true,
-      launchEditor: 'code',
-    }),
-    */
     ViteToml({
       namedExports: true,
     }),

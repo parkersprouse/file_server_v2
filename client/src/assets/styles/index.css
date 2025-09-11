@@ -6,6 +6,7 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './_theme.css';
+@import './_highlighter.css';
 @import './_scrollbar.css';
 
 @custom-variant dark (&:is(.dark *));

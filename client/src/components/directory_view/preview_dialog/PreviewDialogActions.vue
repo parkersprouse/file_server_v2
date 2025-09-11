@@ -4,6 +4,10 @@
       v-if='$is_mobile'
       :entry='entry'
     />
+    <CopyTextButton
+      v-if='entry.preview_type === PreviewType.TEXT'
+      @copy='async () => await sendCopyEvent()'
+    />
     <Button
       variant='ghost'
       aria-label='Invert colors'
@@ -45,6 +49,7 @@ import { ref, watch } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
+import { PreviewType } from 'enums/preview_type.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { Entry } from 'types/entry.d.ts';
@@ -62,6 +67,10 @@ const entry = ref<Entry>(props.entry);
 watch(() => props.entry, (new_value) => {
   set(entry, new_value);
 });
+
+async function sendCopyEvent(): Promise<void> {
+  await $event_bus.emit('copy_text');
+}
 </script>
 
 <style>
