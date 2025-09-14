@@ -18,11 +18,17 @@ export function buildPath(
   }));
 }
 
-export function capitalize(str: string): string {
+export function capitalize(str: string, lower_remainder: boolean = true): string {
+  // eslint-disable-next-line @typescript-eslint/naming-convention -- inline function
+  const modifyCasing = (word: string): string => {
+    const remainder = lower_remainder ? word.substring(1).toLocaleLowerCase() : word.substring(1);
+    return `${word.charAt(0).toLocaleUpperCase()}${remainder}`;
+  };
+
   return str
     .split(/\s+/g)
     .filter((part) => part.length > 0)
-    .map((word) => `${word[0]!.toUpperCase()}${word.substring(1).toLowerCase()}`)
+    .map((word) => modifyCasing(word))
     .join(' ');
 }
 

@@ -1,16 +1,31 @@
 <template>
   <div class='preview-dialog__actions'>
+    <!-- Actions that only apply to the text file preview -->
+    <template v-if='entry.preview_type === PreviewType.TEXT && (clipboard_available || $store.inline_colors_present)'>
+      <PreviewDialogCopyTextButton
+        v-if='clipboard_available'
+        @copy='async () => await $event_bus.emit("copy_text")'
+      />
+      <PreviewDialogToggleInlineColorsButton v-if='$store.inline_colors_present'/>
+      <Separator
+        orientation='vertical'
+        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
+      />
+    </template>
+
+    <!-- Actions that apply universally -->
     <PreviewDialogTitleButton
       v-if='$is_mobile'
       :entry='entry'
     />
     <Button
       variant='ghost'
-      aria-label='Invert colors'
+      aria-label='Toggle preview background color'
       class='ghost-ext h-auto!'
       @click.prevent='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'
     >
-      <icon-checkerboard />
+      <icon-checkerboard-fill v-if='$store.preview_bg_enabled' />
+      <icon-checkerboard v-else />
     </Button>
     <a
       aria-label='Download file'
@@ -41,10 +56,11 @@
 
 <script setup lang='ts'>
 import { set } from '@vueuse/core';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
+import { PreviewType } from 'enums/preview_type.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { Entry } from 'types/entry.d.ts';
@@ -59,6 +75,8 @@ const $store = useStore();
 
 const entry = ref<Entry>(props.entry);
 
+const clipboard_available = computed<boolean>(() => Boolean(navigator?.clipboard));
+
 watch(() => props.entry, (new_value) => {
   set(entry, new_value);
 });
@@ -72,7 +90,7 @@ watch(() => props.entry, (new_value) => {
     & .preview-dialog__header {
       & .preview-dialog__actions {
         @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
-               bg-background border-b border-l border-zinc-300 dark:border-zinc-800 relative z-[1010];
+               bg-background border-b border-l border-zinc-300 dark:border-zinc-700 relative z-[1010];
 
         & svg.icon {
           @apply size-7 sm:size-6;

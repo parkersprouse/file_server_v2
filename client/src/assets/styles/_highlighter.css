@@ -1,0 +1,24 @@
+@import '../../vendor/prism/prism.min.css';
+@import '../../vendor/prism/themes/one-light.css';
+@import '../../vendor/prism/themes/one-dark.css';
+
+:root {
+  --text-preview-font-family:
+    'Source Code Pro Variable',
+    'Fira Code',
+    'Fira Mono',
+    'Menlo',
+    'Consolas',
+    'DejaVu Sans Mono',
+    monospace;
+}
+
+pre[class*='language-'] {
+  @apply rounded-none; /* bg-accent */
+
+  & code {
+    & a.url-link {
+      text-decoration: underline;
+    }
+  }
+}

@@ -10,6 +10,7 @@ export default {
     'dist/**/*',
     'src/assets/styles/_apple.css',
     'src/components/ui/**/*',
+    'src/vendor/**/*',
   ],
   overrides: [
     {

@@ -29,7 +29,7 @@ const $is_mobile = useIsMobile();
     & .preview-dialog__header {
       & .preview-dialog__title {
         @apply grow-0 shrink flex flex-row flex-nowrap items-center justify-start whitespace-pre-line text-sm!
-               text-muted-foreground w-fit max-w-full px-2 py-1 gap-2 bg-background border-t-0 border-l-0
+               text-muted-foreground w-fit max-w-full px-1.5 py-0.5 gap-2 bg-background border-t-0 border-l-0
                border-b border-r border-zinc-300 dark:border-zinc-800 cursor-default z-[1001] hover:z-[1020];
       }
     }

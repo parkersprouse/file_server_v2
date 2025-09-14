@@ -13,6 +13,10 @@ window.addEventListener('vite:preloadError', () => {
   // window.location.reload();
 });
 
+document.addEventListener('DOMContentLoaded', async () => {
+  await import('@/vendor/prism/prism.min.js');
+});
+
 const pinia = createPinia();
 const app = createApp(App);
 

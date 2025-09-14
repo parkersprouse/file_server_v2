@@ -2,10 +2,13 @@
 
 @import '@fontsource-variable/inter/wght.css';
 @import '@fontsource-variable/inter/wght-italic.css';
+@import '@fontsource-variable/source-code-pro/wght.css';
+@import '@fontsource-variable/source-code-pro/wght-italic.css';
 @import './_reset.css' layer(base);
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './_theme.css';
+@import './_highlighter.css';
 @import './_scrollbar.css';
 
 @custom-variant dark (&:is(.dark *));
@@ -83,6 +86,24 @@
   --sidebar-accent-foreground: oklch(21% 0.006 285.885deg);
   --sidebar-border: oklch(92% 0.004 286.32deg);
   --sidebar-ring: oklch(70.5% 0.015 286.067deg);
+
+  /* stylelint-disable -- Unsure where, but there's a bug in Stylelint that removes comments between
+                          values when running `--fix`, but it doesn't seem to be associated with a
+                          specific rule, so we just have to disable Stylelint for the whole attribute.
+                          @see https://github.com/stylelint/stylelint/issues/4620 (it isn't `indentation`) */
+  --base-font-family:
+    'Inter Variable', /* ---- Primary font ----------- */
+    system-ui, /* ----------- System fonts ----------- */
+    -apple-system, /* ------- Safari on macOS >= 10.11 */
+    BlinkMacSystemFont, /* -- Chrome on macOS >= 10.11 */
+    'Segoe UI', /* ---------- >= Windows Vista ------- */
+    'Noto Sans', /* --------- >= KDE Plasma 5 -------- */
+    'Helvetica',
+    'Arial',
+    sans-serif, /* ---------- fallback --------------- */
+    'Apple Color Emoji', /* - macOS emoji ------------ */
+    'Segoe UI Emoji'; /* ---- Windows emoji ---------- */
+  /* stylelint-enable */
 }
 
 .dark {
@@ -164,6 +185,8 @@
     height: 100vh;
     min-height: 100vh;
     max-height: 100vh;
+
+    font-family: var(--base-font-family);
   }
 
   body {
@@ -176,24 +199,7 @@
     min-height: 100vh;
     max-height: 100vh;
 
-    /* stylelint-disable -- Unsure where, but there's a bug in Stylelint that removes comments between
-                            values when running `--fix`, but it doesn't seem to be associated with a
-                            specific rule, so we just have to disable Stylelint for the whole attribute.
-                            @see https://github.com/stylelint/stylelint/issues/4620 (it isn't `indentation`) */
-    font-family:
-      'Inter Variable', /* ---- Primary font ----------- */
-      system-ui, /* ----------- System fonts ----------- */
-      -apple-system, /* ------- Safari on macOS >= 10.11 */
-      BlinkMacSystemFont, /* -- Chrome on macOS >= 10.11 */
-      'Segoe UI', /* ---------- >= Windows Vista ------- */
-      'Noto Sans', /* --------- >= KDE Plasma 5 -------- */
-      'Helvetica',
-      'Arial',
-      sans-serif, /* ---------- fallback --------------- */
-      'Apple Color Emoji', /* - macOS emoji ------------ */
-      'Segoe UI Emoji'; /* ---- Windows emoji ---------- */
-    /* stylelint-enable */
-
+    font-family: var(--base-font-family);
     tab-size: 4;
   }
 }

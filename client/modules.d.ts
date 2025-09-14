@@ -1,4 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- required for appropriate module config */
+declare global {
+  type Prism = import('@types/prismjs');
+
+  interface Window {
+    Prism: Prism;
+  }
+}
+
 declare module '@eslint-community/eslint-plugin-eslint-comments/configs';
 declare module '@eslint/eslintrc';
 declare module '@eslint/js';

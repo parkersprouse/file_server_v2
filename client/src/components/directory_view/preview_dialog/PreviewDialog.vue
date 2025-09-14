@@ -154,6 +154,8 @@ onUnmounted(() => {
     @apply fixed left-1/2 top-1/2 -translate-1/2 hidden w-screen h-screen max-w-screen max-h-screen
            m-0 p-0 border-none z-[1000];
 
+    cursor: initial;
+
     &[open] {
       @apply flex flex-col flex-nowrap place-content-center;
 
@@ -167,7 +169,9 @@ onUnmounted(() => {
     }
 
     & .preview-dialog__header {
-      @apply absolute left-0 top-0 w-screen flex flex-row flex-nowrap items-stretch justify-between gap-0;
+      @apply absolute left-0 top-0 w-screen flex flex-row flex-nowrap items-start justify-between gap-0;
+
+      cursor: initial;
     }
   }
 }
