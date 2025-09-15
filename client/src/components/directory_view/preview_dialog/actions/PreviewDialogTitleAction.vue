@@ -69,7 +69,7 @@ onUnmounted(() => {
 </script>
 
 <style>
-@reference '../../../assets/styles/index.css';
+@reference '../../../../assets/styles/index.css';
 
 @layer app {
   .preview-dialog {

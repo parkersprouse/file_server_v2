@@ -1,12 +1,13 @@
 <template>
   <div class='preview-dialog__actions'>
     <!-- Actions that only apply to the text file preview -->
-    <template v-if='entry.preview_type === PreviewType.TEXT && (clipboard_available || $store.inline_colors_present)'>
-      <PreviewDialogCopyTextButton
+    <template v-if='entry.preview_type === PreviewType.TEXT && Boolean($store.file_highlight_result)'>
+      <PreviewDialogCopyTextAction
         v-if='clipboard_available'
         @copy='async () => await $event_bus.emit("copy_text")'
       />
-      <PreviewDialogToggleInlineColorsButton v-if='$store.inline_colors_present'/>
+      <PreviewDialogToggleLineWrapAction />
+      <PreviewDialogToggleInlineColorsAction v-if='$store.inline_colors_present'/>
       <Separator
         orientation='vertical'
         class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
@@ -14,7 +15,7 @@
     </template>
 
     <!-- Actions that apply universally -->
-    <PreviewDialogTitleButton
+    <PreviewDialogTitleAction
       v-if='$is_mobile'
       :entry='entry'
     />
@@ -22,6 +23,7 @@
       variant='ghost'
       aria-label='Toggle preview background color'
       class='ghost-ext h-auto!'
+      :class='{ "ghost-ext--active": $store.preview_bg_enabled }'
       @click.prevent='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'
     >
       <icon-checkerboard-fill v-if='$store.preview_bg_enabled' />

@@ -1,12 +1,12 @@
 <template>
   <Button
     variant='ghost'
-    aria-label='Copy Text'
+    aria-label='Toggle Line Wrap'
     class='ghost-ext h-auto!'
-    @click='$store.toggleInlineColorsPreview()'
+    :class='{ "ghost-ext--active": $store.preview_text_wrapped }'
+    @click='$store.togglePreviewLineWrap()'
   >
-    <icon-palette v-if='$store.preview_inline_colors_disabled' />
-    <icon-palette-fill v-else />
+    <ricon-text-wrap />
   </Button>
 </template>
 

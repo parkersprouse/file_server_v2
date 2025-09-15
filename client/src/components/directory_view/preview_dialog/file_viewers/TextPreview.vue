@@ -5,7 +5,7 @@
     class='line-numbers'
     :class='{
       "no-inline-preview": $store.preview_inline_colors_disabled,
-      "wrap-lines": wrap_lines,
+      "wrap-lines": $store.wrap_text_preview,
     }'
   />
 </template>
@@ -31,7 +31,6 @@ const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $store = useStore();
 
 const text_ele = useTemplateRef('text_ele');
-const wrap_lines = ref<boolean>(false);
 
 watch(() => $store.preview_inline_colors_disabled, async () => {
   await nextTick();
@@ -39,7 +38,7 @@ watch(() => $store.preview_inline_colors_disabled, async () => {
   if (ele) window.Prism.highlightElement(ele);
 });
 
-watch(wrap_lines, async () => {
+watch(() => $store.wrap_text_preview, async () => {
   await nextTick();
   const ele = document.querySelector('pre code');
   if (ele) window.Prism.highlightElement(ele);
@@ -114,23 +113,22 @@ onUnmounted(() => {
                    hover:bg-transparent hover:border-none hover:border-0 hover:shadow-none
                    cursor-default select-none pointer-events-none p-0;
 
-            /* font-family: var(--base-font-family); */
-            font-family: var(--text-preview-font-family);
+            /* font-family: var(--text-preview-font-family); */
+            font-family: var(--base-font-family);
             color: var(--syntax-fg) !important;
-            opacity: 0.65;
+            opacity: 0.5;
           }
         }
       }
     }
 
     & pre {
-      /* @apply wrap-normal whitespace-pre-wrap whitespace-[preseve] */
       @apply h-full w-full m-0;
       font-family: var(--text-preview-font-family);
 
       &.no-inline-preview {
         & .inline-color-wrapper {
-          display: none;
+          @apply hidden;
         }
       }
 
@@ -140,10 +138,13 @@ onUnmounted(() => {
       }
 
       &.wrap-lines {
+        @apply max-w-full whitespace-pre-wrap;
+        overflow-wrap: break-word;
+
         & code {
-          max-width: 100%;
-          text-wrap: wrap;
-          overflow-wrap: break-word;
+          @apply max-w-full;
+          overflow-wrap: inherit;
+          white-space: inherit;
         }
       }
     }

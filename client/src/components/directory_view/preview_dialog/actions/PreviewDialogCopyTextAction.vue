@@ -50,32 +50,3 @@ onUnmounted(() => {
   for (const unsub of get(event_unsubs)) unsub();
 });
 </script>
-
-<!--
-<style>
-@reference '../../../../assets/styles/index.css';
-
-@utility text-copy-btn-visible {
-  @apply inline-block opacity-100 pointer-events-auto hover:bg-zinc-200 hover:dark:bg-zinc-950;
-}
-
-.copyable {
-  & .text-copy-btn {
-    @apply absolute top-4 right-4 opacity-0 pointer-events-none w-auto h-auto p-1.5 rounded-[0.35rem]
-           bg-transparent text-foreground border-zinc-950 border;
-
-    transition: all 200ms ease;
-
-    &.is-visible {
-      @apply text-copy-btn-visible;
-    }
-  }
-
-  @variant hover {
-    & .text-copy-btn {
-      @apply text-copy-btn-visible;
-    }
-  }
-}
-</style>
--->
