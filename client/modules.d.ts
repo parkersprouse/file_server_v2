@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any -- required for appropriate module config */
 declare global {
-  type Prism = import('@types/prismjs');
+  import type { type } from 'prismjs';
 
   interface Window {
-    Prism: Prism;
+    Prism?: type;
   }
 }
 

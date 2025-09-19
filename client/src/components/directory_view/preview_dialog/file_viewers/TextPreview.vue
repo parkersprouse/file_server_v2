@@ -31,6 +31,7 @@ const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $store = useStore();
 
 const text_ele = useTemplateRef('text_ele');
+// const highlighter = ref<Worker>();
 
 watch(() => $store.preview_inline_colors_disabled, async () => {
   await nextTick();
@@ -70,8 +71,24 @@ function postHightlightHandler(env: Environment): void {
 onMounted(() => {
   const unsubCopyText = $event_bus.on('copy_text', copyText);
   get(event_unsubs).push(unsubCopyText);
+
   window.Prism.hooks.add('complete', postHightlightHandler);
   window.Prism.plugins.fileHighlight.highlight();
+
+  /*
+   * https://github.com/PrismJS/prism/issues/1059#issuecomment-261703318
+   * https://github.com/PrismJS/prism/blob/025147106e82b6efa92ba947cc06cc1a838f477b/components/prism-core.js#L465-L473
+  const worker = new Highlighter();
+  const worker = new Worker(new URL('../../../../vendor/prism/prism.min.js', import.meta.url));
+  set(highlighter, worker);
+
+
+  // eslint-disable-next-line unicorn/prefer-add-event-listener -- temp
+  worker.onmessage = (resp: MessageEvent): void => {
+    console.log(resp.data);
+  };
+  worker.postMessage('run');
+  */
 });
 
 onUnmounted(() => {
@@ -83,6 +100,8 @@ onUnmounted(() => {
   }
 
   for (const unsub of get(event_unsubs)) unsub();
+
+  // get(highlighter)?.terminate();
 });
 </script>
 

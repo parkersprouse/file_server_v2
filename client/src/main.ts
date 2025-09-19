@@ -13,6 +13,12 @@ window.addEventListener('vite:preloadError', () => {
   // window.location.reload();
 });
 
+// https://prismjs.com/docs/prism#.disableWorkerMessageHandler
+//* eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- types are misleading
+// window.Prism = window.Prism || {};
+// window.Prism.disableWorkerMessageHandler = true;
+// window.Prism.manual = true;
+
 document.addEventListener('DOMContentLoaded', async () => {
   await import('@/vendor/prism/prism.min.js');
 });
