@@ -23,6 +23,20 @@ const exts = [
   ...vue_exts,
 ];
 
+const alias_mapping = {
+  '@': './src',
+  assets: './src/assets',
+  components: './src/components',
+  composables: './src/composables',
+  enums: './src/enums',
+  lib: './src/lib',
+  stores: './src/stores',
+  types: './src/types',
+  ui: './src/components/ui',
+  utils: './src/lib/utils',
+  views: './src/views',
+};
+
 /**
  * ------------------------------------------------------------------------------
  * [NOTE]
@@ -65,6 +79,7 @@ export default defineConfigWithVueTs(
           ts: '@typescript-eslint/parser',
         },
         project: [
+          './tsconfig.json',
           './tsconfig.app.json',
           './tsconfig.node.json',
         ],
@@ -89,19 +104,7 @@ export default defineConfigWithVueTs(
       },
       'import-x/resolver': {
         'eslint-import-resolver-custom-alias': {
-          alias: {
-            '@': './src',
-            assets: './src/assets',
-            components: './src/components',
-            composables: './src/composables',
-            enums: './src/enums',
-            lib: './src/lib',
-            stores: './src/stores',
-            types: './src/types',
-            ui: './src/components/ui',
-            utils: './src/lib/utils',
-            views: './src/views',
-          },
+          alias: alias_mapping,
           extensions: exts,
         },
         node: true,
@@ -680,7 +683,7 @@ export default defineConfigWithVueTs(
           pathGroups: [
             {
               group: 'builtin',
-              pattern: '**/*.{css,toml}',
+              pattern: '**/*.{css,json,toml}',
               patternOptions: {
                 dot: true,
                 nocomment: true,
@@ -689,7 +692,7 @@ export default defineConfigWithVueTs(
             },
             {
               group: 'internal',
-              pattern: '(@|components|composables|lib|ui|utils)/**/*',
+              pattern: `(${Object.keys(alias_mapping).join('|')})/**/*`,
               patternOptions: {
                 dot: true,
                 nocomment: true,
