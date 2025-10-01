@@ -20,7 +20,7 @@
         <CardFooter class='flex flex-col flex-nowrap justify-center items-start p-0! grow-0'>
           <div
             class='entry-name max-w-full w-full text-nowrap whitespace-nowrap text-ellipsis
-                  overflow-y-hidden overflow-x-scroll scrollbar-hidden py-1 px-2'
+                   overflow-y-hidden overflow-x-scroll scrollbar-hidden py-1 px-2'
           >
             {{ entry.name }}
           </div>
