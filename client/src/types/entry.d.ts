@@ -7,6 +7,7 @@ export type Entry = {
   duration: string;
   entry_type: EntryType;
   file_type: FileType;
+  full_type: string;
   last_modified_at: string;
   name: string;
   path: string;

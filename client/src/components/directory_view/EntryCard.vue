@@ -2,12 +2,13 @@
   <component
     :is='isDir(entry) ? DirEntry : FileEntry'
     :entry='entry'
+    ref='entry'
   >
     <template #default>
       <Card class='p-0! h-full! gap-2!'>
         <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink'>
           <img
-            v-if='thumbnail'
+            v-if='thumbnail && heic_check'
             :src='thumbnail'
             class='w-auto h-auto object-contain aspect-square'
           >
@@ -41,7 +42,11 @@
                 </Badge>
               </TooltipTrigger>
               <TooltipContent>
-                Last modified on <span>{{ absolute(entry.last_modified_at) }}</span>
+                <div class='text-center'>
+                  Last modified on
+                  <br>
+                  {{ absolute(entry.last_modified_at) }}
+                </div>
               </TooltipContent>
             </Tooltip>
             <Badge
@@ -60,6 +65,9 @@
 </template>
 
 <script setup lang='ts'>
+import { get, set } from '@vueuse/core';
+import { onMounted, ref, useTemplateRef } from 'vue';
+
 import DirEntry from 'components/directory_view/DirEntry.vue';
 import FileEntry from 'components/directory_view/FileEntry.vue';
 import { absolute, relative } from 'lib/datetime.ts';
@@ -67,10 +75,20 @@ import { fileTypeToIcon, isDir } from 'lib/entry_helpers.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
-defineProps<{
+const props = defineProps<{
   entry: Entry;
   thumbnail?: string;
 }>();
+
+const entry_ref = useTemplateRef('entry');
+const heic_check = ref<boolean>(false);
+
+onMounted(() => {
+  if (!isDir(props.entry) && get(entry_ref)) {
+    const file_entry = get(entry_ref) as Readonly<typeof FileEntry>;
+    set(heic_check, file_entry.heic_check);
+  }
+});
 </script>
 
 <style>

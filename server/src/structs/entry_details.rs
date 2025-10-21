@@ -19,22 +19,27 @@ pub struct EntryDetails {
   pub duration: String,
   pub entry_type: String,
   pub file_type: String,
+  pub full_type: String,
   pub last_modified_at: String,
   pub name: String,
   pub path: String,
 }
 
 impl EntryDetails {
+  pub const INLINE_TYPES: [&str; 6] = ["audio", "document", "image", "spreadsheet", "text", "video"];
+
   pub fn new(entry: &fs::DirEntry, data: &Data<AppState>) -> Self {
     let full_path: PathBuf = entry.path();
     let metadata: fs::Metadata = entry.metadata().unwrap();
     let entry_type: String = EntryType::stringify(&metadata.file_type()).into();
-    let file_type: String = Self::file_type(&entry_type, &full_path);
+    let file_format: Option<FileFormat> = Self::determine_file_format(&entry_type, &full_path);
+    let file_type: String = Self::file_type(file_format);
     Self {
       created_at: DateTime::<Utc>::from(metadata.created().unwrap()).to_rfc3339(),
       duration: Self::determine_duration(&full_path, &file_type),
       entry_type,
       file_type,
+      full_type: Self::full_type(file_format),
       last_modified_at: DateTime::<Utc>::from(metadata.modified().unwrap()).to_rfc3339(),
       name: entry.file_name().into_string().unwrap(),
       path: Self::clean_path(&full_path, data),
@@ -90,22 +95,27 @@ impl EntryDetails {
       .to_owned()
   }
 
-  pub fn file_type(entry_type: &str, path: &PathBuf) -> String {
+  pub fn determine_file_format(entry_type: &str, path: &PathBuf) -> Option<FileFormat> {
     if entry_type.eq(EntryType::DIR) {
+      return None;
+    }
+
+    match FileFormat::from_file(path) {
+      Ok(format) => Some(format),
+      Err(err) => {
+        warn!("Failed to determine file format - defaulting to plaintext\n{err}");
+        Some(FileFormat::PlainText)
+      },
+    }
+  }
+
+  pub fn file_type(file_format: Option<FileFormat>) -> String {
+    if file_format.is_none() {
       return "".into();
     }
 
-    let result = FileFormat::from_file(path);
-    if result.is_err() {
-      warn!(
-        "Failed to determine file format - defaulting to 'file'\n{:?}",
-        result.err()
-      );
-      return "file".into();
-    }
-
-    let full_type = result.unwrap();
-    match full_type.kind() {
+    let format = file_format.unwrap();
+    match format.kind() {
       Kind::Archive => "archive".into(), // https://github.com/mmalecot/file-format#archive
       Kind::Audio => "audio".into(),     // https://github.com/mmalecot/file-format#audio
       Kind::Compressed => "compressed".into(), // https://github.com/mmalecot/file-format#compressed
@@ -123,7 +133,7 @@ impl EntryDetails {
       Kind::Model => "model".into(),     // https://github.com/mmalecot/file-format#model
       Kind::Other => {
         // https://github.com/mmalecot/file-format#other
-        match full_type.media_type().starts_with("text/") {
+        match format.media_type().starts_with("text/") {
           true => "text".into(),
           false => "file".into(),
         }
@@ -137,6 +147,13 @@ impl EntryDetails {
       Kind::Video => "video".into(),     // https://github.com/mmalecot/file-format#video
     }
   }
+
+  pub fn full_type(file_format: Option<FileFormat>) -> String {
+    if file_format.is_none() {
+      return "".into();
+    }
+    file_format.unwrap().media_type().into()
+  }
 }
 
 impl Index<&'_ str> for EntryDetails {
@@ -147,6 +164,7 @@ impl Index<&'_ str> for EntryDetails {
       "duration" => &self.duration,
       "entry_type" => &self.entry_type,
       "file_type" => &self.file_type,
+      "full_type" => &self.full_type,
       "last_modified_at" => &self.last_modified_at,
       "name" => &self.name,
       "path" => &self.path,
