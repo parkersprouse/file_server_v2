@@ -1,0 +1,26 @@
+.entry {
+  @apply transition-none!;
+
+  & .entry-meta {
+    @apply text-[0.65rem] transition-none gap-[0.15rem] bg-transparent text-muted-foreground;
+  }
+
+  @variant hover {
+    @apply text-cerise-red-500! dark:text-cerise-red-600!;
+
+    & [data-slot='card'],
+    & [data-slot='item'] {
+      @apply border-cerise-red-500! dark:border-cerise-red-600!;
+    }
+
+    & .entry-meta,
+    & [data-slot^='card-'],
+    & [data-slot^='item-'] {
+      @apply text-cerise-red-500! dark:text-cerise-red-600!;
+    }
+
+    & .entry-meta {
+      @apply border-cerise-red-500/50! dark:border-cerise-red-600/50!;
+    }
+  }
+}

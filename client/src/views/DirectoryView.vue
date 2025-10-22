@@ -79,7 +79,7 @@ onUnmounted(() => {
 @reference '../assets/styles/index.css';
 
 main {
-  @apply flex flex-col justify-start items-center min-h-full p-4 z-0
+  @apply flex flex-col justify-start items-center min-h-full py-4 px-0 sm:p-4 z-0
          mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl relative;
 }
 </style>

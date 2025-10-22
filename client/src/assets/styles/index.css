@@ -4,12 +4,13 @@
 @import '@fontsource-variable/inter/wght-italic.css';
 @import '@fontsource-variable/source-code-pro/wght.css';
 @import '@fontsource-variable/source-code-pro/wght-italic.css';
-@import './_reset.css' layer(base);
+/* @import './_reset.css' layer(base); */
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './_theme.css';
 @import './_highlighter.css';
 @import './_scrollbar.css';
+@import './_directory_view.css';
 
 @custom-variant dark (&:is(.dark *));
 

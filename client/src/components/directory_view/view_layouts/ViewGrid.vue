@@ -1,11 +1,15 @@
 <template>
   <div class='entries--grid'>
-    <EntryCard
+    <EntryItem
       v-for='entry in entries'
       :key='encodeURI(entry.path)'
       :entry='entry'
-      :thumbnail='getThumbnail(entry)'
-    />
+    >
+      <GridItem
+        :entry='entry'
+        :thumbnail='getThumbnail(entry)'
+      />
+    </EntryItem>
   </div>
 </template>
 
@@ -44,7 +48,15 @@ function getThumbnail(entry: Entry): string | undefined {
     }
 
     & .entry-meta {
-      @apply text-[0.65rem];
+      @apply border-b-0 shrink grow-0;
+    }
+
+    & .entry-meta__last-modified {
+      @apply border-l-0;
+    }
+
+    & .entry-meta__duration {
+      @apply border-r-0;
     }
   }
 }

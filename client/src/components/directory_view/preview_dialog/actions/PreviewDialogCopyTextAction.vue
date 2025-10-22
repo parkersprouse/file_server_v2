@@ -22,7 +22,7 @@ import { useEventBus } from 'composables/event_bus.ts';
 import type { UnsubscribeFunction } from 'emittery';
 
 defineEmits<{
-  copy: undefined;
+  copy: [];
 }>();
 
 const [copied, toggleCopied] = useToggle();
