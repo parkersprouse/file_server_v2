@@ -2,7 +2,6 @@
   <TooltipProvider>
     <RouterView />
   </TooltipProvider>
-  <PreviewDialog />
 </template>
 
 <script setup lang='ts'>

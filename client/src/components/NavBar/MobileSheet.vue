@@ -3,9 +3,9 @@
     <SheetTrigger as-child>
       <Button
         variant='ghost'
-        class='p-1! h-auto'
+        class='p-1! h-auto ghost-ext'
       >
-        <icon-gear-duotone class='size-8! text-muted-foreground dark:[&_path]:[[opacity]]:opacity-50!' />
+        <icon-list class='size-8!' />
       </Button>
     </SheetTrigger>
 

@@ -1,6 +1,6 @@
 <template>
   <ContextMenu>
-    <ContextMenuTrigger class='contents'>
+    <ContextMenuTrigger as-child>
       <a
         v-if='can_preview'
         href='#'
@@ -47,7 +47,6 @@ import { useEventBus } from 'composables/event_bus.ts';
 import { checkSupport, features } from 'lib/browser.ts';
 
 import type { Entry } from 'types/entry.d.ts';
-import type { ComputedRef } from 'vue';
 
 const { entry } = defineProps<{
   entry: Entry;
@@ -62,5 +61,5 @@ const heic_check = computed<boolean>(() => {
   return !is_heic || (is_heic && checkSupport(features.heif));
 });
 
-provide<ComputedRef<boolean>>('heic_check', heic_check);
+provide<boolean>('heic_check', get(heic_check));
 </script>

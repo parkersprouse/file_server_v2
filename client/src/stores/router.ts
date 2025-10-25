@@ -1,57 +1,63 @@
+import { set } from '@vueuse/core';
 import { defineStore } from 'pinia';
-import { computed } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
+import { QueryParam } from 'enums/query_param.ts';
 import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { ViewType } from 'enums/view_type.ts';
+import { breadcrumbify } from 'lib/utils.ts';
 
+import type { Breadcrumb } from 'types/breadcrumb.d.ts';
 import type { LocationQueryValue } from 'vue-router';
+
+export type QueryParamValue = SortDir | SortKey | ViewType;
 
 export const useRouterStore = defineStore('router', () => {
   const $event_bus = useEventBus();
   const $route = useRoute();
   const $router = useRouter();
 
+  const breadcrumbs = ref<Breadcrumb[]>([]);
+
   const dir = computed({
     get: () => validate($route.query.dir, SortDir, SortDir.ASC),
-    set: (new_dir: SortDir) => {
-      $router.push({
-        query: {
-          ...$route.query,
-          dir: new_dir,
-        },
-      })
-        .then(async () => { await $event_bus.emit('query_updated'); });
+    set: async (new_dir: SortDir) => {
+      await updateQueryParam(QueryParam.DIR, new_dir);
     },
   });
 
   const key = computed({
     get: () => validate($route.query.key, SortKey, SortKey.NAME),
-    set: (new_key: SortKey) => {
-      $router.push({
-        query: {
-          ...$route.query,
-          key: new_key,
-        },
-      })
-        .then(async () => { await $event_bus.emit('query_updated'); });
+    set: async (new_key: SortKey) => {
+      await updateQueryParam(QueryParam.KEY, new_key);
     },
   });
 
   const view = computed({
     get: () => validate($route.query.view, ViewType, ViewType.LIST),
-    set: (new_view: ViewType) => {
-      $router.push({
-        query: {
-          ...$route.query,
-          view: new_view,
-        },
-      })
-        .then(async () => { await $event_bus.emit('query_updated'); });
+    set: async (new_view: ViewType) => {
+      await updateQueryParam(QueryParam.VIEW, new_view, false);
     },
   });
+
+  async function updateQueryParam(
+    name: QueryParam,
+    value: QueryParamValue,
+    should_refresh: boolean = true,
+  ): Promise<void> {
+    $router.push({
+      query: {
+        ...$route.query,
+        [name]: value,
+      },
+    })
+      .then(async () => {
+        await $event_bus.emit('query_updated', should_refresh);
+      });
+  }
 
   function validate<T extends string, TEnumValue extends string>(
     param: LocationQueryValue | LocationQueryValue[] | undefined,
@@ -62,8 +68,18 @@ export const useRouterStore = defineStore('router', () => {
     return is_valid ? param as TEnumValue : fallback;
   }
 
+  onMounted(() => {
+    set(breadcrumbs, breadcrumbify($route));
+
+    $router.afterEach((to, from) => {
+      set(breadcrumbs, breadcrumbify($route));
+      if (to.path !== from.path) $event_bus.emit('path_updated');
+    });
+  });
+
   return {
     /*-- State --*/
+    breadcrumbs,
     dir,
     key,
     view,

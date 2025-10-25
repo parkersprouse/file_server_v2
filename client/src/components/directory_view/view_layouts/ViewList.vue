@@ -1,15 +1,13 @@
 <template>
   <div class='entries--list'>
     <ItemGroup>
-      <template
-        v-for='(entry, index) in entries'
+      <EntryItem
+        v-for='entry in entries'
         :key='encodeURI(entry.path)'
+        :entry='entry'
       >
-        <EntryItem :entry='entry'>
-          <ListItem :entry='entry' />
-        </EntryItem>
-        <ItemSeparator v-if='index !== entries.length - 1' />
-      </template>
+        <ListItem :entry='entry' />
+      </EntryItem>
     </ItemGroup>
   </div>
 </template>
@@ -26,16 +24,6 @@ const { entries } = defineProps<{
 @reference '../../../assets/styles/index.css';
 
 .entries--list {
-  @apply flex w-full flex-col gap-4 border border-border;
-
-  & .entry {
-    & .entry-meta {
-      @apply border-none;
-    }
-
-    & [data-slot='item'] {
-      @apply py-2 border-none hover:bg-zinc-100 hover:dark:bg-zinc-900;
-    }
-  }
+  @apply flex w-full flex-col gap-4;
 }
 </style>

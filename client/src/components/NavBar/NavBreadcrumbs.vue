@@ -11,7 +11,7 @@
         </component>
       </BreadcrumbItem>
       <slot
-        v-for='crumb of breadcrumbs'
+        v-for='crumb of $router_store.breadcrumbs'
         :key='crumb.path'
       >
         <BreadcrumbSeparator />
@@ -32,15 +32,13 @@
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
-import { breadcrumbify } from 'lib/utils.ts';
+import { useRouterStore } from 'stores/router.ts';
 import { BreadcrumbPage } from 'ui/breadcrumb/index.ts';
 
-import type { Breadcrumb } from 'types/breadcrumb.d.ts';
-
 const $route = useRoute();
+const $router_store = useRouterStore();
 
 const at_root = computed<boolean>(() => $route.path === '/');
-const breadcrumbs = computed<Breadcrumb[]>(() => breadcrumbify($route));
 </script>
 
 <style>

@@ -3,7 +3,7 @@ use crate::structs::entry_type::EntryType;
 use actix_web::web::Data;
 use chrono::{DateTime, Utc};
 use file_format::{FileFormat, Kind};
-use log::warn;
+use log::{error, warn};
 use serde::Serialize;
 use std::{
   fs,
@@ -63,13 +63,21 @@ impl EntryDetails {
     }
     let result = Command::new("./metadata").arg(path).output();
     if result.is_err() {
-      println!("{:?}", result.err());
+      error!("{:?}", result.err());
       return "".to_owned();
     }
 
-    let mut output = String::new();
-    let _ = result.unwrap().stdout.as_slice().read_to_string(&mut output);
-    let mut lines = output.split_terminator("\n");
+    let mut output_body = String::new();
+
+    let output = result.unwrap();
+    if !output.status.success() {
+      let _ = output.stderr.as_slice().read_to_string(&mut output_body);
+      error!("{:?}", output_body);
+      return "".to_owned();
+    }
+
+    let _ = output.stdout.as_slice().read_to_string(&mut output_body);
+    let mut lines = output_body.split_terminator("\n");
 
     let duration_line = lines.find(|line| line.to_lowercase().starts_with("duration"));
     if duration_line.is_none() {
@@ -145,6 +153,7 @@ impl EntryDetails {
       Kind::Spreadsheet => "spreadsheet".into(), // https://github.com/mmalecot/file-format#spreadsheet
       Kind::Subtitle => "subtitle".into(), // https://github.com/mmalecot/file-format#subtitle
       Kind::Video => "video".into(),     // https://github.com/mmalecot/file-format#video
+      _ => "unknown".into(),
     }
   }
 

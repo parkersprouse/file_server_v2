@@ -19,7 +19,7 @@
           @click='$store.view = ViewType.LIST'
         >
           <icon-list-dashes class='size-6!' />
-          List View
+          List
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
@@ -27,7 +27,7 @@
           @click='$store.view = ViewType.ROWS'
         >
           <icon-rows class='size-6!' />
-          Rows View
+          Rows
         </DropdownMenuItem>
         <DropdownMenuItem
           class='ghost-ext'
@@ -35,7 +35,7 @@
           @click='$store.view = ViewType.GRID'
         >
           <icon-squares-four class='size-6!' />
-          Grid View
+          Grid
         </DropdownMenuItem>
       </DropdownMenuGroup>
     </DropdownMenuContent>

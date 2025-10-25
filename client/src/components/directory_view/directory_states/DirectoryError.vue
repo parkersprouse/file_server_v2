@@ -1,17 +1,20 @@
 <template>
-  <section class='pt-4 w-full'>
-    <Alert
-      class='bg-red-200 text-cerise-red-300! dark:bg-red-950 dark:text-cerise-red-700!'
-      variant='destructive'
-    >
-      <icon-warning />
-      <AlertTitle class='text-cerise-red-300! dark:text-cerise-red-700! font-bold'>
-        {{ title }}
-      </AlertTitle>
-      <AlertDescription class='text-cerise-red-300! dark:text-cerise-red-700!'>
-        {{ message }}
-      </AlertDescription>
-    </Alert>
+  <section class='container pt-4'>
+    <Empty>
+      <EmptyHeader>
+        <EmptyMedia class='text-cerise-red-300 dark:text-cerise-red-700'>
+          <icon-warning class='size-14!' />
+        </EmptyMedia>
+        <EmptyTitle class='text-xl font-bold text-cerise-red-300 dark:text-cerise-red-700'>
+          {{ title }}
+        </EmptyTitle>
+        <EmptyDescription>
+          <div class='text-cerise-red-300 dark:text-cerise-red-700 text-base'>
+            {{ message }}
+          </div>
+        </EmptyDescription>
+      </EmptyHeader>
+    </Empty>
   </section>
 </template>
 

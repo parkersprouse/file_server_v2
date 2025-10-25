@@ -33,23 +33,18 @@ const $store = useStore();
 const text_ele = useTemplateRef('text_ele');
 // const highlighter = ref<Worker>();
 
-watch(() => $store.preview_inline_colors_disabled, async () => {
-  await nextTick();
-  const ele = document.querySelector('pre code');
-  if (ele) window.Prism.highlightElement(ele);
-});
-
-watch(() => $store.wrap_text_preview, async () => {
-  await nextTick();
-  const ele = document.querySelector('pre code');
-  if (ele) window.Prism.highlightElement(ele);
-});
+watch(() => $store.preview_inline_colors_disabled, async () => await refreshTextView());
+watch(() => $store.wrap_text_preview, async () => await refreshTextView());
 
 async function copyText(): Promise<void> {
   const ele = get(text_ele);
   if (!ele) return;
-  await navigator.clipboard.writeText(ele.textContent);
-  await $event_bus.emit('text_copied');
+  try {
+    await navigator.clipboard.writeText(ele.textContent);
+    await $event_bus.emit('text_copied', true);
+  } catch {
+    await $event_bus.emit('text_copied', false);
+  }
 }
 
 function postHightlightHandler(env: Environment): void {
@@ -66,6 +61,12 @@ function postHightlightHandler(env: Environment): void {
       language: env.language || 'none',
     };
   }
+}
+
+async function refreshTextView(): Promise<void> {
+  await nextTick();
+  const ele = document.querySelector('pre code');
+  if (ele) window.Prism.highlightElement(ele);
 }
 
 onMounted(() => {

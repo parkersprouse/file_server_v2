@@ -1,8 +1,7 @@
 <template>
   <NavBar />
 
-  <section
-    class='w-screen overflow-y-auto overflow-x-hidden relative'
+  <main
     :style='{
       height: `calc(100vh - ${toolbar_height})`,
       minHeight: `calc(100vh - ${toolbar_height})`,
@@ -10,16 +9,26 @@
       top: toolbar_height,
     }'
   >
-    <main class='container'>
-      <DirectoryError v-if='error' />
-      <DirectoryLoading v-else-if='!entries' />
-      <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
-      <DirectoryContent
-        v-else
-        :entries='entries'
-      />
-    </main>
-  </section>
+    <!--
+      A work in progress
+    <BackButton
+      class='fixed'
+      :style='{
+        left: 0,
+        top: toolbar_height,
+      }'
+    />
+    -->
+    <DirectoryError v-if='error' />
+    <DirectoryLoading v-else-if='!entries' />
+    <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
+    <DirectoryContent
+      v-else
+      :entries='entries'
+    />
+  </main>
+
+  <PreviewDialog />
 </template>
 
 <script setup lang='ts'>
@@ -67,7 +76,12 @@ async function getEntries(): Promise<void> {
 
 onMounted(async () => {
   await getEntries();
-  get(event_unsubs).push($event_bus.on(['path_updated', 'query_updated'], getEntries));
+  get(event_unsubs).push(
+    $event_bus.on('path_updated', getEntries),
+    $event_bus.on('query_updated', async (should_refresh: boolean): Promise<void> => {
+      if (should_refresh) await getEntries();
+    }),
+  );
 });
 
 onUnmounted(() => {
@@ -75,11 +89,11 @@ onUnmounted(() => {
 });
 </script>
 
-<style>
+<style scoped>
 @reference '../assets/styles/index.css';
 
 main {
-  @apply flex flex-col justify-start items-center min-h-full py-4 px-0 sm:p-4 z-0
-         mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl relative;
+  @apply flex flex-col justify-start items-center py-6 px-0 sm:px-4 z-0
+         w-screen overflow-y-auto overflow-x-hidden relative;
 }
 </style>

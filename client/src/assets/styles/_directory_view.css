@@ -2,7 +2,7 @@
   @apply transition-none!;
 
   & .entry-meta {
-    @apply text-[0.65rem] transition-none gap-[0.15rem] bg-transparent text-muted-foreground;
+    @apply text-[0.65rem] transition-none gap-[0.15rem] bg-transparent text-muted-foreground px-1! py-0.5!;
   }
 
   @variant hover {
@@ -13,14 +13,27 @@
       @apply border-cerise-red-500! dark:border-cerise-red-600!;
     }
 
+    /* & [data-slot='item'] {
+      @apply border-zinc-950! dark:border-zinc-300!;
+    } */
+
     & .entry-meta,
     & [data-slot^='card-'],
     & [data-slot^='item-'] {
       @apply text-cerise-red-500! dark:text-cerise-red-600!;
     }
 
-    & .entry-meta {
-      @apply border-cerise-red-500/50! dark:border-cerise-red-600/50!;
+    & [data-slot='card-footer'],
+    & [data-slot='item-description'] {
+      & .entry-meta {
+        @apply border-cerise-red-500/50! dark:border-cerise-red-600/50!;
+      }
     }
+
+    /* & [data-slot='item-description'] {
+      & .entry-meta {
+        @apply border-zinc-950! dark:border-zinc-300!;
+      }
+    } */
   }
 }

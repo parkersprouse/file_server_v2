@@ -152,7 +152,7 @@ onUnmounted(() => {
 @layer app {
   .preview-dialog {
     @apply fixed left-1/2 top-1/2 -translate-1/2 hidden w-screen h-screen max-w-screen max-h-screen
-           m-0 p-0 border-none z-[1000] bg-transparent;
+           m-0 p-0 border-none z-1000 bg-transparent;
 
     cursor: initial;
 
@@ -160,7 +160,7 @@ onUnmounted(() => {
       @apply flex flex-col flex-nowrap place-content-center;
 
       &::backdrop {
-        @apply z-[999] bg-black/85 max-w-screen max-h-screen w-screen h-screen;
+        @apply z-999 bg-black/85 max-w-screen max-h-screen w-screen h-screen;
       }
     }
 

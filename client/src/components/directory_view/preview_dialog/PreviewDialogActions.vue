@@ -2,10 +2,7 @@
   <div class='preview-dialog__actions'>
     <!-- Actions that only apply to the text file preview -->
     <template v-if='entry.preview_type === PreviewType.TEXT && Boolean($store.file_highlight_result)'>
-      <PreviewDialogCopyTextAction
-        v-if='clipboard_available'
-        @copy='async () => await $event_bus.emit("copy_text")'
-      />
+      <PreviewDialogCopyTextAction v-if='clipboard_available' />
       <PreviewDialogToggleLineWrapAction />
       <PreviewDialogToggleInlineColorsAction v-if='$store.inline_colors_present'/>
       <Separator
@@ -92,7 +89,7 @@ watch(() => props.entry, (new_value) => {
     & .preview-dialog__header {
       & .preview-dialog__actions {
         @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
-               bg-background border-b border-l border-zinc-300 dark:border-zinc-700 relative z-[1010];
+               bg-background border-b border-l border-zinc-300 dark:border-zinc-700 relative z-1010;
 
         & svg.icon {
           @apply size-7 sm:size-6;

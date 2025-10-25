@@ -1,16 +1,23 @@
 <template>
-  <ViewRow
-    v-if='view === ViewType.ROWS'
-    :entries='entries'
-  />
-  <ViewGrid
-    v-else-if='view === ViewType.GRID'
-    :entries='entries'
-  />
-  <ViewList
-    v-else
-    :entries='entries'
-  />
+  <section
+    class='container'
+    :class='{
+      "px-0! mx-0! w-full! max-w-none!": view === ViewType.LIST,
+    }'
+  >
+    <ViewRow
+      v-if='view === ViewType.ROWS'
+      :entries='entries'
+    />
+    <ViewGrid
+      v-else-if='view === ViewType.GRID'
+      :entries='entries'
+    />
+    <ViewList
+      v-else
+      :entries='entries'
+    />
+  </section>
 </template>
 
 <script setup lang='ts'>

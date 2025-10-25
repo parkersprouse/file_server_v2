@@ -21,6 +21,7 @@ export enum FileType {
   SPREADSHEET = 'spreadsheet',
   SUBTITLE = 'subtitle',
   TEXT = 'text',
+  UNKNOWN = 'unknown',
   VDISK = 'vdisk',
   VIDEO = 'video',
 };

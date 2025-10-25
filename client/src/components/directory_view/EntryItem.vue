@@ -1,8 +1,8 @@
 <template>
   <component
+    ref='entry'
     :is='isDir(entry) ? DirEntry : FileEntry'
     :entry='entry'
-    ref='entry'
   >
     <template #default>
       <slot name='default' />
@@ -11,8 +11,8 @@
 </template>
 
 <script setup lang='ts'>
-import DirEntry from 'components/directory_view/DirEntry.vue';
-import FileEntry from 'components/directory_view/FileEntry.vue';
+import DirEntry from '@/components/directory_view/entries/DirEntry.vue';
+import FileEntry from '@/components/directory_view/entries/FileEntry.vue';
 import { isDir } from 'lib/entry_helpers.ts';
 
 import type { Entry } from 'types/entry.d.ts';

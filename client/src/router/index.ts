@@ -1,9 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router';
 
-import { useEventBus } from 'composables/event_bus.ts';
 import DirectoryView from 'views/DirectoryView.vue';
-
-const $event_bus = useEventBus();
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -20,10 +17,6 @@ const router = createRouter({
       top: 0,
     };
   },
-});
-
-router.afterEach(() => {
-  $event_bus.emit('path_updated');
 });
 
 export default router;

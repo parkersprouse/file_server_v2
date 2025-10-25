@@ -5,10 +5,10 @@ export type AppEvent = {
   dialog_clicked: Event;
   hide_dialog: undefined;
   path_updated: undefined;
-  query_updated: undefined;
+  query_updated: boolean;
   resize_preview_actions: DOMRect;
   show_dialog: Entry;
-  text_copied: undefined;
+  text_copied: boolean;
   toggle_dialog_content_bg: undefined;
   toggle_inline_colors: undefined;
 };

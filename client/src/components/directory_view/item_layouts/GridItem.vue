@@ -16,7 +16,7 @@
       <CardFooter class='flex flex-col flex-nowrap justify-center items-start p-0! grow-0'>
         <div
           class='entry-name max-w-full w-full text-nowrap whitespace-nowrap text-ellipsis
-                  overflow-y-hidden overflow-x-scroll scrollbar-hidden py-1 px-2'
+                 overflow-y-hidden overflow-x-scroll scrollbar-hidden py-1 px-2'
         >
           {{ entry.name }}
         </div>
@@ -65,12 +65,11 @@ import { absolute, relative } from 'lib/datetime.ts';
 import { fileTypeToIcon } from 'lib/entry_helpers.ts';
 
 import type { Entry } from 'types/entry.d.ts';
-import type { ComputedRef } from 'vue';
 
 defineProps<{
   entry: Entry;
   thumbnail?: string;
 }>();
 
-const heic_check = inject<ComputedRef<boolean>>('heic_check');
+const heic_check = inject<boolean>('heic_check', false);
 </script>

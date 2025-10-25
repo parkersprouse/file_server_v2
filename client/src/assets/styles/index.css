@@ -203,6 +203,10 @@
     font-family: var(--base-font-family);
     tab-size: 4;
   }
+
+  .container {
+    @apply mx-auto w-full sm:w-xl md:w-2xl lg:w-4xl xl:w-6xl 2xl:w-7xl relative;
+  }
 }
 
 @utility container {

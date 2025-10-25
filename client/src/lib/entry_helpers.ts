@@ -4,8 +4,9 @@ import IconSubtitle from '~icons/ph/closed-captioning';
 import IconDatabase from '~icons/ph/database';
 import IconFile from '~icons/ph/file';
 import IconArchive from '~icons/ph/file-archive';
-import IconMetadata from '~icons/ph/file-dashed';
+import IconFileUnknown from '~icons/ph/file-dashed';
 import IconFileDoc from '~icons/ph/file-doc';
+import IconMetadata from '~icons/ph/file-magnifying-glass';
 import IconText from '~icons/ph/file-text';
 import IconFilmStrip from '~icons/ph/film-strip';
 import IconDisk from '~icons/ph/floppy-disk';
@@ -28,6 +29,8 @@ import { EntryType } from 'enums/entry_type.ts';
 import { FileType } from 'enums/file_type.ts';
 import { trim } from 'lib/utils.ts';
 
+// import type { SortDir } from 'enums/sort_dir.ts';
+// import type { SortKey } from 'enums/sort_key.ts';
 import type { Entry } from 'types/entry.d.ts';
 import type { FunctionalComponent } from 'vue';
 import type { RouteLocationNormalizedLoadedGeneric } from 'vue-router';
@@ -57,13 +60,10 @@ const ICON_MAPPING = {
   [FileType.SPREADSHEET]: IconTable,
   [FileType.SUBTITLE]: IconSubtitle,
   [FileType.TEXT]: IconText,
+  [FileType.UNKNOWN]: IconFileUnknown,
   [FileType.VDISK]: IconDisk,
   [FileType.VIDEO]: IconFilmStrip,
 };
-
-export function fileTypeToIcon(type: FileType | EntryType): FunctionalComponent {
-  return ICON_MAPPING[type];
-}
 
 export function buildEntryRoute(
   entry: Entry,
@@ -77,8 +77,8 @@ export function buildEntryRoute(
   } as RouteLocationNormalizedLoadedGeneric;
 }
 
-export function toFileUrl(entry: Entry): string {
-  return `${trim(config.server_url)}/${trim(entry.path)}`;
+export function fileTypeToIcon(type: FileType | EntryType): FunctionalComponent {
+  return ICON_MAPPING[type];
 }
 
 export function isDir(entry: Entry): boolean {
@@ -87,4 +87,28 @@ export function isDir(entry: Entry): boolean {
 
 export function isFile(entry: Entry): boolean {
   return entry.entry_type === EntryType.FILE;
+}
+
+// export function sortByDir(entries: Entry[], dir: SortDir): Entry[] {
+//   const sorted = [...entries].sort((a: Entry, b: Entry) => {
+
+//   });
+
+//   return sortDirectoriesTop(sorted);
+// }
+
+// export function sortByKey(entries: Entry[], key: SortKey): Entry[] {
+//   return sortDirectoriesTop(entries);
+// }
+
+// export function sortDirectoriesTop(entries: Entry[]): Entry[] {
+//   return [...entries].sort((a: Entry, b: Entry) => {
+//     if (isDir(a) && isFile(b)) return -1;
+//     if (isFile(a) && isDir(b)) return 1;
+//     return 0;
+//   });
+// }
+
+export function toFileUrl(entry: Entry): string {
+  return `${trim(config.server_url)}/${trim(entry.path)}`;
 }
