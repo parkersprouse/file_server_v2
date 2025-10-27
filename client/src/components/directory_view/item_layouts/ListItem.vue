@@ -1,6 +1,6 @@
 <template>
-  <Item class='flex-nowrap'>
-    <ItemMedia class='self-center!'>
+  <Item variant='outline' size='sm'>
+    <ItemMedia class='self-center! shrink-0 grow-0'>
       <component
         :is='fileTypeToIcon(entry.file_type || entry.entry_type)'
         class='size-7'
@@ -12,41 +12,46 @@
       >
         {{ entry.name }}
       </ItemTitle>
+    </ItemContent>
+    <ItemContent
+      v-if='Boolean(entry.duration)'
+      class='w-auto shrink-0 grow-0'
+    >
       <ItemDescription>
-        <div class='flex flex-row flex-nowrap justify-start items-center w-full gap-2 text-muted-foreground'>
-          <Tooltip
-            :delay-duration='500'
-            :disable-closing-trigger='true'
-            :disable-hoverable-content='true'
-            :skip-delay-duration='300'
-          >
-            <TooltipTrigger as-child>
-              <Badge
-                variant='outline'
-                class='entry-meta entry-meta__last-modified'
-              >
-                <icon-clock-counter-clockwise />
-                {{ relative(entry.last_modified_at) }}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div class='text-center'>
-                Last modified on
-                <br>
-                {{ absolute(entry.last_modified_at) }}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-          <template v-if='Boolean(entry.duration)'>
+        <Badge
+          variant='outline'
+          class='entry-meta entry-meta__duration'
+        >
+          <icon-timer />
+          {{ entry.duration }}
+        </Badge>
+      </ItemDescription>
+    </ItemContent>
+    <ItemContent class='w-auto shrink-0 grow-0'>
+      <ItemDescription>
+        <Tooltip
+          :delay-duration='500'
+          :disable-closing-trigger='true'
+          :disable-hoverable-content='true'
+          :skip-delay-duration='300'
+        >
+          <TooltipTrigger as-child>
             <Badge
               variant='outline'
-              class='entry-meta entry-meta__duration'
+              class='entry-meta entry-meta__last-modified'
             >
-              <icon-timer />
-              {{ entry.duration }}
+              <icon-clock-counter-clockwise />
+              {{ relative(entry.last_modified_at) }}
             </Badge>
-          </template>
-        </div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div class='text-center'>
+              Last modified on
+              <br>
+              {{ absolute(entry.last_modified_at) }}
+            </div>
+          </TooltipContent>
+        </Tooltip>
       </ItemDescription>
     </ItemContent>
   </Item>
@@ -69,16 +74,24 @@ defineProps<{
 
 .entries--list {
   & .entry {
-    &:first-of-type {
-      & [data-slot='item'] {
-        @apply border-t-border;
-      }
+    @apply z-10 hover:z-20;
+
+    &:nth-child(odd) {
+      @apply bg-accent dark:bg-zinc-900;
+    }
+
+    &:not(:last-of-type) {
+      @apply -mb-px;
     }
 
     & [data-slot='item'] {
       /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-      @apply py-2! border-border border-b border-t-transparent border-l-0 border-r-0
-             sm:border-l sm:border-r border-l-transparent border-r-transparent;
+      @apply py-2! flex-nowrap border-l-0 border-r-0;
+
+      & * {
+        --tw-translate-x: 0;
+        --tw-translate-y: 0;
+      }
     }
   }
 }

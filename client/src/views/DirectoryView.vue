@@ -93,7 +93,6 @@ onUnmounted(() => {
 @reference '../assets/styles/index.css';
 
 main {
-  @apply flex flex-col justify-start items-center py-6 px-0 sm:px-4 z-0
-         w-screen overflow-y-auto overflow-x-hidden relative;
+  @apply flex flex-col justify-start items-center py-6 px-0 z-0 w-screen overflow-y-auto overflow-x-hidden relative;
 }
 </style>

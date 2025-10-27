@@ -24,7 +24,7 @@
           </span>
           <Separator
             orientation='horizontal'
-            class='shrink-0 grow w-auto! border-zinc-300 dark:border-zinc-700'
+            class='shrink-0 grow w-auto!'
           />
         </p>
         <ViewToggles />
@@ -35,7 +35,7 @@
           </span>
           <Separator
             orientation='horizontal'
-            class='shrink-0 grow w-auto! border-zinc-300 dark:border-zinc-700'
+            class='shrink-0 grow w-auto!'
           />
         </p>
         <SortToggles />
@@ -46,7 +46,7 @@
           </span>
           <Separator
             orientation='horizontal'
-            class='shrink-0 grow w-auto! border-zinc-300 dark:border-zinc-700'
+            class='shrink-0 grow w-auto!'
           />
         </p>
         <ThemeToggle />

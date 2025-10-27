@@ -1,5 +1,5 @@
 <template>
-  <div class='entries--grid'>
+  <div class='entries--row'>
     <EntryItem
       v-for='entry in entries'
       :key='encodeURI(entry.path)'
@@ -32,5 +32,7 @@ function getThumbnail(entry: Entry): string | undefined {
 <style>
 @reference '../../../assets/styles/index.css';
 
-
+.entries--row {
+  @apply flex w-full flex-col;
+}
 </style>

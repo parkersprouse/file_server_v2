@@ -33,6 +33,7 @@
     "component:add": "pnpm exec shadcn-vue add"
   },
   "dependencies": {
+    "@fontsource-variable/atkinson-hyperlegible-next": "^5.2.6",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/source-code-pro": "^5.2.7",
     "@tailwindcss/vite": "^4.1.16",

@@ -7,6 +7,7 @@
   >
     <video
       slot='media'
+      preload='auto'
       :src='entry.url'
       muted
     />
@@ -137,6 +138,12 @@ const { entry } = defineProps<{
     & .preview-dialog__content {
       & media-controller {
         @apply w-auto h-auto mobile-video-player md:desktop-video-player;
+
+        &[mediaisfullscreen] {
+          & [slot='media'] {
+            @apply h-full;
+          }
+        }
 
         & [slot='media'] {
           @apply object-contain aspect-auto;

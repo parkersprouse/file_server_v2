@@ -1,35 +1,24 @@
 <template>
-  <Tooltip
-    :delay-duration='250'
-    :disable-closing-trigger='true'
-    :disable-hoverable-content='true'
-    :skip-delay-duration='300'
-  >
-    <TooltipTrigger as-child>
-      <Button
-        variant='ghost'
-        aria-label='Copy Text'
-        class='ghost-ext h-auto! copy-text-dialog-action'
-        :class='{
-          failed: failed_copy,
-          successful: successful_copy,
-        }'
-        @click='async () => await $event_bus.emit("copy_text")'
-      >
-        <icon-check v-if='successful_copy' />
-        <icon-warning v-else-if='failed_copy' />
-        <icon-clipboard v-else />
-      </Button>
-    </TooltipTrigger>
-    <TooltipContent
-      side='bottom'
-      to='.preview-dialog__actions'
+  <PreviewDialogTooltip>
+    <Button
+      variant='ghost'
+      aria-label='Copy Text'
+      class='ghost-ext h-auto! copy-text-dialog-action'
+      :class='{
+        failed: failed_copy,
+        successful: successful_copy,
+      }'
+      @click='async () => await $event_bus.emit("copy_text")'
     >
-      <div class='text-center'>
-        {{ tooltip_text }}
-      </div>
-    </TooltipContent>
-  </Tooltip>
+      <icon-check v-if='successful_copy' />
+      <icon-warning v-else-if='failed_copy' />
+      <icon-clipboard v-else />
+    </Button>
+
+    <template #content>
+      {{ tooltip_text }}
+    </template>
+  </PreviewDialogTooltip>
 </template>
 
 <script setup lang='ts'>
@@ -52,7 +41,7 @@ const successful_copy = computed<boolean>(() => get(copied) && get(copy_success)
 const tooltip_text = computed<string>(() => {
   if (get(successful_copy)) return 'Copied!';
   if (get(failed_copy)) return 'Failed to copy';
-  return 'Copy File Contents';
+  return 'Copy Text';
 });
 
 async function showCopied(successful: boolean): Promise<void> {

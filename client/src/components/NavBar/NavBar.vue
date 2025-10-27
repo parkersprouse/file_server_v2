@@ -22,17 +22,17 @@
     >
       <Separator
         orientation='vertical'
-        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
+        class='h-auto! self-stretch!'
       />
       <ViewSelector />
       <Separator
         orientation='vertical'
-        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
+        class='h-auto! self-stretch!'
       />
       <SortSelector />
       <Separator
         orientation='vertical'
-        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
+        class='h-auto! self-stretch!'
       />
       <ThemeToggle />
     </section>

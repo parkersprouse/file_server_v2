@@ -1,12 +1,19 @@
 <template>
-  <Button
-    ref='preview_title_button'
-    variant='ghost'
-    class='ghost-ext h-auto!'
-    @click='open = !open'
-  >
-    <icon-info />
-  </Button>
+  <PreviewDialogTooltip>
+    <Button
+      ref='preview_title_button'
+      variant='ghost'
+      class='ghost-ext h-auto!'
+      :class='{ "ghost-ext--active": open }'
+      @click='open = !open'
+    >
+      <icon-info />
+    </Button>
+
+    <template #content>
+      File Info
+    </template>
+  </PreviewDialogTooltip>
 
   <div
     ref='preview_title_wrapper'
@@ -51,7 +58,7 @@ onClickOutside(preview_title, async () => {
 
 const onResize = useThrottleFn((entries) => {
   const target = entries[0]!.target as HTMLDivElement;
-  get(preview_title_wrapper)!.style.top = `calc(${target.offsetHeight}px + 0.5rem)`;
+  get(preview_title_wrapper)!.style.top = `calc(${target.offsetHeight}px - 1px)`;
 }, 100);
 
 const observer = new ResizeObserver(onResize);
@@ -75,12 +82,12 @@ onUnmounted(() => {
   .preview-dialog {
     & .preview-dialog__header {
       & .preview-dialog__title__wrapper {
-        @apply absolute max-w-screen w-screen px-4;
+        @apply border-none absolute max-w-screen w-screen; /* px-4 */
 
         & .preview-dialog__title--compact {
-          @apply bg-background border border-zinc-300 dark:border-zinc-800 text-sm!
+          @apply bg-background border-x-0 border-y text-sm!
                  flex flex-nowrap flex-row gap-2 items-center justify-center
-                 max-w-full p-1 px-2 py-1 text-foreground! w-full whitespace-pre-line text-center;
+                 max-w-full px-2 py-1 text-foreground! w-full whitespace-pre-line text-center;
         }
       }
     }

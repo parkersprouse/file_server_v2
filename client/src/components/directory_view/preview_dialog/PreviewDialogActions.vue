@@ -7,7 +7,7 @@
       <PreviewDialogToggleInlineColorsAction v-if='$store.inline_colors_present'/>
       <Separator
         orientation='vertical'
-        class='h-auto! self-stretch! bg-zinc-300 dark:bg-zinc-700'
+        class='h-auto! self-stretch!'
       />
     </template>
 
@@ -16,34 +16,56 @@
       v-if='$is_mobile'
       :entry='entry'
     />
+
+    <PreviewDialogTooltip>
+      <Button
+        variant='ghost'
+        :aria-label='`${$store.preview_bg_enabled ? "Darken" : "Lighten"} preview background color`'
+        class='ghost-ext h-auto!'
+        :class='{ "ghost-ext--active": $store.preview_bg_enabled }'
+        @click.prevent='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'
+      >
+        <icon-checkerboard-fill v-if='$store.preview_bg_enabled' />
+        <icon-checkerboard v-else />
+      </Button>
+
+      <template #content>
+        {{ $store.preview_bg_enabled ? 'Darken' : 'Lighten' }} Background
+      </template>
+    </PreviewDialogTooltip>
+
+    <PreviewDialogTooltip>
+      <a
+        aria-label='Download file'
+        :href='`${entry.url}?download`'
+        download
+        class='ghost-ext h-auto!'
+      >
+        <icon-download-simple />
+      </a>
+
+      <template #content>
+        Download
+      </template>
+    </PreviewDialogTooltip>
+
+    <PreviewDialogTooltip>
+      <a
+        aria-label='Open in new tab'
+        :href='`${entry.url}?inline`'
+        target='_blank'
+        class='ghost-ext h-auto!'
+      >
+        <icon-arrow-square-out />
+      </a>
+
+      <template #content>
+        Open
+      </template>
+    </PreviewDialogTooltip>
+
     <Button
-      variant='ghost'
-      aria-label='Toggle preview background color'
-      class='ghost-ext h-auto!'
-      :class='{ "ghost-ext--active": $store.preview_bg_enabled }'
-      @click.prevent='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'
-    >
-      <icon-checkerboard-fill v-if='$store.preview_bg_enabled' />
-      <icon-checkerboard v-else />
-    </Button>
-    <a
-      aria-label='Download file'
-      :href='`${entry.url}?download`'
-      download
-      class='ghost-ext h-auto!'
-    >
-      <icon-download-simple />
-    </a>
-    <a
-      aria-label='Open file in new tab'
-      :href='`${entry.url}?inline`'
-      target='_blank'
-      class='ghost-ext h-auto!'
-    >
-      <icon-arrow-square-out />
-    </a>
-    <Button
-      aria-label='Close file preview'
+      aria-label='Close preview'
       variant='ghost'
       class='ghost-ext h-auto!'
       @click='async () => await $event_bus.emit("hide_dialog")'
@@ -89,7 +111,7 @@ watch(() => props.entry, (new_value) => {
     & .preview-dialog__header {
       & .preview-dialog__actions {
         @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
-               bg-background border-b border-l border-zinc-300 dark:border-zinc-700 relative z-1010;
+               bg-background border-b border-l relative z-1010;
 
         & svg.icon {
           @apply size-7 sm:size-6;
