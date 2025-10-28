@@ -71,7 +71,7 @@ where
   for entry_result in entries {
     let entry: fs::DirEntry = entry_result?;
     // skip "invalid" entry types - i.e. anything not a directory or file
-    if EntryType::valid(&entry) {
+    if EntryType::valid(&entry, data) {
       output.push(EntryDetails::new(&entry, data).await);
     }
   }

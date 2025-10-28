@@ -7,7 +7,7 @@
     "pnpm": "^10"
   },
   "scripts": {
-    "start": "run-p client server",
+    "start": "run-p --print-name client server",
     "client": "cd client && pnpm run build && serve -l 3000 --single dist",
     "server": "cd server && cargo run -r"
   },

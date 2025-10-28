@@ -64,10 +64,11 @@ async function getEntries(): Promise<void> {
     const previewable_strings = Object.values(PreviewType).map((p) => p as string);
     set(entries, res.data.map((entry: Entry) => {
       entry.url = toFileUrl(entry);
+
       if (entry.thumbnail) {
-        entry.thumbnail = entry.file_type === FileType.IMAGE ?
-          entry.url :
-          (toFileUrl(entry.thumbnail) || null);
+        entry.thumbnail = toFileUrl(entry.thumbnail) || null;
+      } else if (entry.file_type === FileType.IMAGE) {
+        entry.thumbnail = entry.url;
       }
 
       if (previewable_strings.includes(entry.file_type as string)) {
