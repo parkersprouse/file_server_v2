@@ -1,0 +1,17 @@
+{
+  "name": "web_file_browser",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "^22",
+    "pnpm": "^10"
+  },
+  "scripts": {
+    "start": "run-p client server",
+    "client": "cd client && pnpm run build && serve -l 3000 --single dist",
+    "server": "cd server && cargo run -r"
+  },
+  "dependencies": {
+    "npm-run-all2": "^8.0.4"
+  }
+}

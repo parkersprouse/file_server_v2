@@ -11,6 +11,7 @@ actix-web = "4"
 chrono = "0.4.40"
 config = { version = "0.15.11", features = ["toml"] }
 env_logger = "0.11.8"
+ffprobe = "0.4.0"
 file-format = { version = "0.28.0", features = ["reader"] }
 log = "0.4.27"
 serde = { version = "1.0.219", features = ["derive"] }

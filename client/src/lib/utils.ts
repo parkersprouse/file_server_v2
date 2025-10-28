@@ -2,8 +2,11 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { stringifyQuery } from 'vue-router';
 
+import { config } from '@/config.ts';
+
 import type { ClassValue } from 'clsx';
 import type { Breadcrumb } from 'types/breadcrumb.d.ts';
+import type { Entry } from 'types/entry';
 import type { LocationQuery, RouteLocationNormalizedLoadedGeneric } from 'vue-router';
 
 export function buildPath(
@@ -48,6 +51,11 @@ export function breadcrumbify(route: RouteLocationNormalizedLoadedGeneric): Brea
 
 export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string {
   return `/${trim(route.path)}${formatQuery(route.query)}`;
+}
+
+export function toFileUrl(value: Entry | string): string {
+  const path = typeof value === 'string' ? value : value.path;
+  return `${trim(config.server_url)}/${trim(path)}`;
 }
 
 export function trim(path: string): string {

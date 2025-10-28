@@ -1,11 +1,11 @@
 <template>
   <Item variant='outline'>
     <ItemMedia
-      v-if='thumbnail && heic_check'
+      v-if='entry.thumbnail && heic_check'
       variant='image'
     >
       <img
-        :src='thumbnail'
+        :src='entry.thumbnail'
         class='object-contain! aspect-square!'
       >
     </ItemMedia>
@@ -68,7 +68,6 @@ import type { Entry } from 'types/entry.d.ts';
 
 defineProps<{
   entry: Entry;
-  thumbnail?: string;
 }>();
 
 const heic_check = inject<boolean>('heic_check', false);

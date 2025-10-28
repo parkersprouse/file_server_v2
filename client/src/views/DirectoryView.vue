@@ -37,10 +37,10 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
+import { FileType } from 'enums/file_type.ts';
 import { PreviewType } from 'enums/preview_type.ts';
-import { toFileUrl } from 'lib/entry_helpers.ts';
 import { http } from 'lib/http.ts';
-import { pathToRoute } from 'lib/utils.ts';
+import { pathToRoute, toFileUrl } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
@@ -64,9 +64,16 @@ async function getEntries(): Promise<void> {
     const previewable_strings = Object.values(PreviewType).map((p) => p as string);
     set(entries, res.data.map((entry: Entry) => {
       entry.url = toFileUrl(entry);
+      if (entry.thumbnail) {
+        entry.thumbnail = entry.file_type === FileType.IMAGE ?
+          entry.url :
+          (toFileUrl(entry.thumbnail) || null);
+      }
+
       if (previewable_strings.includes(entry.file_type as string)) {
         entry.preview_type = entry.file_type as string as PreviewType;
       }
+
       return entry;
     }));
   } catch {

@@ -24,10 +24,8 @@ import IconTerminalWindow from '~icons/ph/terminal-window';
 import IconFont from '~icons/ph/text-aa';
 import Icon3D from '~icons/ph/vector-three';
 
-import { config } from '@/config.ts';
 import { EntryType } from 'enums/entry_type.ts';
 import { FileType } from 'enums/file_type.ts';
-import { trim } from 'lib/utils.ts';
 
 // import type { SortDir } from 'enums/sort_dir.ts';
 // import type { SortKey } from 'enums/sort_key.ts';
@@ -108,7 +106,3 @@ export function isFile(entry: Entry): boolean {
 //     return 0;
 //   });
 // }
-
-export function toFileUrl(entry: Entry): string {
-  return `${trim(config.server_url)}/${trim(entry.path)}`;
-}

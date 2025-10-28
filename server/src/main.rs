@@ -1,9 +1,11 @@
 use crate::services::resource_handler;
 use actix_cors::Cors;
+use actix_files::NamedFile;
 use actix_web::{
-  App, HttpRequest, HttpServer, http,
-  middleware::Logger,
-  web::{Data, get},
+  App, Either, HttpRequest, HttpResponse, HttpServer, http, middleware::Logger, web::{
+    Data,
+    get,
+  }
 };
 use app_config::AppConfig;
 use std::io;
@@ -30,6 +32,10 @@ pub struct AppState {
   pub config: AppConfig,
 }
 
+async fn index_route(req: HttpRequest, data: Data<AppState>) -> Either<HttpResponse, NamedFile> {
+  resource_handler::handle(req, data).await
+}
+
 #[actix_web::main]
 async fn main() -> io::Result<()> {
   let config: AppConfig = AppConfig::init();
@@ -50,14 +56,8 @@ async fn main() -> io::Result<()> {
           .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::ACCEPT])
           .max_age(3600), // one hour
       )
-      .route(
-        "/{path:.*}",
-        get().to(async |req: HttpRequest, data: Data<AppState>| resource_handler::handle(req, data).await),
-      )
-      .route(
-        "/{path:.*}/",
-        get().to(async |req: HttpRequest, data: Data<AppState>| resource_handler::handle(req, data).await),
-      )
+      .route("/{path:.*}", get().to(index_route))
+      .route("/{path:.*}/", get().to(index_route))
   })
   .bind(("0.0.0.0", config.port))?
   .run()

@@ -3,8 +3,8 @@
     <Card class='p-0! h-full! gap-2!'>
       <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink'>
         <img
-          v-if='thumbnail && heic_check'
-          :src='thumbnail'
+          v-if='entry.thumbnail && heic_check'
+          :src='entry.thumbnail'
           class='w-auto h-auto object-contain aspect-square'
         >
         <component
@@ -68,7 +68,6 @@ import type { Entry } from 'types/entry.d.ts';
 
 defineProps<{
   entry: Entry;
-  thumbnail?: string;
 }>();
 
 const heic_check = inject<boolean>('heic_check', false);

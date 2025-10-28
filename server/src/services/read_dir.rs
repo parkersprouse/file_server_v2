@@ -21,10 +21,20 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
   let time_based: bool = SortKey::is_time_based(clone.first().unwrap(), key);
 
   // First sort by requested attribute
-  clone.sort_by(|a, b| {
+  clone.sort_by(|a: &EntryDetails, b: &EntryDetails| {
     if time_based {
-      let a_dt = DateTime::parse_from_rfc3339(&a[key]).unwrap();
-      let b_dt = DateTime::parse_from_rfc3339(&b[key]).unwrap();
+      let a_val = &a[key];
+      let b_val = &b[key];
+      if a_val.is_empty() && b_val.is_empty() {
+        return Ordering::Equal;
+      } else if a_val.is_empty() && !b_val.is_empty() {
+        return Ordering::Less;
+      } else if !a_val.is_empty() && b_val.is_empty() {
+        return Ordering::Greater;
+      }
+
+      let a_dt = DateTime::parse_from_rfc3339(a_val).unwrap();
+      let b_dt = DateTime::parse_from_rfc3339(b_val).unwrap();
       if SortDir::is_desc(dir) { b_dt.cmp(&a_dt) } else { a_dt.cmp(&b_dt) }
     } else if SortDir::is_desc(dir) {
       b[key].to_lowercase().cmp(&a[key].to_lowercase())
@@ -62,7 +72,7 @@ where
     let entry: fs::DirEntry = entry_result?;
     // skip "invalid" entry types - i.e. anything not a directory or file
     if EntryType::valid(&entry) {
-      output.push(EntryDetails::new(&entry, data));
+      output.push(EntryDetails::new(&entry, data).await);
     }
   }
 

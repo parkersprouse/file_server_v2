@@ -19,6 +19,5 @@ import type { Entry } from 'types/entry.d.ts';
 
 defineProps<{
   entry: Entry;
-  thumbnail?: string;
 }>();
 </script>

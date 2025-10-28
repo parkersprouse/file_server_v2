@@ -1,16 +1,18 @@
-use crate::AppState;
-use crate::structs::entry_type::EntryType;
+use crate::{
+  AppState,
+  structs::entry_type::EntryType,
+};
 use actix_web::web::Data;
 use chrono::{DateTime, Utc};
 use file_format::{FileFormat, Kind};
 use log::{error, warn};
+
 use serde::Serialize;
 use std::{
   fs,
-  io::Read,
   ops::Index,
   path::{Path, PathBuf},
-  process::Command,
+  time::Duration,
 };
 
 #[derive(Clone, Serialize)]
@@ -23,84 +25,57 @@ pub struct EntryDetails {
   pub last_modified_at: String,
   pub name: String,
   pub path: String,
+  pub thumbnail: Option<String>,
 }
 
 impl EntryDetails {
   pub const INLINE_TYPES: [&str; 6] = ["audio", "document", "image", "spreadsheet", "text", "video"];
 
-  pub fn new(entry: &fs::DirEntry, data: &Data<AppState>) -> Self {
-    let full_path: PathBuf = entry.path();
+  pub async fn new(entry: &fs::DirEntry, data: &Data<AppState>) -> Self {
     let metadata: fs::Metadata = entry.metadata().unwrap();
     let entry_type: String = EntryType::stringify(&metadata.file_type()).into();
+    let full_path: PathBuf = entry.path();
     let file_format: Option<FileFormat> = Self::determine_file_format(&entry_type, &full_path);
     let file_type: String = Self::file_type(file_format);
+    let as_url: String = Self::path_to_url(&full_path, data);
+
     Self {
-      created_at: DateTime::<Utc>::from(metadata.created().unwrap()).to_rfc3339(),
-      duration: Self::determine_duration(&full_path, &file_type),
+      created_at: Self::determine_created_at(&metadata),
+      duration: Self::determine_duration(&full_path, &file_type).await,
       entry_type,
       file_type,
       full_type: Self::full_type(file_format),
-      last_modified_at: DateTime::<Utc>::from(metadata.modified().unwrap()).to_rfc3339(),
+      last_modified_at: Self::determine_modified_at(&metadata),
       name: entry.file_name().into_string().unwrap(),
-      path: Self::clean_path(&full_path, data),
+      path: as_url.clone(),
+      thumbnail: Self::get_thumbnail(as_url, data),
     }
   }
 
-  pub fn clean_path(path: &Path, data: &Data<AppState>) -> String {
-    format!(
-      "/{}",
-      path
-        .to_str()
-        .unwrap_or("")
-        .replace(&data.config.root_dir_path, "")
-        .trim_matches('/')
-    )
+  pub fn determine_created_at(metadata: &fs::Metadata) -> String {
+    match metadata.created() {
+      Ok(output) => DateTime::<Utc>::from(output).to_rfc3339(),
+      Err(_) => "n/a".into(),
+    }
   }
 
-  pub fn determine_duration(path: &PathBuf, file_type: &str) -> String {
-    if file_type.ne("video") {
-      return "".to_owned();
-    }
-    let result = Command::new("./metadata").arg(path).output();
-    if result.is_err() {
-      error!("{:?}", result.err());
-      return "".to_owned();
+  pub async fn determine_duration(path: &PathBuf, file_type: &str) -> String {
+    if !["audio", "video"].contains(&file_type) {
+      return "".into();
     }
 
-    let mut output_body = String::new();
+    let output = match ffprobe::ffprobe(path) {
+      Ok(info) => info,
+      Err(err) => {
+        error!("{}", err);
+        return "".into();
+      },
+    };
 
-    let output = result.unwrap();
-    if !output.status.success() {
-      let _ = output.stderr.as_slice().read_to_string(&mut output_body);
-      error!("{:?}", output_body);
-      return "".to_owned();
+    match output.format.get_duration() {
+      Some(value) => Self::parse_ffmpeg_duration(&value),
+      None => "".to_string(),
     }
-
-    let _ = output.stdout.as_slice().read_to_string(&mut output_body);
-    let mut lines = output_body.split_terminator("\n");
-
-    let duration_line = lines.find(|line| line.to_lowercase().starts_with("duration"));
-    if duration_line.is_none() {
-      return "".to_owned();
-    }
-
-    let duration = duration_line.unwrap().split_whitespace().last();
-    if duration.is_none() {
-      return "".to_owned();
-    }
-
-    duration
-      .unwrap()
-      .split(':')
-      .map(|n| format!("{:02}", n.parse::<f32>().unwrap().trunc()))
-      .fold(String::new(), |mut a, b| {
-        a.reserve(b.len() + 1);
-        a.push_str(b.as_str());
-        a.push(':');
-        a
-      })
-      .trim_end_matches(':')
-      .to_owned()
   }
 
   pub fn determine_file_format(entry_type: &str, path: &PathBuf) -> Option<FileFormat> {
@@ -114,6 +89,13 @@ impl EntryDetails {
         warn!("Failed to determine file format - defaulting to plaintext\n{err}");
         Some(FileFormat::PlainText)
       },
+    }
+  }
+
+  pub fn determine_modified_at(metadata: &fs::Metadata) -> String {
+    match metadata.modified() {
+      Ok(output) => DateTime::<Utc>::from(output).to_rfc3339(),
+      Err(_) => "n/a".into(),
     }
   }
 
@@ -162,6 +144,46 @@ impl EntryDetails {
       return "".into();
     }
     file_format.unwrap().media_type().into()
+  }
+
+  pub fn get_thumbnail(as_url: String, data: &Data<AppState>) -> Option<String> {
+    let mut thumb_url_path = PathBuf::from(["/.thumbnails", &as_url].join(""));
+    thumb_url_path.set_extension("png");
+
+    let Some(thumb_url_path) = thumb_url_path.to_str() else {
+      return None;
+    };
+
+    let thumb_system_path = format!("{}{}", &data.config.root_dir_path, thumb_url_path);
+    match PathBuf::from(thumb_system_path).try_exists() {
+      Ok(exists) => {
+        if exists {
+          Some(thumb_url_path.to_string())
+        } else {
+          None
+        }
+      },
+      Err(_) => None,
+    }
+  }
+
+  pub fn parse_ffmpeg_duration(value: &Duration) -> String {
+    let total_secs = value.as_secs();
+    let hours = total_secs / 3600;
+    let minutes = (total_secs % 3600) / 60;
+    let seconds = total_secs % 60;
+    format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
+  }
+
+  pub fn path_to_url(path: &Path, data: &Data<AppState>) -> String {
+    format!(
+      "/{}",
+      path
+        .to_str()
+        .unwrap_or("")
+        .replace(&data.config.root_dir_path, "")
+        .trim_matches('/')
+    )
   }
 }
 

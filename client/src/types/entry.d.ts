@@ -12,5 +12,6 @@ export type Entry = {
   name: string;
   path: string;
   preview_type?: PreviewType;
+  thumbnail: string | null;
   url: string;
 };
