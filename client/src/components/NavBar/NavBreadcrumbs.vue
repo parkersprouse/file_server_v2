@@ -1,6 +1,6 @@
 <template>
   <Breadcrumb>
-    <BreadcrumbList>
+    <BreadcrumbList class='scrollbar-hidden'>
       <BreadcrumbItem>
         <component
           :to='at_root ? undefined : { path: "/", query: { ...$route.query } }'
@@ -44,16 +44,26 @@ const at_root = computed<boolean>(() => $route.path === '/');
 <style>
 @reference '../../assets/styles/index.css';
 
-nav li {
-  &::before {
-    @apply hidden;
-  }
+nav {
+  & ol,
+  & ul {
+    @apply flex-nowrap overflow-y-hidden overflow-x-auto whitespace-nowrap text-nowrap;
+    overflow-wrap: normal;
 
-  & a {
-    @apply border-b border-transparent border-dotted;
+    & li {
+      @apply flex-nowrap;
 
-    @variant hover {
-      @apply border-primary;
+      &::before {
+        @apply hidden;
+      }
+
+      & a {
+        @apply border-b border-transparent border-dotted;
+
+        @variant hover {
+          @apply border-primary;
+        }
+      }
     }
   }
 }

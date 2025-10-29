@@ -3,7 +3,8 @@
     id='toolbar'
     class='z-10 fixed top-0 left-0 right-0 h-fit justify-between items-center border-x-0 border-t-0 p-0 pl-4'
   >
-    <section class='flex justify-evenly items-center gap-2 h-full'>
+    <section class='flex flex-nowrap justify-evenly items-center gap-2 h-full
+                    overflow-y-hidden overflow-x-auto scrollbar-hidden'>
       <NavBreadcrumbs />
     </section>
 
