@@ -18,7 +18,7 @@ declare module '*.toml' {
 }
 
 declare module '@/config.toml' {
-  const server_url: string;
-  export default { server_url };
+  const server_port: number;
+  export default { server_port };
 }
 /* eslint-enable @typescript-eslint/no-explicit-any */

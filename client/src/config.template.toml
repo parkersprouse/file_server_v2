@@ -1,2 +1,2 @@
-# The URL of the running Web File Browser server
-server_url = "http://0.0.0.0:9000/"
+# The port to run the Web File Browser server on
+server_port = 9000

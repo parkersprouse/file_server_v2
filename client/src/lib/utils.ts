@@ -2,7 +2,8 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { stringifyQuery } from 'vue-router';
 
-import { config } from '@/config.ts';
+// import { config } from '@/config.ts';
+import { http } from 'lib/http.ts';
 
 import type { ClassValue } from 'clsx';
 import type { Breadcrumb } from 'types/breadcrumb.d.ts';
@@ -55,7 +56,7 @@ export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string
 
 export function toFileUrl(value: Entry | string): string {
   const path = typeof value === 'string' ? value : value.path;
-  return `${trim(config.server_url)}/${trim(path)}`;
+  return `${http.defaults.baseURL!}/${trim(path)}`;
 }
 
 export function trim(path: string): string {

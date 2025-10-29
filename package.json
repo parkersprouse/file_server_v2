@@ -7,11 +7,11 @@
     "pnpm": "^10"
   },
   "scripts": {
-    "start": "run-p --print-name client server",
+    "start": "concurrently --kill-others --names \"Browser Client\",\"Browser Server\" --prefix-colors blue,yellow \"pnpm run client\" \"pnpm run server\"",
     "client": "cd client && pnpm run build && serve -l 3000 --single dist",
     "server": "cd server && cargo run -r"
   },
   "dependencies": {
-    "npm-run-all2": "^8.0.4"
+    "concurrently": "^9.2.1"
   }
 }

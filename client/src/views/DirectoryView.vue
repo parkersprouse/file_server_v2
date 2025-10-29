@@ -83,6 +83,8 @@ async function getEntries(): Promise<void> {
 
       return entry;
     }));
+    get(entries_abort_cont)?.abort();
+    set(entries_abort_cont, undefined);
   } catch {
     set(error, true);
   }
