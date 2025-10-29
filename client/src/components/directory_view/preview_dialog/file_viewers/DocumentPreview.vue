@@ -14,11 +14,13 @@ const { entry } = defineProps<{
 @reference '../../../../assets/styles/index.css';
 
 .preview-dialog--doc {
+  @apply h-[90%] w-[90%] p-0;
+
   & .preview-dialog__content {
-    @apply h-[90%] w-[90%] p-0;
+    @apply max-w-full max-h-full p-0;
 
     & object {
-      @apply w-full h-full;
+      @apply w-full h-full overflow-auto;
     }
   }
 }

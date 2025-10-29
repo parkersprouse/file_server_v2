@@ -45,12 +45,6 @@
         <ricon-play-fill slot='play' />
         <ricon-pause-fill slot='pause' />
       </media-play-button>
-      <media-mute-button class='preview-video-player__control'>
-        <ricon-volume-up-fill slot='high' />
-        <ricon-volume-up-fill slot='medium' />
-        <ricon-volume-down-fill slot='low' />
-        <ricon-volume-mute-fill slot='off' />
-      </media-mute-button>
       <media-seek-backward-button
         seekoffset='5'
         class='preview-video-player__control'
@@ -64,10 +58,6 @@
           part='arrow'
         />
       </media-time-range>
-      <media-time-display
-        showduration
-        class='preview-video-player__control'
-      />
       <media-seek-forward-button
         seekoffset='5'
         class='preview-video-player__control'
@@ -75,6 +65,16 @@
         <span slot='tooltip-content'>Forward 5s</span>
         <ricon-forward-5-fill slot='icon' />
       </media-seek-forward-button>
+      <media-mute-button class='preview-video-player__control'>
+        <ricon-volume-up-fill slot='high' />
+        <ricon-volume-up-fill slot='medium' />
+        <ricon-volume-down-fill slot='low' />
+        <ricon-volume-mute-fill slot='off' />
+      </media-mute-button>
+      <media-time-display
+        showduration
+        class='preview-video-player__control'
+      />
       <media-fullscreen-button class='preview-video-player__control'>
         <span slot='tooltip-enter'>Fullscreen</span>
         <span slot='tooltip-exit'>Leave Fullscreen</span>
@@ -126,8 +126,7 @@ const { entry } = defineProps<{
   media-control-bar {
     media-seek-backward-button,
     media-play-button,
-    media-seek-forward-button,
-    media-mute-button {
+    media-seek-forward-button {
       @apply hidden;
     }
   }

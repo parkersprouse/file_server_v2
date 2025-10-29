@@ -111,7 +111,7 @@ watch(() => props.entry, (new_value) => {
     & .preview-dialog__header {
       & .preview-dialog__actions {
         @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
-               bg-background border-b border-l relative z-1010;
+               bg-background border-b border-l;
 
         & svg.icon {
           @apply size-7 sm:size-6;

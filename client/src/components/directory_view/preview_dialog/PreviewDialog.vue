@@ -10,9 +10,10 @@
   >
     <template v-if='entry'>
       <div class='preview-dialog__header'>
-        <PreviewDialogTitle :entry='entry' />
         <PreviewDialogActions :entry='entry' />
       </div>
+
+      <PreviewDialogTitle :entry='entry' />
 
       <PreviewDialogContent>
         <component
@@ -144,13 +145,13 @@ onUnmounted(() => {
 
 @layer app {
   .preview-dialog {
-    @apply fixed left-1/2 top-1/2 -translate-1/2 hidden w-screen h-screen max-w-screen max-h-screen
-           m-0 p-0 border-none z-1000 bg-transparent;
+    @apply fixed left-0 top-0 hidden w-screen h-screen max-w-screen max-h-screen
+           m-auto p-0 border-none z-1000 bg-transparent;
 
     cursor: initial;
 
     &[open] {
-      @apply flex flex-col flex-nowrap place-content-center;
+      @apply flex flex-col flex-nowrap items-center justify-center;
 
       &::backdrop {
         @apply z-999 bg-black/85 max-w-screen max-h-screen w-screen h-screen;
@@ -162,9 +163,16 @@ onUnmounted(() => {
     }
 
     & .preview-dialog__header {
-      @apply absolute left-0 top-0 w-screen flex flex-row flex-nowrap items-start justify-end gap-4;
-
+      @apply fixed left-0 top-0 w-screen flex flex-row flex-nowrap items-start justify-end gap-4 z-1010;
       cursor: initial;
+    }
+
+    & .preview-dialog__title {
+      @apply fixed bottom-0 right-0 flex z-1004 hover:z-1020;
+    }
+
+    & .preview-dialog__content {
+      @apply z-1005 relative;
     }
   }
 }

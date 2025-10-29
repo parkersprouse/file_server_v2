@@ -40,8 +40,8 @@ onUnmounted(() => {
 @layer app {
   .preview-dialog {
     & .preview-dialog__content {
-      @apply flex flex-col flex-nowrap place-content-center z-1005 px-4
-             w-fit h-auto max-w-screen max-h-screen overflow-hidden self-center;
+      @apply flex flex-col flex-nowrap place-content-center px-4 w-fit h-auto
+             max-w-screen max-h-screen overflow-hidden self-center;
 
       cursor: initial;
 

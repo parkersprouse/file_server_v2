@@ -53,13 +53,19 @@ const $store = useStore();
 
 const error = ref<boolean>(false);
 const entries = ref<Entry[]>();
+const entries_abort_cont = ref<AbortController>();
 
 const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
 
 async function getEntries(): Promise<void> {
   try {
+    if (get(entries_abort_cont)) get(entries_abort_cont)!.abort();
+    const new_abort_conntroller = new AbortController();
     const timer_id = setTimeout(() => set(entries, undefined), 150);
-    const res = await http.get(pathToRoute($route));
+    const res = await http.get(pathToRoute($route), {
+      signal: new_abort_conntroller.signal,
+    });
+    set(entries_abort_cont, new_abort_conntroller);
     clearTimeout(timer_id);
     const previewable_strings = Object.values(PreviewType).map((p) => p as string);
     set(entries, res.data.map((entry: Entry) => {

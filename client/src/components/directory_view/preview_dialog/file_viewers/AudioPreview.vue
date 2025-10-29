@@ -21,6 +21,12 @@
         <ricon-play-fill slot='play' />
         <ricon-pause-fill slot='pause' />
       </media-play-button>
+      <media-mute-button class='preview-audio-player__control'>
+        <ricon-volume-up-fill slot='high' />
+        <ricon-volume-up-fill slot='medium' />
+        <ricon-volume-down-fill slot='low' />
+        <ricon-volume-mute-fill slot='off' />
+      </media-mute-button>
       <media-seek-forward-button
         seekoffset='5'
         class='preview-audio-player__control'
@@ -102,7 +108,7 @@ const { entry } = defineProps<{
       @apply not-hover:bg-transparent flex-1;
 
       & svg {
-        @apply size-12!;
+        @apply size-10!;
       }
     }
   }
