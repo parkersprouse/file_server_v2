@@ -44,24 +44,28 @@ const at_root = computed<boolean>(() => $route.path === '/');
 <style>
 @reference '../../assets/styles/index.css';
 
-nav {
-  & ol,
-  & ul {
-    @apply flex-nowrap overflow-y-hidden overflow-x-auto whitespace-nowrap text-nowrap;
-    overflow-wrap: normal;
+.breadcrumb-wrapper {
+  & nav {
+    @apply w-fit;
 
-    & li {
-      @apply flex-nowrap;
+    & ol,
+    & ul {
+      @apply w-full flex-nowrap overflow-y-hidden overflow-x-visible whitespace-nowrap text-nowrap;
+      overflow-wrap: normal;
 
-      &::before {
-        @apply hidden;
-      }
+      & li {
+        @apply flex-nowrap;
 
-      & a {
-        @apply border-b border-transparent border-dotted;
+        &::before {
+          @apply hidden;
+        }
 
-        @variant hover {
-          @apply border-primary;
+        & a {
+          @apply border-b border-transparent border-dotted;
+
+          @variant hover {
+            @apply border-primary;
+          }
         }
       }
     }

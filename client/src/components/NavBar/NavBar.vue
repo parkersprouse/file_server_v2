@@ -1,10 +1,9 @@
 <template>
   <Menubar
     id='toolbar'
-    class='z-10 fixed top-0 left-0 right-0 h-fit justify-between items-center border-x-0 border-t-0 p-0 pl-4'
+    class='z-10 fixed top-0 left-0 right-0 h-fit justify-between items-center border-x-0 border-t-0 p-0 pl-4 gap-4'
   >
-    <section class='flex flex-nowrap justify-evenly items-center gap-2 h-full
-                    overflow-y-hidden overflow-x-auto scrollbar-hidden'>
+    <section ref='breadcrumbs' class='breadcrumb-wrapper scrollbar-hidden'>
       <NavBreadcrumbs />
     </section>
 
@@ -19,7 +18,7 @@
     <!-- desktop view inline elements -->
     <section
       v-else
-      class='flex justify-evenly items-center h-full'
+      class='config-wrapper'
     >
       <Separator
         orientation='vertical'
@@ -41,11 +40,14 @@
 </template>
 
 <script setup lang='ts'>
-import { useThrottleFn } from '@vueuse/core';
-import { onMounted, onUnmounted } from 'vue';
+import { get, useThrottleFn } from '@vueuse/core';
+import { nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
+import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { useStore } from 'stores/global.ts';
+
+import type { UnsubscribeFunction } from 'emittery';
 
 const $is_mobile = useIsMobile();
 const $store = useStore();
@@ -56,14 +58,43 @@ const onResize = useThrottleFn((entries) => {
   $store.toolbar_height = target.offsetHeight;
 }, 100);
 
+const event_unsubs = ref<UnsubscribeFunction[]>([]);
+const $event_bus = useEventBus();
+
+const breadcrumbs = useTemplateRef('breadcrumbs');
 const observer = new ResizeObserver((entries) => onResize(entries));
 
-onMounted(() => {
+function rightAlignBreadcrumbs(): void {
+  const bc = get(breadcrumbs);
+  bc?.scrollTo({
+    behavior: 'instant',
+    left: bc.scrollWidth + 100,
+    top: 0,
+  });
+}
+
+onMounted(async () => {
   const toolbar = document.getElementById('toolbar');
   if (toolbar) observer.observe(toolbar);
+
+  nextTick(rightAlignBreadcrumbs);
+  get(event_unsubs).push($event_bus.on('path_updated', rightAlignBreadcrumbs));
 });
 
 onUnmounted(() => {
   observer.disconnect();
+  for (const unsub of get(event_unsubs)) unsub();
 });
 </script>
+
+<style>
+@reference '../../assets/styles/index.css';
+
+.breadcrumb-wrapper {
+  @apply block h-full overflow-y-hidden overflow-x-auto;
+}
+
+.config-wrapper {
+  @apply flex justify-end items-center h-full;
+}
+</style>
