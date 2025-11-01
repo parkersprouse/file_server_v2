@@ -7,9 +7,12 @@
     "pnpm": "^10"
   },
   "scripts": {
-    "start": "concurrently --kill-others --names \"Browser Client\",\"Browser Server\" --prefix-colors blue,yellow \"pnpm run client\" \"pnpm run server\"",
-    "client": "cd client && pnpm run build && serve -l 3000 --single dist",
-    "server": "cd server && cargo run -r"
+    "start": "concurrently --kill-others --names \"Dev Client\",\"Dev Server\" --prefix-colors blue,yellow \"pnpm run client:dev\" \"pnpm run server:dev\"",
+    "client:dev": "cd client && pnpm start --host",
+    "server:dev": "cd server && cargo run",
+    "release": "concurrently --kill-others --names \"Release Client\",\"Release Server\" --prefix-colors blue,yellow \"pnpm run client:release\" \"pnpm run server:release\"",
+    "client:release": "cd client && pnpm run build && serve -l 3000 --single dist",
+    "server:release": "cd server && cargo run -r"
   },
   "dependencies": {
     "concurrently": "^9.2.1"

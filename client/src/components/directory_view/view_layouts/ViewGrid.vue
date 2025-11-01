@@ -32,8 +32,8 @@ const { entries } = defineProps<{
       sm:flex-[calc(calc(calc(100%/3)-1rem)+calc(1rem/3))] sm:max-w-[calc(calc(calc(100%/3)-1rem)+calc(1rem/3))]
       flex-[calc(calc(50%-1rem)+0.5rem)] max-w-[calc(calc(50%-1rem)+0.5rem)] min-h-[200px];
 
-    & .entry-name {
-      @apply text-sm;
+    & .entry-title {
+      @apply text-sm py-1 px-2;
     }
 
     & .entry-meta {

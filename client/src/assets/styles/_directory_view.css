@@ -1,6 +1,16 @@
 .entry {
   @apply transition-none!;
 
+  & .entry-title {
+    @apply max-w-full w-full block text-nowrap whitespace-nowrap overflow-y-hidden overflow-x-scroll;
+
+    /*
+     * Manually setting this to an ellipsis instead of using the keyword allows it to show in browsers that
+     * properly support `text-overflow` + scrolling (Firefox) while not showing in browsers that don't (Vivaldi)
+     */
+    text-overflow: '…';
+  }
+
   & .entry-meta {
     @apply text-[0.65rem] transition-none gap-[0.15rem] bg-transparent text-muted-foreground px-1! py-0.5!;
   }

@@ -10,7 +10,7 @@
     }'
   >
     <!--
-      A work in progress
+    A work in progress
     <BackButton
       class='fixed'
       :style='{

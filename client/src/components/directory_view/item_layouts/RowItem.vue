@@ -13,9 +13,7 @@
       <component :is='fileTypeToIcon(entry.file_type || entry.entry_type)' />
     </ItemMedia>
     <ItemContent class='w-auto overflow-hidden'>
-      <ItemTitle class='w-full block text-nowrap whitespace-nowrap text-ellipsis
-                        overflow-y-hidden overflow-x-scroll scrollbar-hidden'
-      >
+      <ItemTitle class='entry-title scrollbar-hidden'>
         {{ entry.name }}
       </ItemTitle>
       <ItemDescription>
