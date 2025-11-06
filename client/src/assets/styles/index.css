@@ -178,7 +178,7 @@
 }
 
 @utility body-basics {
-  @apply bg-background text-foreground overflow-hidden;
+  @apply bg-background text-foreground; /* overflow-hidden -- this breaks vivaldi */
 
   width: 100vw;
   min-width: 100vw;

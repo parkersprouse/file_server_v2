@@ -12,7 +12,6 @@ use std::{
   fs,
   ops::Index,
   path::{Path, PathBuf},
-  time::Duration,
 };
 
 #[derive(Clone, Serialize)]
@@ -25,6 +24,7 @@ pub struct EntryDetails {
   pub last_modified_at: String,
   pub name: String,
   pub path: String,
+  pub raw_duration: u64,
   pub thumbnail: Option<String>,
 }
 
@@ -38,16 +38,18 @@ impl EntryDetails {
     let file_format: Option<FileFormat> = Self::determine_file_format(&entry_type, &full_path);
     let file_type: String = Self::file_type(file_format);
     let as_url: String = Self::path_to_url(&full_path, data);
+    let duration_tuple = Self::determine_duration(&full_path, &file_type).await;
 
     Self {
       created_at: Self::determine_created_at(&metadata),
-      duration: Self::determine_duration(&full_path, &file_type).await,
+      duration: duration_tuple.1,
       entry_type,
       file_type,
       full_type: Self::full_type(file_format),
       last_modified_at: Self::determine_modified_at(&metadata),
       name: entry.file_name().into_string().unwrap(),
       path: as_url.clone(),
+      raw_duration: duration_tuple.0,
       thumbnail: Self::get_thumbnail(as_url, data),
     }
   }
@@ -59,22 +61,25 @@ impl EntryDetails {
     }
   }
 
-  pub async fn determine_duration(path: &PathBuf, file_type: &str) -> String {
+  pub async fn determine_duration(path: &PathBuf, file_type: &str) -> (u64, String) {
     if !["audio", "video"].contains(&file_type) {
-      return "".into();
+      return (0, "".into());
     }
 
     let output = match ffprobe::ffprobe(path) {
       Ok(info) => info,
       Err(err) => {
         error!("{}", err);
-        return "".into();
+        return (0, "".into());
       },
     };
 
     match output.format.get_duration() {
-      Some(value) => Self::parse_ffmpeg_duration(&value),
-      None => "".to_string(),
+      Some(value) => {
+        let total_secs = value.as_secs();
+        (total_secs, Self::parse_ffmpeg_duration(total_secs))
+      },
+      None => (0, "".into()),
     }
   }
 
@@ -167,8 +172,7 @@ impl EntryDetails {
     }
   }
 
-  pub fn parse_ffmpeg_duration(value: &Duration) -> String {
-    let total_secs = value.as_secs();
+  pub fn parse_ffmpeg_duration(total_secs: u64) -> String {
     let hours = total_secs / 3600;
     let minutes = (total_secs % 3600) / 60;
     let seconds = total_secs % 60;

@@ -1,10 +1,12 @@
 use config::Config;
 use log::LevelFilter;
+use regex_lite::Regex;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone)]
 pub struct AppConfig {
   pub log_level: LevelFilter,
+  pub nonalpha_pattern: Regex,
   pub port: u16,
   pub root_dir_path: String,
 }
@@ -21,6 +23,7 @@ impl AppConfig {
 
     AppConfig {
       log_level: AppConfig::parse_app_log_level(&settings.get_string("log_level").unwrap_or("info".into())),
+      nonalpha_pattern: Regex::new(r"^[^A-Za-z0-9]").unwrap(),
       port: settings.get_int("port").unwrap_or(9000) as u16,
       root_dir_path: settings.get("root_dir").unwrap_or_else(|_| {
         panic!("Must set either \"root_dir\" in config.toml, or \"WEB_FILE_BROWSER_ROOT_DIR\" environment variable")

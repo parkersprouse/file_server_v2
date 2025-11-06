@@ -6,7 +6,7 @@ use actix_web::{HttpRequest, web::Data};
 use chrono::DateTime;
 use std::{cmp::Ordering, fs, io::Error, path::Path};
 
-fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<EntryDetails> {
+fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams, data: &Data<AppState>) -> Vec<EntryDetails> {
   // If output is empty, exit early
   if output.is_empty() {
     return output;
@@ -18,24 +18,26 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
   let mut clone = output.clone();
 
   // Check if the attribute we're attempting to sort by can be parsed as a datetime
-  let time_based: bool = SortKey::is_time_based(clone.first().unwrap(), key);
+  let datetime: bool = SortKey::is_time_based(clone.first().unwrap(), key);
 
   // First sort by requested attribute
   clone.sort_by(|a: &EntryDetails, b: &EntryDetails| {
-    if time_based {
+    if datetime {
       let a_val = &a[key];
       let b_val = &b[key];
-      if a_val.is_empty() && b_val.is_empty() {
-        return Ordering::Equal;
-      } else if a_val.is_empty() && !b_val.is_empty() {
-        return Ordering::Less;
-      } else if !a_val.is_empty() && b_val.is_empty() {
-        return Ordering::Greater;
+      if !a_val.is_empty() && !b_val.is_empty() {
+        let a_dt = DateTime::parse_from_rfc3339(a_val).unwrap();
+        let b_dt = DateTime::parse_from_rfc3339(b_val).unwrap();
+        if SortDir::is_desc(dir) { b_dt.cmp(&a_dt) } else { a_dt.cmp(&b_dt) }
+      } else {
+        Ordering::Equal
       }
+    } else if key.eq(SortKey::DURATION) {
+      // if a.duration.is_empty() || b.duration.is_empty() {
+      //   return Ordering::Less;
+      // }
 
-      let a_dt = DateTime::parse_from_rfc3339(a_val).unwrap();
-      let b_dt = DateTime::parse_from_rfc3339(b_val).unwrap();
-      if SortDir::is_desc(dir) { b_dt.cmp(&a_dt) } else { a_dt.cmp(&b_dt) }
+      if SortDir::is_desc(dir) { b.raw_duration.cmp(&a.raw_duration) } else { a.raw_duration.cmp(&b.raw_duration) }
     } else if SortDir::is_desc(dir) {
       b[key].to_lowercase().cmp(&a[key].to_lowercase())
     } else {
@@ -43,8 +45,19 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams) -> Vec<Entr
     }
   });
 
-  // Then make sure directories appear on top
-  clone.sort_by(|a, b| {
+  // Then make sure entries with non-alphanumeric chars appear on top
+  let pat = &data.config.nonalpha_pattern;
+  clone.sort_by(|a: &EntryDetails, b: &EntryDetails| {
+    if pat.is_match(a.name.as_str()) && !pat.is_match(b.name.as_str()) {
+      return Ordering::Less;
+    } else if !pat.is_match(a.name.as_str()) && pat.is_match(b.name.as_str()) {
+      return Ordering::Greater;
+    }
+    Ordering::Equal
+  });
+
+  // Finally, make sure directories appear on top
+  clone.sort_by(|a: &EntryDetails, b: &EntryDetails| {
     // If we're comparing a directory against a file, the directory moves up
     if a.entry_type.eq(EntryType::DIR) && b.entry_type.ne(EntryType::DIR) {
       return Ordering::Less;
@@ -76,5 +89,5 @@ where
     }
   }
 
-  Ok(sort_output(output, query_params))
+  Ok(sort_output(output, query_params, &data))
 }
