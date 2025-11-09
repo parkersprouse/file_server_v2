@@ -82,7 +82,7 @@ onUnmounted(() => {
   .preview-dialog {
     & .preview-dialog__header {
       & .preview-dialog__title__wrapper {
-        @apply border-none absolute max-w-screen w-screen; /* px-4 */
+        @apply border-none absolute max-w-full w-full; /* px-4 */
 
         & .preview-dialog__title--compact {
           @apply bg-background border-x-0 border-y text-sm!

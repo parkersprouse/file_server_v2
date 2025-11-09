@@ -3,9 +3,9 @@
 
   <main
     :style='{
-      height: `calc(100vh - ${toolbar_height})`,
-      minHeight: `calc(100vh - ${toolbar_height})`,
-      maxHeight: `calc(100vh - ${toolbar_height})`,
+      height: `calc(100% - ${toolbar_height})`,
+      minHeight: `calc(100% - ${toolbar_height})`,
+      maxHeight: `calc(100% - ${toolbar_height})`,
       top: toolbar_height,
     }'
   >
@@ -109,6 +109,6 @@ onUnmounted(() => {
 @reference '../assets/styles/index.css';
 
 main {
-  @apply flex flex-col justify-start items-center py-6 px-0 z-0 w-screen overflow-y-auto overflow-x-hidden relative;
+  @apply flex flex-col justify-start items-center py-6 px-0 z-0 w-full overflow-y-auto overflow-x-hidden relative;
 }
 </style>

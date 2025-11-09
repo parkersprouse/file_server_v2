@@ -145,7 +145,7 @@ onUnmounted(() => {
 
 @layer app {
   .preview-dialog {
-    @apply fixed left-0 top-0 hidden w-screen h-screen max-w-screen max-h-screen
+    @apply fixed left-0 top-0 hidden w-full h-full max-w-full max-h-full
            m-auto p-0 border-none z-1000 bg-transparent;
 
     cursor: initial;
@@ -154,7 +154,7 @@ onUnmounted(() => {
       @apply flex flex-col flex-nowrap items-center justify-center;
 
       &::backdrop {
-        @apply z-999 bg-black/85 max-w-screen max-h-screen w-screen h-screen;
+        @apply z-999 bg-black/85 max-w-full max-h-full w-full h-full;
       }
     }
 
@@ -163,7 +163,7 @@ onUnmounted(() => {
     }
 
     & .preview-dialog__header {
-      @apply fixed left-0 top-0 w-screen flex flex-row flex-nowrap items-start justify-end gap-4 z-1010;
+      @apply fixed left-0 top-0 w-full flex flex-row flex-nowrap items-start justify-end gap-4 z-1010;
       cursor: initial;
     }
 
