@@ -5,9 +5,7 @@ use crate::{
 use actix_files::NamedFile;
 use actix_web::http::header::{ContentDisposition, DispositionType};
 use std::{
-  fs,
-  io::Error,
-  path::{Path, PathBuf},
+  fs, io::Error, path::{Path, PathBuf}
 };
 
 pub async fn read<P>(path: P, disposition_kind: DispositionKind) -> Result<NamedFile, Error>
@@ -16,10 +14,10 @@ where
 {
   match disposition_kind {
     DispositionKind::Attachment => {
-      let file: NamedFile = NamedFile::open_async(&path)
-        .await?
+      let file = NamedFile::open_async(&path).await?
         .use_etag(true)
         .use_last_modified(true)
+        .read_mode_threshold(0)
         .set_content_disposition(ContentDisposition {
           disposition: DispositionType::Attachment,
           parameters: vec![],
@@ -27,10 +25,10 @@ where
       Ok(file)
     },
     DispositionKind::Inline => {
-      let file: NamedFile = NamedFile::open_async(&path)
-        .await?
+      let file = NamedFile::open_async(&path).await?
         .use_etag(true)
         .use_last_modified(true)
+        .read_mode_threshold(0)
         .set_content_disposition(ContentDisposition {
           disposition: DispositionType::Inline,
           parameters: vec![],
@@ -41,22 +39,22 @@ where
       let mut disposition = DispositionType::Attachment;
 
       let Ok(file_meta) = fs::metadata(&path) else {
-        let file: NamedFile = NamedFile::open_async(&path)
-          .await?
+        let file = NamedFile::open_async(&path).await?
           .use_etag(true)
           .use_last_modified(true)
+          .read_mode_threshold(0)
           .set_content_disposition(ContentDisposition {
-            disposition,
-            parameters: vec![],
-          });
-
+              disposition,
+              parameters: vec![],
+            });
         return Ok(file);
       };
 
       let mut path_buf = PathBuf::new();
       path_buf.push(&path);
 
-      let file_format = EntryDetails::determine_file_format(EntryType::stringify(&file_meta.file_type()), &path_buf);
+      let file_format = EntryDetails::determine_file_format(
+        EntryType::stringify(&file_meta.file_type()), &path_buf);
       let file_type = EntryDetails::file_type(file_format);
 
       if EntryDetails::INLINE_TYPES.contains(&file_type.as_str()) {

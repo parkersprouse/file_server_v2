@@ -1,8 +1,7 @@
 use crate::services::resource_handler;
 use actix_cors::Cors;
-use actix_files::NamedFile;
 use actix_web::{
-  App, Either, HttpRequest, HttpResponse, HttpServer, http, middleware::Logger, web::{
+  App, HttpRequest, HttpResponse, HttpServer, http, middleware::Logger, web::{
     Data,
     get,
   }
@@ -32,7 +31,7 @@ pub struct AppState {
   pub config: AppConfig,
 }
 
-async fn index_route(req: HttpRequest, data: Data<AppState>) -> Either<HttpResponse, NamedFile> {
+async fn index_route(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
   resource_handler::handle(req, data).await
 }
 
