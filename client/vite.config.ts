@@ -20,31 +20,41 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Manually define the chunks that dependencies will be bundled
-        //   into to ensure they stay under acceptable size limits.
+        //   into to keep them as small as possible.
         manualChunks: {
-          runtime_libs: [
+          a: [
+            'emittery',
+            'media-chrome',
+            'ua-parser-js',
+          ],
+          b: [
             'axios',
+            'clsx',
             'dayjs',
             'pinia',
+            'reka-ui',
           ],
           // tailwind: [
+          //   '@tailwindcss/vite',
           //   'tailwindcss',
           //   'tailwind-merge',
-          //   'tw-animate-css',
           // ],
-          vue: [
+          c: [
             '@vueuse/core',
             'vue',
             'vue-router',
           ],
+          d: [
+            'caniuse-lite',
+          ],
         },
       },
     },
-    sourcemap: false,
+    sourcemap: true,
     target: 'es2020',
   },
   css: {
-    devSourcemap: false,
+    devSourcemap: true,
     modules: false,
     // Tailwind seems to have some issues with lightningcss:
     //   https://github.com/tailwindlabs/tailwindcss/issues/14205
