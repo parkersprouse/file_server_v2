@@ -127,10 +127,6 @@ function setLocalKey(key: SortKey): void {
 async function commit(): Promise<void> {
   const dir = get(local_dir);
   const key = get(local_key);
-
-  console.log(dir, $store.dir, dir === $store.dir);
-  console.log(key, $store.key, key === $store.key);
-
   if (dir === $store.dir && key === $store.key) return;
   await $store.updateSorting(dir!, key!);
 }

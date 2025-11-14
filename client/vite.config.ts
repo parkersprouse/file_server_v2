@@ -50,11 +50,11 @@ export default defineConfig({
         },
       },
     },
-    sourcemap: true,
+    sourcemap: false,
     target: 'es2020',
   },
   css: {
-    devSourcemap: true,
+    devSourcemap: false,
     modules: false,
     // Tailwind seems to have some issues with lightningcss:
     //   https://github.com/tailwindlabs/tailwindcss/issues/14205
