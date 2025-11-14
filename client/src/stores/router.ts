@@ -59,6 +59,22 @@ export const useRouterStore = defineStore('router', () => {
       });
   }
 
+  async function updateSorting(
+    new_dir: SortDir,
+    new_key: SortKey,
+  ): Promise<void> {
+    $router.push({
+      query: {
+        ...$route.query,
+        [QueryParam.DIR]: new_dir,
+        [QueryParam.KEY]: new_key,
+      },
+    })
+      .then(async () => {
+        await $event_bus.emit('query_updated', true);
+      });
+  }
+
   function validate<T extends string, TEnumValue extends string>(
     param: LocationQueryValue | LocationQueryValue[] | undefined,
     type: { [idx in T]: TEnumValue },
@@ -83,5 +99,8 @@ export const useRouterStore = defineStore('router', () => {
     dir,
     key,
     view,
+
+    /*-- Functions --*/
+    updateSorting,
   };
 });
