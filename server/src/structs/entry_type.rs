@@ -1,4 +1,4 @@
-use crate::AppState;
+use crate::{AppState, structs::entry_details::EntryDetails};
 use actix_web::web::Data;
 use std::fs;
 
@@ -7,6 +7,14 @@ pub struct EntryType {}
 impl EntryType {
   pub const DIR: &'static str = "dir";
   pub const FILE: &'static str = "file";
+
+  pub fn is_dir(entry: &EntryDetails) -> bool {
+    entry.entry_type == Self::DIR
+  }
+
+  pub fn is_file(entry: &EntryDetails) -> bool {
+    entry.entry_type == Self::FILE
+  }
 
   pub fn stringify(filetype: &fs::FileType) -> &'static str {
     if filetype.is_dir() {

@@ -1,9 +1,16 @@
-use crate::AppState;
-use crate::structs::{
-  entry_details::EntryDetails, entry_type::EntryType, query_params::QueryParams, sort_dir::SortDir, sort_key::SortKey,
+use crate::{
+  AppState,
+  structs::{
+    entry_details::EntryDetails,
+    entry_type::EntryType,
+    query_params::QueryParams,
+    sort_dir::SortDir,
+    sort_key::SortKey,
+  },
 };
 use actix_web::{HttpRequest, web::Data};
 use chrono::DateTime;
+use regex_lite::Regex;
 use std::{cmp::Ordering, fs, io::Error, path::Path};
 
 fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams, data: &Data<AppState>) -> Vec<EntryDetails> {
@@ -12,65 +19,105 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams, data: &Data
     return output;
   }
 
+  let sticky_pat: &Regex = &data.config.nonalpha_pattern;
   let dir = SortDir::validate(&query_params.dir);
   let key = SortKey::validate(&query_params.key);
 
-  let mut clone = output.clone();
+  let mut folders: Vec<EntryDetails> = output.clone()
+    .into_iter()
+    .filter(|entry: &EntryDetails| entry.is_dir())
+    .collect();
 
-  // Check if the attribute we're attempting to sort by can be parsed as a datetime
-  let datetime: bool = SortKey::is_time_based(clone.first().unwrap(), key);
+  let mut files: Vec<EntryDetails> = output.clone()
+    .into_iter()
+    .filter(|entry: &EntryDetails| entry.is_file())
+    .collect();
 
-  // First sort by requested attribute
-  clone.sort_by(|a: &EntryDetails, b: &EntryDetails| {
-    if datetime {
-      let a_val = &a[key];
-      let b_val = &b[key];
-      if !a_val.is_empty() && !b_val.is_empty() {
-        let a_dt = DateTime::parse_from_rfc3339(a_val).unwrap();
-        let b_dt = DateTime::parse_from_rfc3339(b_val).unwrap();
-        if SortDir::is_desc(dir) { b_dt.cmp(&a_dt) } else { a_dt.cmp(&b_dt) }
-      } else {
-        Ordering::Equal
+  // Sort folders separately from files so that we can keep them collected on top
+  folders.sort_by(|a: &EntryDetails, b: &EntryDetails| {
+    match key {
+      "created_at" => {
+        sort_by_datetime(a, b, key)
+      },
+      "duration" => {
+        sort_by_name(a, b)
+      },
+      "last_modified_at" => {
+        sort_by_datetime(a, b, key)
+      },
+      "name" => {
+        sort_by_name(a, b)
+      },
+      _ => {
+        sort_by_name(a, b)
       }
-    } else if key.eq(SortKey::DURATION) {
-      // if a.duration.is_empty() || b.duration.is_empty() {
-      //   return Ordering::Less;
-      // }
-
-      if SortDir::is_desc(dir) { b.raw_duration.cmp(&a.raw_duration) } else { a.raw_duration.cmp(&b.raw_duration) }
-    } else if SortDir::is_desc(dir) {
-      b[key].to_lowercase().cmp(&a[key].to_lowercase())
-    } else {
-      a[key].to_lowercase().cmp(&b[key].to_lowercase())
     }
   });
 
-  // Then make sure entries with non-alphanumeric chars appear on top
-  let pat = &data.config.nonalpha_pattern;
-  clone.sort_by(|a: &EntryDetails, b: &EntryDetails| {
-    if pat.is_match(a.name.as_str()) && !pat.is_match(b.name.as_str()) {
-      return Ordering::Less;
-    } else if !pat.is_match(a.name.as_str()) && pat.is_match(b.name.as_str()) {
-      return Ordering::Greater;
+  folders.sort_by(|a: &EntryDetails, b: &EntryDetails| {
+    sort_by_sticky(a, b, sticky_pat)
+  });
+
+  files.sort_by(|a: &EntryDetails, b: &EntryDetails| {
+    match key {
+      "created_at" => {
+        sort_by_datetime(a, b, key)
+      },
+      "duration" => {
+        sort_by_duration(a, b)
+      },
+      "last_modified_at" => {
+        sort_by_datetime(a, b, key)
+      },
+      "name" => {
+        sort_by_name(a, b)
+      },
+      _ => {
+        sort_by_name(a, b)
+      }
     }
+  });
+
+  files.sort_by(|a: &EntryDetails, b: &EntryDetails| {
+    sort_by_sticky(a, b, sticky_pat)
+  });
+
+  if SortDir::is_desc(dir) {
+    folders.reverse();
+    files.reverse();
+  }
+
+  folders.append(&mut files);
+  folders
+}
+
+fn sort_by_datetime(a: &EntryDetails, b: &EntryDetails, key: &str) -> Ordering {
+  let a_val = &a[key];
+  let b_val = &b[key];
+  if !a_val.is_empty() && !b_val.is_empty() {
+    let a_dt = DateTime::parse_from_rfc3339(a_val).unwrap();
+    let b_dt = DateTime::parse_from_rfc3339(b_val).unwrap();
+    a_dt.cmp(&b_dt)
+  } else {
     Ordering::Equal
-  });
+  }
+}
 
-  // Finally, make sure directories appear on top
-  clone.sort_by(|a: &EntryDetails, b: &EntryDetails| {
-    // If we're comparing a directory against a file, the directory moves up
-    if a.entry_type.eq(EntryType::DIR) && b.entry_type.ne(EntryType::DIR) {
-      return Ordering::Less;
-    }
-    // If we're comparing a file against a directory, the file moves down
-    if a.entry_type.ne(EntryType::DIR) && b.entry_type.eq(EntryType::DIR) {
-      return Ordering::Greater;
-    }
-    // Otherwise, change nothing
-    Ordering::Equal
-  });
+fn sort_by_duration(a: &EntryDetails, b: &EntryDetails) -> Ordering {
+  a.raw_duration.cmp(&b.raw_duration)
+}
 
-  clone
+fn sort_by_name(a: &EntryDetails, b: &EntryDetails) -> Ordering {
+  a.name.to_lowercase().cmp(&b.name.to_lowercase())
+}
+
+fn sort_by_sticky(a: &EntryDetails, b: &EntryDetails, pat: &Regex) -> Ordering {
+  if pat.is_match(a.name.as_str()) && !pat.is_match(b.name.as_str()) {
+    return Ordering::Less;
+  } else if !pat.is_match(a.name.as_str()) && pat.is_match(b.name.as_str()) {
+    return Ordering::Greater;
+  }
+  Ordering::Equal
 }
 
 pub async fn read<P>(path: P, req: &HttpRequest, data: &Data<AppState>) -> Result<Vec<EntryDetails>, Error>

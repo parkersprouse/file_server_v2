@@ -172,6 +172,14 @@ impl EntryDetails {
     }
   }
 
+  pub fn is_dir(self: &EntryDetails) -> bool {
+    EntryType::is_dir(self)
+  }
+
+  pub fn is_file(self: &EntryDetails) -> bool {
+    EntryType::is_file(self)
+  }
+
   pub fn parse_ffmpeg_duration(total_secs: u64) -> String {
     let hours = total_secs / 3600;
     let minutes = (total_secs % 3600) / 60;

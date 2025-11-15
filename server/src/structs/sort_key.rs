@@ -1,6 +1,3 @@
-use crate::structs::entry_details::EntryDetails;
-use chrono::DateTime;
-
 pub struct SortKey {}
 
 impl SortKey {
@@ -16,9 +13,5 @@ impl SortKey {
       return dir;
     }
     Self::NAME
-  }
-
-  pub fn is_time_based(entry: &EntryDetails, key: &str) -> bool {
-    DateTime::parse_from_rfc3339(&entry[key]).is_ok()
   }
 }
