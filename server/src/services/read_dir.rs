@@ -28,7 +28,7 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams, data: &Data
     .filter(|entry: &EntryDetails| entry.is_dir())
     .collect();
 
-  let mut files: Vec<EntryDetails> = output.clone()
+  let mut files: Vec<EntryDetails> = output
     .into_iter()
     .filter(|entry: &EntryDetails| entry.is_file())
     .collect();
@@ -83,8 +83,11 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams, data: &Data
   });
 
   if SortDir::is_desc(dir) {
-    folders.reverse();
     files.reverse();
+    // Don't reverse the sorting of folders when sorting by duration
+    if key != SortKey::DURATION {
+      folders.reverse();
+    }
   }
 
   folders.append(&mut files);
