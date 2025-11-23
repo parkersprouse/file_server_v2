@@ -3,13 +3,14 @@ use log::info;
 
 pub fn verify(ctx: &GuardContext) -> bool {
   match ctx.head().peer_addr {
-    Some(value) => {
-      let addr = value.to_string();
-      if addr.starts_with("192.168.") {
-        return true;
+    Some(addr) => {
+      match addr.to_string().starts_with("192.168.") {
+        true => true,
+        false => {
+          info!("[blocking request from] {addr}");
+          false
+        }
       }
-      info!("[blocking request from] {addr}");
-      false
     },
     None => false,
   }
