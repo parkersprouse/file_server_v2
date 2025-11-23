@@ -1,4 +1,4 @@
-use crate::{lib::{cors, referer_guard}, services::resource_handler};
+use crate::{lib::{cors, gatekeeper}, services::resource_handler};
 use actix_web::{
   App, HttpRequest, HttpResponse, HttpServer, guard,
   middleware,
@@ -13,7 +13,7 @@ mod enums {
 }
 mod lib {
   pub mod cors;
-  pub mod referer_guard;
+  pub mod gatekeeper;
 }
 mod services {
   pub mod read_dir;
@@ -54,7 +54,7 @@ async fn main() -> io::Result<()> {
       .wrap(cors::default())
       .service(
         web::scope("/{path:.*}")
-          .guard(guard::fn_guard(referer_guard::check_referer))
+          .guard(guard::fn_guard(gatekeeper::verify))
           .route("", get().to(index_route))
       )
   })
