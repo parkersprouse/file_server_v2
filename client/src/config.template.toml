@@ -1,2 +1,2 @@
 # The port to run the Web File Browser server on
-server_port = 9000
+server_port = 8100

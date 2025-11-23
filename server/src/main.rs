@@ -1,10 +1,8 @@
-use crate::services::resource_handler;
-use actix_cors::Cors;
+use crate::{lib::{cors, referer_guard}, services::resource_handler};
 use actix_web::{
-  App, HttpRequest, HttpResponse, HttpServer, http, middleware::Logger, web::{
-    Data,
-    get,
-  }
+  App, HttpRequest, HttpResponse, HttpServer, guard,
+  middleware,
+  web::{self, Data, get},
 };
 use app_config::AppConfig;
 use std::io;
@@ -12,6 +10,10 @@ use std::io;
 mod app_config;
 mod enums {
   pub mod disposition_kind;
+}
+mod lib {
+  pub mod cors;
+  pub mod referer_guard;
 }
 mod services {
   pub mod read_dir;
@@ -47,16 +49,14 @@ async fn main() -> io::Result<()> {
   HttpServer::new(move || {
     App::new()
       .app_data(app_state.to_owned())
-      .wrap(Logger::default())
-      .wrap(
-        Cors::default()
-          .allow_any_origin()
-          .allowed_methods(vec!["GET"])
-          .allowed_headers(vec![http::header::CONTENT_TYPE, http::header::ACCEPT])
-          .max_age(3600), // one hour
+      .wrap(middleware::Logger::default())
+      .wrap(middleware::NormalizePath::trim())
+      .wrap(cors::default())
+      .service(
+        web::scope("/{path:.*}")
+          .guard(guard::fn_guard(referer_guard::check_referer))
+          .route("", get().to(index_route))
       )
-      .route("/{path:.*}", get().to(index_route))
-      .route("/{path:.*}/", get().to(index_route))
   })
   .bind(("0.0.0.0", config.port))?
   .run()

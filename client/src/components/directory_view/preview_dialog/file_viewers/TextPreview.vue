@@ -15,7 +15,7 @@ import { get } from '@vueuse/core';
 import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
-import { capitalize } from 'lib/utils.ts';
+// import { capitalize } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
@@ -53,8 +53,9 @@ function postHightlightHandler(env: Environment): void {
   const code_toolbar = document.querySelector('.code-toolbar');
   const code_ele = code_toolbar?.querySelector('pre code');
   if (code_toolbar && code_ele) {
-    const language_tag = code_toolbar.querySelector('.language-tag');
-    if (language_tag) language_tag.textContent = capitalize(language_tag.textContent, false);
+    // const language_tag = code_toolbar.querySelector('.language-tag');
+    // if (language_tag) language_tag.textContent = capitalize(language_tag.textContent, false);
+    console.log(env.language);
 
     $store.file_highlight_result = {
       inline_colors_present: code_toolbar.querySelectorAll('.inline-color').length > 0,
@@ -113,7 +114,7 @@ onUnmounted(() => {
   @apply h-[90%] w-[90%] p-0;
 
   & .preview-dialog__content {
-    @apply max-w-full max-h-full bg-accent text-primary overflow-hidden p-0;
+    @apply max-w-full max-h-full w-full h-full bg-accent text-primary overflow-hidden p-0;
 
     & object {
       @apply w-full h-full overflow-auto;

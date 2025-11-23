@@ -17,7 +17,7 @@ const { entry } = defineProps<{
   @apply h-[90%] w-[90%] p-0;
 
   & .preview-dialog__content {
-    @apply max-w-full max-h-full p-0;
+    @apply max-w-full max-h-full w-full h-full p-0;
 
     & object {
       @apply w-full h-full overflow-auto;

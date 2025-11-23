@@ -2,7 +2,6 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { stringifyQuery } from 'vue-router';
 
-// import { config } from '@/config.ts';
 import { http } from 'lib/http.ts';
 
 import type { ClassValue } from 'clsx';
@@ -46,7 +45,7 @@ export function formatQuery(query: LocationQuery): string {
 }
 
 export function breadcrumbify(route: RouteLocationNormalizedLoadedGeneric): Breadcrumb[] {
-  const parts = decodeURI(route.path).split('/').slice(1);
+  const parts = trim(decodeURI(route.path)).split(/[\\/]+/g);
   return buildPath(parts, route).filter((part) => part.label.length > 0);
 }
 
@@ -60,5 +59,5 @@ export function toFileUrl(value: Entry | string): string {
 }
 
 export function trim(path: string): string {
-  return path.replace(/(^\/*)|(\/*$)/g, '');
+  return path.replace(/(^[\\/]*)|([\\/]*$)/g, '');
 }

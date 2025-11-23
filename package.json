@@ -11,7 +11,7 @@
     "client:dev": "cd client && pnpm start --host",
     "server:dev": "cd server && cargo run",
     "release": "concurrently --kill-others --names \"Release Client\",\"Release Server\" --prefix-colors blue,yellow \"pnpm run client:release\" \"pnpm run server:release\"",
-    "client:release": "cd client && pnpm run build && serve -l 3000 --single dist",
+    "client:release": "cd client && pnpm run build && serve -l 8080 --single dist",
     "server:release": "cd server && cargo run -r"
   },
   "dependencies": {
