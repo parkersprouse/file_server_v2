@@ -16,3 +16,4 @@ file-format = { version = "0.28.0", features = ["reader"] }
 log = "0.4.27"
 regex-lite = "0.1.8"
 serde = { version = "1.0.219", features = ["derive"] }
+urlencoding = "2.1.3"
