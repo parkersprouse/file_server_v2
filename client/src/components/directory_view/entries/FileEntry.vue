@@ -11,7 +11,7 @@
       </a>
       <a
         v-else
-        :href='entry.url'
+        :href='`${entry.url}?download`'
         download
         class='entry'
       >
