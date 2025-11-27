@@ -23,9 +23,6 @@ mod services {
 mod structs {
   pub mod entry_details;
   pub mod entry_type;
-  pub mod query_params;
-  pub mod sort_dir;
-  pub mod sort_key;
 }
 mod util;
 

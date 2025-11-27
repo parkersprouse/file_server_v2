@@ -95,7 +95,7 @@ fn sort_output(output: Vec<EntryDetails>, query_params: QueryParams, data: &Data
       //   return Ordering::Less;
       // }
 
-      if SortDir::is_desc(dir) { b.raw_duration.cmp(&a.raw_duration) } else { a.raw_duration.cmp(&b.raw_duration) }
+      if SortDir::is_desc(dir) { b.duration_raw.cmp(&a.duration_raw) } else { a.duration_raw.cmp(&b.duration_raw) }
     } else if SortDir::is_desc(dir) {
       b[key].to_lowercase().cmp(&a[key].to_lowercase())
     } else {

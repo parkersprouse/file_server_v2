@@ -39,16 +39,22 @@ import { useRoute } from 'vue-router';
 import { useEventBus } from 'composables/event_bus.ts';
 import { FileType } from 'enums/file_type.ts';
 import { PreviewType } from 'enums/preview_type.ts';
+import { SortDir } from 'enums/sort_dir.ts';
+import { SortKey } from 'enums/sort_key.ts';
 import { http } from 'lib/http.ts';
+import { sortEntries } from 'lib/sort.ts';
 import { pathToRoute, toFileUrl } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
+import { useRouterStore } from 'stores/router.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
+import type { QueryParamValue } from 'stores/router.ts';
 import type { Entry } from 'types/entry.d.ts';
 
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $event_bus = useEventBus();
 const $route = useRoute();
+const $router_store = useRouterStore();
 const $store = useStore();
 
 const error = ref<boolean>(false);
@@ -69,7 +75,8 @@ async function getEntries(): Promise<void> {
     set(entries_abort_ctrl, new_abort_conntroller);
     clearTimeout(timer_id);
     const previewable_strings = Object.values(PreviewType).map((p) => p as string);
-    set(entries, res.data.map((entry: Entry) => {
+
+    const results = res.data.map((entry: Entry) => {
       entry.url = toFileUrl(entry);
 
       if (entry.thumbnail) {
@@ -83,21 +90,25 @@ async function getEntries(): Promise<void> {
       }
 
       return entry;
-    }));
+    });
+
+    set(entries, sortEntries(results, $router_store.key, $router_store.dir));
   } catch {
     set(error, true);
-  } finally {
-    get(entries_abort_ctrl)?.abort();
-    set(entries_abort_ctrl, undefined);
   }
 }
 
 onMounted(async () => {
+  const sort_param_keys = [...Object.keys(SortKey), ...Object.keys(SortDir)];
+
   await getEntries();
   get(event_unsubs).push(
     $event_bus.on('path_updated', getEntries),
-    $event_bus.on('query_updated', async (should_refresh: boolean): Promise<void> => {
-      if (should_refresh) await getEntries();
+    $event_bus.on('query_updated', (params: QueryParamValue[]): void => {
+      const ents = get(entries);
+      if (ents && params.some((param) => sort_param_keys.includes(param.toUpperCase()))) {
+        set(entries, sortEntries(ents, $router_store.key, $router_store.dir));
+      }
     }),
   );
 });

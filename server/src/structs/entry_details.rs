@@ -17,14 +17,18 @@ use std::{
 #[derive(Clone, Serialize)]
 pub struct EntryDetails {
   pub created_at: String,
+  pub created_at_epoch: i64,
   pub duration: String,
+  pub duration_order: u8,
+  pub duration_raw: u64,
   pub entry_type: String,
   pub file_type: String,
   pub full_type: String,
   pub last_modified_at: String,
+  pub last_modified_at_epoch: i64,
   pub name: String,
+  pub name_lowercase: String,
   pub path: String,
-  pub raw_duration: u64,
   pub thumbnail: Option<String>,
 }
 
@@ -37,27 +41,44 @@ impl EntryDetails {
     let full_path: PathBuf = entry.path();
     let file_format: Option<FileFormat> = Self::determine_file_format(&entry_type, &full_path);
     let file_type: String = Self::file_type(file_format);
+
+    let name: String = entry.file_name().into_string().unwrap();
+
     let as_url: String = Self::path_to_url(&full_path, data);
     let duration_tuple = Self::determine_duration(&full_path, &file_type).await;
+    let created_at = Self::determine_created_at(&metadata);
+    let last_modified_at = Self::determine_modified_at(&metadata);
+
+    let mut duration_order: u8 = 0;
+    if duration_tuple.0 == 0 {
+      duration_order = 1;
+    }
 
     Self {
-      created_at: Self::determine_created_at(&metadata),
+      created_at: created_at.1,
+      created_at_epoch: created_at.0,
       duration: duration_tuple.1,
+      duration_order,
+      duration_raw: duration_tuple.0,
       entry_type,
       file_type,
       full_type: Self::full_type(file_format),
-      last_modified_at: Self::determine_modified_at(&metadata),
-      name: entry.file_name().into_string().unwrap(),
+      last_modified_at: last_modified_at.1,
+      last_modified_at_epoch: last_modified_at.0,
+      name: name.clone(),
+      name_lowercase: name.to_lowercase(),
       path: as_url.clone(),
-      raw_duration: duration_tuple.0,
       thumbnail: Self::get_thumbnail(as_url, data),
     }
   }
 
-  pub fn determine_created_at(metadata: &fs::Metadata) -> String {
-    match metadata.created() {
-      Ok(output) => DateTime::<Utc>::from(output).to_rfc3339(),
-      Err(_) => "n/a".into(),
+  pub fn determine_created_at(metadata: &fs::Metadata) -> (i64, String) {
+    match metadata.modified() {
+      Ok(output) => {
+        let datetime = DateTime::<Utc>::from(output);
+        (datetime.timestamp(), datetime.to_rfc3339())
+      },
+      Err(_) => (0, "n/a".to_string()),
     }
   }
 
@@ -97,10 +118,13 @@ impl EntryDetails {
     }
   }
 
-  pub fn determine_modified_at(metadata: &fs::Metadata) -> String {
+  pub fn determine_modified_at(metadata: &fs::Metadata) -> (i64, String) {
     match metadata.modified() {
-      Ok(output) => DateTime::<Utc>::from(output).to_rfc3339(),
-      Err(_) => "n/a".into(),
+      Ok(output) => {
+        let datetime = DateTime::<Utc>::from(output);
+        (datetime.timestamp(), datetime.to_rfc3339())
+      },
+      Err(_) => (0, "n/a".to_string()),
     }
   }
 
@@ -170,14 +194,6 @@ impl EntryDetails {
       },
       Err(_) => None,
     }
-  }
-
-  pub fn is_dir(self: &EntryDetails) -> bool {
-    EntryType::is_dir(self)
-  }
-
-  pub fn is_file(self: &EntryDetails) -> bool {
-    EntryType::is_file(self)
   }
 
   pub fn parse_ffmpeg_duration(total_secs: u64) -> String {

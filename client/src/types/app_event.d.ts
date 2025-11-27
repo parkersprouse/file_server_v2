@@ -1,3 +1,4 @@
+import type { QueryParamValue } from 'stores/router.ts';
 import type { Entry } from 'types/entry.d.ts';
 
 export type AppEvent = {
@@ -5,7 +6,7 @@ export type AppEvent = {
   dialog_clicked: Event;
   hide_dialog: undefined;
   path_updated: undefined;
-  query_updated: boolean;
+  query_updated: QueryParamValue[];
   resize_preview_actions: DOMRect;
   show_dialog: Entry;
   text_copied: boolean;

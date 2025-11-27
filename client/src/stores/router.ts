@@ -39,14 +39,13 @@ export const useRouterStore = defineStore('router', () => {
   const view = computed({
     get: () => validate($route.query.view, ViewType, ViewType.LIST),
     set: async (new_view: ViewType) => {
-      await updateQueryParam(QueryParam.VIEW, new_view, false);
+      await updateQueryParam(QueryParam.VIEW, new_view);
     },
   });
 
   async function updateQueryParam(
     name: QueryParam,
     value: QueryParamValue,
-    should_refresh: boolean = true,
   ): Promise<void> {
     $router.push({
       query: {
@@ -55,7 +54,7 @@ export const useRouterStore = defineStore('router', () => {
       },
     })
       .then(async () => {
-        await $event_bus.emit('query_updated', should_refresh);
+        await $event_bus.emit('query_updated', [value]);
       });
   }
 
@@ -71,7 +70,7 @@ export const useRouterStore = defineStore('router', () => {
       },
     })
       .then(async () => {
-        await $event_bus.emit('query_updated', true);
+        await $event_bus.emit('query_updated', [new_dir, new_key]);
       });
   }
 

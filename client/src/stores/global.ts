@@ -8,21 +8,22 @@ export const useStore = defineStore('global', () => {
   /*-- State --*/
   const file_highlight_result = ref<FileHighlightResult>();
   const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
-  const preview_inline_colors_disabled = useLocalStorage('preview_inline_colors_disabled', false);
-  const preview_text_wrapped = useLocalStorage('preview_text_wrapped', false);
+  const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
+  const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
   const toolbar_height = ref<number>(0);
 
   /*-- Computed --*/
-  const inline_colors_present = computed<boolean>(() => get(file_highlight_result)?.inline_colors_present ?? false);
-  const wrap_text_preview = computed<boolean>(() => get(preview_text_wrapped));
+  const inline_colors_present = computed<boolean>(() =>
+    get<FileHighlightResult | undefined>(file_highlight_result)?.inline_colors_present ?? false);
+  const wrap_text_preview = computed<boolean>(() => get<boolean>(preview_text_wrapped));
 
   /*-- Methods --*/
   function toggleInlineColorsPreview(): void {
-    set(preview_inline_colors_disabled, !get(preview_inline_colors_disabled));
+    set(preview_inline_colors_disabled, !get<boolean>(preview_inline_colors_disabled));
   }
 
   function togglePreviewLineWrap(): void {
-    set(preview_text_wrapped, !get(preview_text_wrapped));
+    set(preview_text_wrapped, !get<boolean>(preview_text_wrapped));
   }
 
   return {

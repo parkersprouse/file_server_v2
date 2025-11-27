@@ -22,7 +22,7 @@ pub async fn handle(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
 
   // If the path we're requesting points to a directory
   if metadata.is_dir() {
-    return match read_dir::read(&path, &req, &data).await {
+    return match read_dir::read(&path, &data).await {
       Ok(result) => HttpResponse::Ok().json(result),
       Err(_) => HttpResponse::InternalServerError().finish(),
     }
