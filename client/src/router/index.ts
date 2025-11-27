@@ -6,6 +6,12 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      beforeEnter(to, _from, next): void {
+        if (to.path.includes('%5C')) {
+          to.path.replace('%5C', '/');
+        }
+        next(to);
+      },
       component: DirectoryView,
       name: 'entry',
       path: '/:pathMatch(.*)*',
