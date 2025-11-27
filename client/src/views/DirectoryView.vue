@@ -66,14 +66,15 @@ const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`)
 async function getEntries(): Promise<void> {
   try {
     get(entries_abort_ctrl)?.abort();
-    const new_abort_conntroller = new AbortController();
+    const abort_controller = new AbortController();
 
     const timer_id = setTimeout(() => set(entries, undefined), 150);
     const res = await http.get(pathToRoute($route), {
-      signal: new_abort_conntroller.signal,
+      signal: abort_controller.signal,
     });
-    set(entries_abort_ctrl, new_abort_conntroller);
+    set(entries_abort_ctrl, abort_controller);
     clearTimeout(timer_id);
+
     const previewable_strings = Object.values(PreviewType).map((p) => p as string);
 
     const results = res.data.map((entry: Entry) => {
@@ -105,9 +106,9 @@ onMounted(async () => {
   get(event_unsubs).push(
     $event_bus.on('path_updated', getEntries),
     $event_bus.on('query_updated', (params: QueryParamValue[]): void => {
-      const ents = get(entries);
-      if (ents && params.some((param) => sort_param_keys.includes(param.toUpperCase()))) {
-        set(entries, sortEntries(ents, $router_store.key, $router_store.dir));
+      const current_entries = get(entries);
+      if (current_entries && params.some((param) => sort_param_keys.includes(param.toUpperCase()))) {
+        set(entries, sortEntries(current_entries, $router_store.key, $router_store.dir));
       }
     }),
   );

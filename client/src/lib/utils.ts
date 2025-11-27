@@ -41,7 +41,7 @@ export function formatQuery(query: LocationQuery): string {
 }
 
 export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string {
-  return `/${encodeURIComponent(trim(route.path))}${formatQuery(route.query)}`;
+  return `/${trim(route.path)}${formatQuery(route.query)}`;
 }
 
 export function toFileUrl(value: Entry | string): string {
