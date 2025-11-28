@@ -9,12 +9,6 @@
       top: toolbar_height,
     }'
   >
-    <div
-      class='transition-cover'
-      :class='{
-        active: transitioning,
-      }'
-    />
     <!--
     A work in progress
     <BackButton
@@ -28,10 +22,15 @@
     <DirectoryError v-if='error' />
     <DirectoryLoading v-else-if='!entries' />
     <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
-    <DirectoryContent
-      v-else
-      :entries='entries'
-    />
+    <template v-else>
+      <div
+        class='transition-cover'
+        :class='{
+          active: transitioning,
+        }'
+      />
+      <DirectoryContent :entries='entries' />
+    </template>
   </main>
 
   <PreviewDialog />
