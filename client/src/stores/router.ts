@@ -47,31 +47,31 @@ export const useRouterStore = defineStore('router', () => {
     name: QueryParam,
     value: QueryParamValue,
   ): Promise<void> {
-    $router.push({
-      query: {
-        ...$route.query,
-        [name]: value,
-      },
-    })
-      .then(async () => {
-        await $event_bus.emit('query_updated', [value]);
+    try {
+      await $router.push({
+        query: {
+          ...$route.query,
+          [name]: value,
+        },
       });
+      await $event_bus.emit('query_updated', [value]);
+    } catch { /**/ }
   }
 
   async function updateSorting(
     new_dir: SortDir,
     new_key: SortKey,
   ): Promise<void> {
-    $router.push({
-      query: {
-        ...$route.query,
-        [QueryParam.DIR]: new_dir,
-        [QueryParam.KEY]: new_key,
-      },
-    })
-      .then(async () => {
-        await $event_bus.emit('query_updated', [new_dir, new_key]);
+    try {
+      await $router.push({
+        query: {
+          ...$route.query,
+          [QueryParam.DIR]: new_dir,
+          [QueryParam.KEY]: new_key,
+        },
       });
+      await $event_bus.emit('query_updated', [new_dir, new_key]);
+    } catch { /**/ }
   }
 
   function validate<T extends string, TEnumValue extends string>(
@@ -85,6 +85,15 @@ export const useRouterStore = defineStore('router', () => {
 
   onMounted(() => {
     set(breadcrumbs, breadcrumbify($route));
+
+    $router.beforeEach((to, _from) => {
+      const { path } = to;
+      console.log(path);
+      if (path.includes('%5C')) { // || path.includes('\\')) {
+        to.path = to.path.replace('%5C', '//'); // .replace(/[\\]+/g, '/');
+        return to;
+      }
+    });
 
     $router.afterEach((to, from) => {
       set(breadcrumbs, breadcrumbify($route));
