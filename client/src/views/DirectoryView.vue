@@ -1,11 +1,4 @@
 <template>
-  <div
-    class='transition-cover'
-    :class='{
-      active: transitioning,
-    }'
-  />
-
   <NavBar />
 
   <main
@@ -16,6 +9,12 @@
       top: toolbar_height,
     }'
   >
+    <div
+      class='transition-cover'
+      :class='{
+        active: transitioning,
+      }'
+    />
     <!--
     A work in progress
     <BackButton
@@ -112,35 +111,29 @@ function onBeforeRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLo
   set(transitioning, true);
 }
 
-function onAfterRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
-  set(transitioning, false);
-  // new Promise((resolve) => setTimeout(() => {
-  //   set(transitioning, false);
-  //   resolve(null);
-  // }, 1500));
-}
-
 onMounted(async () => {
   $router_store.addBeforeCallback(onBeforeRouteUpdate);
-  $router_store.addAfterCallback(onAfterRouteUpdate);
 
   const sort_param_keys = [...Object.keys(SortKey), ...Object.keys(SortDir)];
 
   await getEntries();
   get(event_unsubs).push(
-    $event_bus.on('path_updated', async () => await getEntries()),
+    $event_bus.on('path_updated', async () => {
+      await getEntries();
+      set(transitioning, false);
+    }),
     $event_bus.on('query_updated', (params: QueryParamValue[]): void => {
       const current_entries = get(entries);
       if (current_entries && params.some((param) => sort_param_keys.includes(param.toUpperCase()))) {
         set(entries, sortEntries(current_entries, $router_store.key, $router_store.dir));
       }
+      set(transitioning, false);
     }),
   );
 });
 
 onUnmounted(() => {
   $router_store.removeBeforeCallback(onBeforeRouteUpdate);
-  $router_store.removeAfterCallback(onAfterRouteUpdate);
   for (const unsub of get(event_unsubs)) unsub();
 });
 </script>
@@ -150,13 +143,13 @@ onUnmounted(() => {
 
 main {
   @apply flex flex-col justify-start items-center py-6 px-0 z-0 w-full overflow-y-auto overflow-x-hidden relative;
-}
 
-.transition-cover {
-  @apply hidden top-0 bottom-0 left-0 right-0 w-full h-full bg-background/75 z-10000;
+  & .transition-cover {
+    @apply hidden top-0 bottom-0 left-0 right-0 w-full h-full bg-background/75 z-10000;
 
-  &.active {
-    @apply fixed block;
+    &.active {
+      @apply absolute block;
+    }
   }
 }
 </style>
