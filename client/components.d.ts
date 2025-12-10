@@ -201,9 +201,8 @@ declare module 'vue' {
     TooltipTrigger: typeof import('./src/components/ui/tooltip/TooltipTrigger.vue')['default']
     VideoPreview: typeof import('./src/components/directory_view/preview_dialog/file_viewers/VideoPreview.vue')['default']
     ViewGrid: typeof import('./src/components/directory_view/view_layouts/ViewGrid.vue')['default']
-    ViewList: typeof import('./src/components/directory_view/view_layouts/ViewList.vue')['default']
-    ViewRow: typeof import('./src/components/directory_view/view_layouts/ViewRow.vue')['default']
     ViewSelector: typeof import('./src/components/navbar/ViewSelector.vue')['default']
+    ViewStack: typeof import('./src/components/directory_view/view_layouts/ViewStack.vue')['default']
     ViewToggles: typeof import('./src/components/navbar/ViewToggles.vue')['default']
   }
 }

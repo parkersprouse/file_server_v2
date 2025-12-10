@@ -5,16 +5,18 @@
       "px-0! mx-0! w-full! max-w-none!": view === ViewType.LIST,
     }'
   >
-    <ViewRow
+    <ViewStack
       v-if='view === ViewType.ROWS'
+      mode='row'
       :entries='entries'
     />
     <ViewGrid
       v-else-if='view === ViewType.GRID'
       :entries='entries'
     />
-    <ViewList
+    <ViewStack
       v-else
+      mode='list'
       :entries='entries'
     />
   </section>

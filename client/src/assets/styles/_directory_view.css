@@ -1,6 +1,8 @@
 .entry {
   @apply transition-none!;
 
+  content-visibility: auto !important;
+
   & .entry-title {
     @apply max-w-full w-full block text-nowrap whitespace-nowrap overflow-y-hidden overflow-x-scroll;
 
