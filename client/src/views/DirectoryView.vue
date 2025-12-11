@@ -2,6 +2,7 @@
   <NavBar />
 
   <main
+    ref='main_content_wrapper'
     :style='{
       height: `calc(100% - ${toolbar_height})`,
       minHeight: `calc(100% - ${toolbar_height})`,
@@ -38,7 +39,7 @@
 
 <script setup lang='ts'>
 import { get, set } from '@vueuse/core';
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -48,7 +49,7 @@ import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { http } from 'lib/http.ts';
 import { sortEntries } from 'lib/sort.ts';
-import { pathToRoute, toFileUrl } from 'lib/utils.ts';
+import { pathToRoute, sleep, toFileUrl } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 import { useRouterStore } from 'stores/router.ts';
 
@@ -62,6 +63,8 @@ const $event_bus = useEventBus();
 const $route = useRoute();
 const $router_store = useRouterStore();
 const $store = useStore();
+
+const main_content_wrapper = useTemplateRef('main_content_wrapper');
 
 const error = ref<boolean>(false);
 const entries = ref<Entry[]>();
@@ -107,7 +110,19 @@ async function getEntries(): Promise<void> {
 }
 
 function onBeforeRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
+  const content = get(main_content_wrapper);
+  if (content) $store.scroll_offset[$route.path] = content.scrollTop;
+
   set(transitioning, true);
+}
+
+async function setScrollPosition(): Promise<void> {
+  await sleep(0);
+  const content = get(main_content_wrapper);
+  if (!content) return;
+  const offset = $store.scroll_offset[$route.path];
+  if (!offset || content.scrollTop === offset) return;
+  content.scrollTop = offset ?? 0;
 }
 
 onMounted(async () => {
@@ -116,11 +131,14 @@ onMounted(async () => {
   const sort_param_keys = [...Object.keys(SortKey), ...Object.keys(SortDir)];
 
   await getEntries();
+
   get(event_unsubs).push(
     $event_bus.on('path_updated', async () => {
       await getEntries();
+      await setScrollPosition();
       set(transitioning, false);
     }),
+
     $event_bus.on('query_updated', (params: QueryParamValue[]): void => {
       const current_entries = get(entries);
       if (current_entries && params.some((param) => sort_param_keys.includes(param.toUpperCase()))) {
@@ -147,7 +165,7 @@ main {
     @apply hidden top-0 bottom-0 left-0 right-0 w-full h-full bg-background/75 z-10000;
 
     &.active {
-      @apply absolute block;
+      @apply fixed block;
     }
   }
 }

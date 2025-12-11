@@ -77,7 +77,7 @@ onMounted(async () => {
   const toolbar = document.getElementById('toolbar');
   if (toolbar) observer.observe(toolbar);
 
-  nextTick(rightAlignBreadcrumbs);
+  await nextTick(rightAlignBreadcrumbs);
   get(event_unsubs).push($event_bus.on('path_updated', rightAlignBreadcrumbs));
 });
 

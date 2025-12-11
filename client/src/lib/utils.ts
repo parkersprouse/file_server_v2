@@ -81,3 +81,7 @@ export function capitalize(str: string, lower_remainder: boolean = true): string
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
 }
+
+export async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}

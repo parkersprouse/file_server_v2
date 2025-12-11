@@ -10,6 +10,7 @@ export const useStore = defineStore('global', () => {
   const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
   const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
   const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
+  const scroll_offset = ref<{ [key: string]: number; }>({});
   const toolbar_height = ref<number>(0);
 
   /*-- Computed --*/
@@ -32,6 +33,7 @@ export const useStore = defineStore('global', () => {
     preview_bg_enabled,
     preview_inline_colors_disabled,
     preview_text_wrapped,
+    scroll_offset,
     toolbar_height,
 
     /*-- Computed --*/

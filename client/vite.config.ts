@@ -7,6 +7,7 @@ import UnpluginIcons from 'unplugin-icons/vite';
 import UnpluginComponents from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vite';
 import { ViteToml } from 'vite-plugin-toml';
+import VueDevtools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -73,6 +74,10 @@ export default defineConfig({
           isCustomElement: (tag) => tag.startsWith('media-'),
         },
       },
+    }),
+    VueDevtools({
+      componentInspector: true,
+      launchEditor: 'code',
     }),
     UnpluginComponents({
       resolvers: [
