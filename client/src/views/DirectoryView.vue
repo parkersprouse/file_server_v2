@@ -64,25 +64,22 @@ const $route = useRoute();
 const $router_store = useRouterStore();
 const $store = useStore();
 
+let entries_abort_controller = new AbortController();
+
 const main_content_wrapper = useTemplateRef('main_content_wrapper');
 
 const error = ref<boolean>(false);
 const entries = ref<Entry[]>();
-const entries_abort_ctrl = ref<AbortController>();
 const transitioning = ref<boolean>(false);
 
 const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
 
 async function getEntries(): Promise<void> {
   try {
-    get(entries_abort_ctrl)?.abort();
-    const abort_controller = new AbortController();
-
     const timer_id = setTimeout(() => set(entries, undefined), 150);
     const res = await http.get(pathToRoute($route), {
-      signal: abort_controller.signal,
+      signal: entries_abort_controller?.signal,
     });
-    set(entries_abort_ctrl, abort_controller);
     clearTimeout(timer_id);
 
     const previewable_strings = Object.values(PreviewType).map((p) => p as string);
@@ -105,6 +102,7 @@ async function getEntries(): Promise<void> {
 
     set(entries, sortEntries(results, $router_store.key, $router_store.dir));
   } catch {
+    if (entries_abort_controller.signal.aborted) return;
     set(error, true);
   }
 }
@@ -133,6 +131,19 @@ onMounted(async () => {
   await getEntries();
 
   get(event_unsubs).push(
+    $event_bus.on('path_updating', ({ from }) => {
+      if (
+        $route.path !== from.path &&
+        (entries_abort_controller && !entries_abort_controller.signal.aborted)
+      ) {
+        entries_abort_controller?.abort();
+      }
+
+      if (!entries_abort_controller || entries_abort_controller?.signal.aborted) {
+        entries_abort_controller = new AbortController();
+      }
+    }),
+
     $event_bus.on('path_updated', async () => {
       await getEntries();
       await setScrollPosition();

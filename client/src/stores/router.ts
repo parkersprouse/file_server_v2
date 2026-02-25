@@ -75,7 +75,6 @@ export const useRouterStore = defineStore('router', () => {
     if (bc.includes(callback)) set(before_callbacks, bc.filter((cb) => cb !== callback));
   }
 
-
   async function updateQueryParam(
     name: QueryParam,
     value: QueryParamValue,
@@ -123,13 +122,21 @@ export const useRouterStore = defineStore('router', () => {
       const { path } = to;
       const should_update = path.includes('%5C');
       if (should_update) to.path = to.path.replace('%5C', '//');
+      if (to.path !== from.path) $event_bus.emit('path_updating', {
+        from,
+        to,
+      });
+
       for (const callback of get(before_callbacks)) await callback(to, from);
       if (should_update) return to;
     });
 
     $router.afterEach(async (to, from) => {
       set(breadcrumbs, breadcrumbify($route));
-      if (to.path !== from.path) $event_bus.emit('path_updated');
+      if (to.path !== from.path) $event_bus.emit('path_updated', {
+        from,
+        to,
+      });
 
       for (const callback of get(after_callbacks)) await callback(to, from);
     });

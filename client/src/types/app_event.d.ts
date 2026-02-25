@@ -1,11 +1,13 @@
 import type { QueryParamValue } from 'stores/router.ts';
 import type { Entry } from 'types/entry.d.ts';
+import type { PathUpdate } from 'types/path_update.d.ts';
 
 export type AppEvent = {
   copy_text: undefined;
   dialog_clicked: Event;
   hide_dialog: undefined;
-  path_updated: undefined;
+  path_updated: PathUpdate;
+  path_updating: PathUpdate;
   query_updated: QueryParamValue[];
   resize_preview_actions: DOMRect;
   show_dialog: Entry;
