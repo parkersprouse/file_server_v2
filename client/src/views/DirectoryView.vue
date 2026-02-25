@@ -131,9 +131,9 @@ onMounted(async () => {
   await getEntries();
 
   get(event_unsubs).push(
-    $event_bus.on('path_updating', ({ from }) => {
+    $event_bus.on('path_updating', ({ to }) => {
       if (
-        $route.path !== from.path &&
+        $route.path !== to?.path &&
         (entries_abort_controller && !entries_abort_controller.signal.aborted)
       ) {
         entries_abort_controller?.abort();
