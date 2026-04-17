@@ -24,5 +24,4 @@ where
   }
 
   Ok(output)
-  // Ok(sort_output(output, query_params, &data))
 }
