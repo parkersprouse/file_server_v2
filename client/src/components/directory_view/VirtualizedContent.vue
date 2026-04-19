@@ -5,7 +5,6 @@
     :class='{
       "px-0! mx-0! w-full! max-w-none!": view === ViewType.LIST,
     }'
-    @scroll='handleScroll'
   >
     <!-- Spacer for items before visible range -->
     <div
@@ -61,7 +60,8 @@
 </template>
 
 <script setup lang='ts'>
-import { computed, onMounted, ref, watch } from 'vue';
+import { get, set } from '@vueuse/core';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 
 import EntryItem from 'components/directory_view/EntryItem.vue';
 import GridItem from 'components/directory_view/item_layouts/GridItem.vue';
@@ -92,14 +92,17 @@ const scroll_container_ref = ref<HTMLElement | null>(null);
 const scroll_top = ref(0);
 const container_height = ref(0);
 const container_width = ref(0);
+const container_ready = ref(false);
 
-// ResizeObserver to track container size
+// ResizeObserver to track container width (width only — height is derived from the viewport
+// to avoid a feedback loop where changing offset_bottom changes the section's content height,
+// which fires the observer, which changes rows_in_viewport, which changes offset_bottom, etc.)
 const resize_observer = ref<ResizeObserver | null>(null);
 
 const view = computed<ViewType>(() => $store.view);
 
 const mode = computed<LayoutMode>(() =>
-  view.value === ViewType.ROWS ? 'row' : 'list');
+  get(view) === ViewType.ROWS ? 'row' : 'list');
 
 const layout_mapping = computed(() => ({
   list: ListItem,
@@ -108,7 +111,7 @@ const layout_mapping = computed(() => ({
 
 // Compute item height based on view type
 const item_height = computed<number>(() => {
-  switch (view.value) {
+  switch (get(view)) {
     case ViewType.ROWS:
       return ITEM_HEIGHT_ROW;
     case ViewType.GRID:
@@ -121,128 +124,173 @@ const item_height = computed<number>(() => {
 
 // For grid view: calculate items per row based on container width
 const items_per_row = computed<number>(() => {
-  if (view.value !== ViewType.GRID || container_width.value === 0) {
+  if (get(view) !== ViewType.GRID || get(container_width) === 0) {
     return 1;
   }
 
   // Account for gap (16px = 1rem) and padding
-  const usable_width = container_width.value - 32;
+  const usable_width = get(container_width) - 32;
   const item_slot = GRID_ITEM_WIDTH + 16; // item width + gap
   return Math.max(1, Math.floor(usable_width / item_slot));
 });
 
 const rows_in_viewport = computed<number>(() => {
-  if (container_height.value === 0) return 1;
-  return Math.ceil(container_height.value / item_height.value) + BUFFER_SIZE * 2;
+  // Return a minimal value if container isn't ready yet to avoid invalid calculations
+  if (get(container_height) === 0 || !get(container_ready)) return 1;
+  return Math.ceil(get(container_height) / get(item_height)) + BUFFER_SIZE * 2;
 });
 
 // Calculate visible range
 const visible_start = computed<number>(() => {
-  if (view.value === ViewType.GRID) {
-    const current_row = Math.floor(scroll_top.value / item_height.value);
+  if (get(view) === ViewType.GRID) {
+    const current_row = Math.floor(get(scroll_top) / get(item_height));
     const start_row = Math.max(0, current_row - BUFFER_SIZE);
-    return start_row * items_per_row.value;
+    return start_row * get(items_per_row);
   }
-  const buffer = Math.floor((item_height.value * BUFFER_SIZE) / item_height.value);
-  return Math.max(0, Math.floor(scroll_top.value / item_height.value) - buffer);
+  const buffer = Math.floor((get(item_height) * BUFFER_SIZE) / get(item_height));
+  return Math.max(0, Math.floor(get(scroll_top) / get(item_height)) - buffer);
 });
 
 const visible_end = computed<number>(() => {
-  const start = visible_start.value;
-  if (view.value === ViewType.GRID) {
-    const items_needed = rows_in_viewport.value * items_per_row.value;
+  const start = get(visible_start);
+  if (get(view) === ViewType.GRID) {
+    const items_needed = Math.max(1, get(rows_in_viewport) * Math.max(1, get(items_per_row)));
     return Math.min(entries.length, start + items_needed);
   }
-  return Math.min(entries.length, start + rows_in_viewport.value);
+  return Math.min(entries.length, start + Math.max(1, get(rows_in_viewport)));
 });
 
-const visible_entries = computed<Entry[]>(() => entries.slice(visible_start.value, visible_end.value));
+const visible_entries = computed<Entry[]>(() => entries.slice(get(visible_start), get(visible_end)));
 
 const offset_top = computed<number>(() => {
-  if (view.value === ViewType.GRID) return 0; // Grid doesn't use offset spacers
-  return visible_start.value * item_height.value;
+  if (get(view) === ViewType.GRID) return 0; // Grid doesn't use offset spacers
+  return get(visible_start) * get(item_height);
 });
 
 const offset_bottom = computed<number>(() => {
-  if (view.value === ViewType.GRID) return 0;
-  const end = visible_end.value;
-  return (entries.length - end) * item_height.value;
+  if (get(view) === ViewType.GRID) return 0;
+  // Don't calculate if container isn't ready - prevents flickering on initial load
+  if (!get(container_ready)) {
+    return Math.max(0, entries.length * get(item_height) - (get(container_height) || window.innerHeight));
+  }
+  const end = get(visible_end);
+  const remaining_items = Math.max(0, entries.length - end);
+  return remaining_items * get(item_height);
 });
 
 const total_rows = computed<number>(() => {
-  if (view.value === ViewType.GRID) {
-    return Math.ceil(entries.length / items_per_row.value);
+  if (get(view) === ViewType.GRID) {
+    return Math.ceil(entries.length / get(items_per_row));
   }
   return entries.length;
 });
 
 const total_scroll_height = computed<number>(() => {
-  if (view.value === ViewType.GRID) {
-    return total_rows.value * item_height.value;
+  if (get(view) === ViewType.GRID) {
+    return get(total_rows) * get(item_height);
   }
-  return entries.length * item_height.value;
+  return entries.length * get(item_height);
 });
 
 const rendered_height = computed<number>(() => {
-  if (view.value === ViewType.GRID) {
-    const rendered_rows = Math.ceil((visible_end.value - visible_start.value) / items_per_row.value);
-    return rendered_rows * item_height.value;
+  if (get(view) === ViewType.GRID) {
+    const rendered_rows = Math.ceil((get(visible_end) - get(visible_start)) / get(items_per_row));
+    return rendered_rows * get(item_height);
   }
-  return (visible_end.value - visible_start.value) * item_height.value;
+  return (get(visible_end) - get(visible_start)) * get(item_height);
 });
 
 // Event handlers
 function handleScroll(event: Event): void {
   const target = event.target as HTMLElement;
-  scroll_top.value = target.scrollTop;
+  set(scroll_top, target.scrollTop);
 }
 
-function updateContainerSize(): void {
-  if (!scroll_container_ref.value) return;
-  container_height.value = scroll_container_ref.value.clientHeight;
-  container_width.value = scroll_container_ref.value.clientWidth;
+function updateContainerHeight(): void {
+  // The <section> has no fixed height — it grows with its content. Scrolling is
+  // handled by the <main> ancestor. Read the viewport height from visualViewport
+  // so this value is completely decoupled from virtual content changes and cannot
+  // participate in a ResizeObserver feedback loop.
+  set(container_height, window.visualViewport?.height ?? window.innerHeight);
+  if (get(container_height) > 0 && get(container_width) > 0) {
+    set(container_ready, true);
+  }
+}
+
+function updateContainerWidth(): void {
+  const ele = get(scroll_container_ref);
+  if (!ele) return;
+  set(container_width, ele.clientWidth);
+  if (get(container_height) > 0 && get(container_width) > 0) {
+    set(container_ready, true);
+  }
 }
 
 // Expose methods for external scroll control
 defineExpose({
-  getScrollPosition: () => scroll_top.value,
+  getScrollPosition: () => get(scroll_top),
   scrollToIndex: (index: number) => {
-    if (!scroll_container_ref.value) return;
-    if (view.value === ViewType.GRID) {
-      const row = Math.floor(index / items_per_row.value);
-      scroll_container_ref.value.scrollTop = row * item_height.value;
+    const scroller = get(scroll_container_ref)?.parentElement;
+    if (!scroller) return;
+    if (get(view) === ViewType.GRID) {
+      const row = Math.floor(index / get(items_per_row));
+      scroller.scrollTop = row * get(item_height);
     } else {
-      scroll_container_ref.value.scrollTop = index * item_height.value;
+      scroller.scrollTop = index * get(item_height);
     }
   },
   scrollToPosition: (scrollTop: number) => {
-    if (!scroll_container_ref.value) return;
-    scroll_container_ref.value.scrollTop = scrollTop;
+    const scroller = get(scroll_container_ref)?.parentElement;
+    if (!scroller) return;
+    scroller.scrollTop = scrollTop;
   },
 });
 
 // Watch for layout changes
 watch(
-  () => view.value,
+  () => get(view),
   () => {
     // Reset scroll on layout change
-    if (scroll_container_ref.value) {
-      scroll_container_ref.value.scrollTop = 0;
+    const scroller = get(scroll_container_ref)?.parentElement;
+    if (scroller) {
+      scroller.scrollTop = 0;
     }
   },
 );
 
-// Setup ResizeObserver
+// Setup ResizeObserver and viewport listeners
 onMounted(() => {
-  updateContainerSize();
+  updateContainerHeight();
+  updateContainerWidth();
 
-  resize_observer.value = new ResizeObserver(() => {
-    updateContainerSize();
-  });
+  // Track width via ResizeObserver on the section itself — safe because width
+  // changes don't feed back into offset_bottom.
+  set(resize_observer, new ResizeObserver(() => {
+    updateContainerWidth();
+  }));
 
-  if (scroll_container_ref.value) {
-    resize_observer.value.observe(scroll_container_ref.value);
+  const ele = get(scroll_container_ref);
+  if (ele) {
+    get(resize_observer)!.observe(ele);
+
+    // <main> is the true scroll container (overflow-y-auto, fixed height).
+    // Attach scroll listener there so scroll_top tracks actual scroll position.
+    ele.parentElement?.addEventListener('scroll', handleScroll);
   }
+
+  // Track height via visualViewport/window — completely decoupled from content.
+  window.visualViewport?.addEventListener('resize', updateContainerHeight);
+  window.addEventListener('resize', updateContainerHeight);
+});
+
+// Cleanup ResizeObserver and viewport listeners on unmount
+onBeforeUnmount(() => {
+  get(resize_observer)?.disconnect();
+  window.visualViewport?.removeEventListener('resize', updateContainerHeight);
+  window.removeEventListener('resize', updateContainerHeight);
+
+  const ele = get(scroll_container_ref);
+  ele?.parentElement?.removeEventListener('scroll', handleScroll);
 });
 </script>
 
@@ -288,7 +336,7 @@ onMounted(() => {
 
   .virtual-spacer-top,
   .virtual-spacer-bottom {
-    @apply flex-shrink-0 w-full;
+    @apply shrink-0 w-full;
   }
 }
 </style>
