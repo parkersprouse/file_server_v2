@@ -1,7 +1,4 @@
-use crate::{
-  AppState,
-  structs::entry_type::EntryType,
-};
+use crate::{AppState, structs::entry_type::EntryType};
 use actix_web::web::Data;
 use chrono::{DateTime, Utc};
 use file_format::{FileFormat, Kind};
@@ -22,6 +19,7 @@ pub struct EntryDetails {
   pub duration_order: u8,
   pub duration_raw: u64,
   pub entry_type: String,
+  pub file_size: u64,
   pub file_type: String,
   pub full_type: String,
   pub last_modified_at: String,
@@ -43,9 +41,10 @@ impl EntryDetails {
     let file_type: String = Self::file_type(file_format);
 
     let name: String = entry.file_name().into_string().unwrap();
+    let file_size: u64 = metadata.len();
 
     let as_url: String = Self::path_to_url(&full_path, data);
-    let duration_tuple = Self::determine_duration(&full_path, &file_type).await;
+    let duration_tuple = Self::determine_duration(&full_path, &file_type, data).await;
     let created_at = Self::determine_created_at(&metadata);
     let last_modified_at = Self::determine_modified_at(&metadata);
 
@@ -61,6 +60,7 @@ impl EntryDetails {
       duration_order,
       duration_raw: duration_tuple.0,
       entry_type,
+      file_size,
       file_type,
       full_type: Self::full_type(file_format),
       last_modified_at: last_modified_at.1,
@@ -82,9 +82,16 @@ impl EntryDetails {
     }
   }
 
-  pub async fn determine_duration(path: &PathBuf, file_type: &str) -> (u64, String) {
+  pub async fn determine_duration(path: &PathBuf, file_type: &str, data: &Data<AppState>) -> (u64, String) {
     if !["audio", "video"].contains(&file_type) {
       return (0, "".into());
+    }
+
+    let path_str = path.to_string_lossy().into_owned();
+
+    // Check cache first
+    if let Some((duration_raw, duration_formatted)) = data.media_cache.get(&path_str).await {
+      return (duration_raw, duration_formatted);
     }
 
     let output = match ffprobe::ffprobe(path) {
@@ -98,7 +105,15 @@ impl EntryDetails {
     match output.format.get_duration() {
       Some(value) => {
         let total_secs = value.as_secs();
-        (total_secs, Self::parse_ffmpeg_duration(total_secs))
+        let duration_formatted = Self::parse_ffmpeg_duration(total_secs);
+
+        // Cache the result
+        data
+          .media_cache
+          .set(path_str, total_secs, duration_formatted.clone())
+          .await;
+
+        (total_secs, duration_formatted)
       },
       None => (0, "".into()),
     }
@@ -179,9 +194,7 @@ impl EntryDetails {
     let mut thumb_url_path = PathBuf::from(["/.thumbnails", &as_url].join(""));
     thumb_url_path.set_extension("png");
 
-    let Some(thumb_url_path) = thumb_url_path.to_str() else {
-      return None;
-    };
+    let thumb_url_path = thumb_url_path.to_str()?;
 
     let thumb_system_path = format!("{}{}", &data.config.root_dir_path, thumb_url_path);
     match PathBuf::from(thumb_system_path).try_exists() {
