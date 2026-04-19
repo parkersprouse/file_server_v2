@@ -3,9 +3,11 @@
     <Card class='p-0! h-full! gap-2!'>
       <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink'>
         <img
-          v-if='entry.thumbnail && heic_check'
-          :src='entry.thumbnail'
-          class='w-auto h-auto object-contain aspect-square'
+           v-if='entry.thumbnail && heic_check'
+           :src='entry.thumbnail'
+           loading='lazy'
+           decoding='async'
+           class='w-auto h-auto object-contain aspect-square'
         >
         <component
           v-else

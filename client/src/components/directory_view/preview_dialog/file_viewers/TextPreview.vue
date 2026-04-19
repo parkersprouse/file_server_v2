@@ -15,7 +15,7 @@ import { get } from '@vueuse/core';
 import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
-// import { capitalize } from 'lib/utils.ts';
+import { ensurePrismLoaded, getPrism } from 'lib/prism.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
@@ -31,10 +31,13 @@ const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $store = useStore();
 
 const text_ele = useTemplateRef('text_ele');
-// const highlighter = ref<Worker>();
 
-watch(() => $store.preview_inline_colors_disabled, async () => await refreshTextView());
-watch(() => $store.wrap_text_preview, async () => await refreshTextView());
+watch(() => $store.preview_inline_colors_disabled, async () => {
+  await refreshTextView();
+});
+watch(() => $store.wrap_text_preview, async () => {
+  await refreshTextView();
+});
 
 async function copyText(): Promise<void> {
   const ele = get(text_ele);
@@ -53,10 +56,6 @@ function postHightlightHandler(env: Environment): void {
   const code_toolbar = document.querySelector('.code-toolbar');
   const code_ele = code_toolbar?.querySelector('pre code');
   if (code_toolbar && code_ele) {
-    // const language_tag = code_toolbar.querySelector('.language-tag');
-    // if (language_tag) language_tag.textContent = capitalize(language_tag.textContent, false);
-    console.log(env.language);
-
     $store.file_highlight_result = {
       inline_colors_present: code_toolbar.querySelectorAll('.inline-color').length > 0,
       language: env.language || 'none',
@@ -66,44 +65,42 @@ function postHightlightHandler(env: Environment): void {
 
 async function refreshTextView(): Promise<void> {
   await nextTick();
+  const prism = getPrism();
   const ele = document.querySelector('pre code');
-  if (ele) window.Prism.highlightElement(ele);
+  if (ele && prism) {
+    prism.highlightElement(ele);
+  }
 }
 
-onMounted(() => {
+onMounted(async () => {
   const unsubCopyText = $event_bus.on('copy_text', copyText);
   get(event_unsubs).push(unsubCopyText);
 
-  window.Prism.hooks.add('complete', postHightlightHandler);
-  window.Prism.plugins.fileHighlight.highlight();
+  // Lazy-load Prism.js when text preview is opened
+  await ensurePrismLoaded();
+  const prism = getPrism();
+  if (!prism) {
+    return;
+  }
 
-  /*
-   * https://github.com/PrismJS/prism/issues/1059#issuecomment-261703318
-   * https://github.com/PrismJS/prism/blob/025147106e82b6efa92ba947cc06cc1a838f477b/components/prism-core.js#L465-L473
-  const worker = new Highlighter();
-  const worker = new Worker(new URL('../../../../vendor/prism/prism.min.js', import.meta.url));
-  set(highlighter, worker);
-
-
-  // eslint-disable-next-line unicorn/prefer-add-event-listener -- temp
-  worker.onmessage = (resp: MessageEvent): void => {
-    console.log(resp.data);
-  };
-  worker.postMessage('run');
-  */
+  prism.hooks.add('complete', postHightlightHandler);
+  prism.plugins.fileHighlight.highlight();
 });
 
 onUnmounted(() => {
-  // prism's doesn't have a `remove` method for its hooks, so we have to do it manually
-  for (const [idx, hook] of (window.Prism.hooks.all.complete?.entries() ?? [])) {
-    if (hook.name === postHightlightHandler.name) {
-      window.Prism.hooks.all.complete?.splice(idx, 1);
+  const prism = getPrism();
+  if (prism) {
+    // prism's doesn't have a `remove` method for its hooks, so we have to do it manually
+    for (const [idx, hook] of (prism.hooks.all.complete?.entries() ?? [])) {
+      if (hook.name === postHightlightHandler.name) {
+        prism.hooks.all.complete?.splice(idx, 1);
+      }
     }
   }
 
-  for (const unsub of get(event_unsubs)) unsub();
-
-  // get(highlighter)?.terminate();
+  for (const unsub of get(event_unsubs)) {
+    unsub();
+  }
 });
 </script>
 

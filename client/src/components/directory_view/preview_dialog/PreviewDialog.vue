@@ -27,13 +27,8 @@
 
 <script setup lang='ts'>
 import { get, onKeyStroke, set, useMutationObserver } from '@vueuse/core';
-import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
-import AudioPreview from 'components/directory_view/preview_dialog/file_viewers/AudioPreview.vue';
-import DocumentPreview from 'components/directory_view/preview_dialog/file_viewers/DocumentPreview.vue';
-import ImagePreview from 'components/directory_view/preview_dialog/file_viewers/ImagePreview.vue';
-import TextPreview from 'components/directory_view/preview_dialog/file_viewers/TextPreview.vue';
-import VideoPreview from 'components/directory_view/preview_dialog/file_viewers/VideoPreview.vue';
 import { useEventBus } from 'composables/event_bus.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { cn } from 'lib/utils.ts';
@@ -43,6 +38,18 @@ import type { UnsubscribeFunction } from 'emittery';
 import type { Entry } from 'types/entry.d.ts';
 import type { PreviewTypeAttrs } from 'types/preview_type_attrs.d.ts';
 import type { PreviewTypeAttrsMapping } from 'types/preview_type_attrs_mapping.d.ts';
+
+// Lazy-load preview components
+const AudioPreview = defineAsyncComponent(() =>
+  import('components/directory_view/preview_dialog/file_viewers/AudioPreview.vue'));
+const DocumentPreview = defineAsyncComponent(() =>
+  import('components/directory_view/preview_dialog/file_viewers/DocumentPreview.vue'));
+const ImagePreview = defineAsyncComponent(() =>
+  import('components/directory_view/preview_dialog/file_viewers/ImagePreview.vue'));
+const TextPreview = defineAsyncComponent(() =>
+  import('components/directory_view/preview_dialog/file_viewers/TextPreview.vue'));
+const VideoPreview = defineAsyncComponent(() =>
+  import('components/directory_view/preview_dialog/file_viewers/VideoPreview.vue'));
 
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);

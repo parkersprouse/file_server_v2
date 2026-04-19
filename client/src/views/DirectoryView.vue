@@ -10,16 +10,6 @@
       top: toolbar_height,
     }'
   >
-    <!--
-    A work in progress
-    <BackButton
-      class='fixed'
-      :style='{
-        left: 0,
-        top: toolbar_height,
-      }'
-    />
-    -->
     <DirectoryError v-if='error' />
     <DirectoryLoading v-else-if='!entries' />
     <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
@@ -48,8 +38,9 @@ import { PreviewType } from 'enums/preview_type.ts';
 import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { http } from 'lib/http.ts';
+import { directory_cache } from 'lib/request_cache.ts';
 import { sortEntries } from 'lib/sort.ts';
-import { pathToRoute, sleep, toFileUrl } from 'lib/utils.ts';
+import { pathToRoute, toFileUrl } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 import { useRouterStore } from 'stores/router.ts';
 
@@ -76,35 +67,62 @@ const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`)
 
 async function getEntries(): Promise<void> {
   try {
+    const path_route = pathToRoute($route);
+    const cache_key = path_route;
+
+    // Check if we have a cached result
+    const cached_data = directory_cache.get(cache_key);
+    if (cached_data) {
+      processEntries(cached_data as Entry[]);
+      return;
+    }
+
+    // Check if there's a pending request for the same path
+    const pending = directory_cache.getPending(cache_key);
+    if (pending) {
+      const cached = await pending;
+      processEntries(cached as Entry[]);
+      return;
+    }
+
+    // Make the request and cache the promise for deduplication
     const timer_id = setTimeout(() => set(entries, undefined), 150);
-    const res = await http.get(pathToRoute($route), {
+    const request_promise = http.get(path_route, {
       signal: entries_abort_controller?.signal,
     });
+    directory_cache.setPending(cache_key, request_promise.then((res) => res.data));
+
+    const res = await request_promise;
     clearTimeout(timer_id);
 
-    const previewable_strings = Object.values(PreviewType).map((p) => p as string);
-
-    const results = res.data.map((entry: Entry) => {
-      entry.url = toFileUrl(entry);
-
-      if (entry.thumbnail) {
-        entry.thumbnail = toFileUrl(entry.thumbnail) || null;
-      } else if (entry.file_type === FileType.IMAGE) {
-        entry.thumbnail = entry.url;
-      }
-
-      if (previewable_strings.includes(entry.file_type as string)) {
-        entry.preview_type = entry.file_type as string as PreviewType;
-      }
-
-      return entry;
-    });
-
-    set(entries, sortEntries(results, $router_store.key, $router_store.dir));
+    directory_cache.set(cache_key, res.data);
+    processEntries(res.data);
   } catch {
     if (entries_abort_controller.signal.aborted) return;
     set(error, true);
   }
+}
+
+function processEntries(data: Entry[]): void {
+  const previewable_strings = Object.values(PreviewType).map((p) => p as string);
+
+  const results = data.map((entry: Entry) => {
+    entry.url = toFileUrl(entry);
+
+    if (entry.thumbnail) {
+      entry.thumbnail = toFileUrl(entry.thumbnail) || null;
+    } else if (entry.file_type === FileType.IMAGE) {
+      entry.thumbnail = entry.url;
+    }
+
+    if (previewable_strings.includes(entry.file_type as string)) {
+      entry.preview_type = entry.file_type as string as PreviewType;
+    }
+
+    return entry;
+  });
+
+  set(entries, sortEntries(results, $router_store.key, $router_store.dir));
 }
 
 function onBeforeRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
@@ -115,7 +133,8 @@ function onBeforeRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLo
 }
 
 async function setScrollPosition(): Promise<void> {
-  await sleep(0);
+  // Use requestAnimationFrame for more reliable scroll restoration
+  await new Promise((resolve) => requestAnimationFrame(resolve));
   const content = get(main_content_wrapper);
   if (!content) return;
   const offset = $store.scroll_offset[$route.path];

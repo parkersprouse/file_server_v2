@@ -4,10 +4,12 @@
       v-if='entry.thumbnail && heic_check'
       variant='image'
     >
-      <img
-        :src='entry.thumbnail'
-        class='object-contain! aspect-square!'
-      >
+       <img
+         :src='entry.thumbnail'
+         loading='lazy'
+         decoding='async'
+         class='object-contain! aspect-square!'
+       >
     </ItemMedia>
     <ItemMedia v-else>
       <component :is='fileTypeToIcon(entry.file_type || entry.entry_type)' />

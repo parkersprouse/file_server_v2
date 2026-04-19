@@ -204,5 +204,6 @@ declare module 'vue' {
     ViewSelector: typeof import('./src/components/navbar/ViewSelector.vue')['default']
     ViewStack: typeof import('./src/components/directory_view/view_layouts/ViewStack.vue')['default']
     ViewToggles: typeof import('./src/components/navbar/ViewToggles.vue')['default']
+    VirtualizedContent: typeof import('./src/components/directory_view/VirtualizedContent.vue')['default']
   }
 }

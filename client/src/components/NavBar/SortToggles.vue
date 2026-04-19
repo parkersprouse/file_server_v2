@@ -18,8 +18,6 @@
     </Button>
   </section>
 
-  <!-- <hr class='w-1/2! p-0! my-1! border-zinc-500 border-dashed'> -->
-
   <section class='flex flex-row flex-nowrap justify-center items-center gap-2 w-full'>
     <Button
       variant='ghost'
@@ -83,9 +81,6 @@ function setLocalKey(key: SortKey): void {
 async function commit(): Promise<void> {
   const dir = get(local_dir);
   const key = get(local_key);
-
-  console.log(dir, $store.dir, dir === $store.dir);
-  console.log(key, $store.key, key === $store.key);
 
   if (dir === $store.dir && key === $store.key) return;
   await $store.updateSorting(dir!, key!);
