@@ -111,10 +111,10 @@ function processEntries(data: Entry[]): void {
   const results = data.map((entry: Entry) => {
     entry.url = toFileUrl(entry);
 
-    if (entry.thumbnail) {
-      entry.thumbnail = toFileUrl(entry.thumbnail) || null;
-    } else if (entry.file_type === FileType.IMAGE) {
+    if (entry.file_type === FileType.IMAGE) {
       entry.thumbnail = entry.url;
+    } else if (entry.thumbnail) {
+      entry.thumbnail = toFileUrl(entry.thumbnail) || null;
     }
 
     if (previewable_strings.includes(entry.file_type as string)) {
