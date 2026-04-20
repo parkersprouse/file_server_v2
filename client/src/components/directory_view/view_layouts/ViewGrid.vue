@@ -5,7 +5,7 @@
     :style='{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }'
   >
     <div
-      v-for='(virtual_row, idx) in virtual_rows'
+      v-for='virtual_row in virtual_rows'
       :key='String(virtual_row.key)'
       :data-index='virtual_row.index'
       :ref='(el) => virtualizer.measureElement(el as Element | null)'
@@ -17,6 +17,7 @@
         width: "100%",
         transform: `translateY(${virtual_row.start - scroll_margin}px)`,
         paddingBottom: `${GAP_PX}px`,
+        gridTemplateColumns: `repeat(${columns}, 1fr)`,
       }'
     >
       <EntryItem
@@ -26,14 +27,6 @@
       >
         <GridItem :entry='entry' />
       </EntryItem>
-
-      <template v-if='idx === virtual_rows.length - 1 && entries.length % columns !== 0'>
-        <div
-          v-for='num in columns - (entries.length % columns)'
-          :key='`grid-spacer-${num}`'
-          class='entry grow! shrink-0!'
-        />
-      </template>
     </div>
   </div>
 </template>
@@ -113,26 +106,26 @@ const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
   @apply w-full;
 
   & .entry-grid-row {
-    @apply flex flex-row flex-nowrap justify-start items-stretch gap-4;
-  }
+    @apply grid items-stretch gap-4;
 
-  & .entry {
-    @apply flex-1 min-w-0 shrink grow min-h-[200px];
+    & .entry {
+      @apply min-w-0 min-h-[200px];
 
-    & .entry-title {
-      @apply text-sm py-1 px-2;
-    }
+      & .entry-title {
+        @apply text-sm py-1 px-2;
+      }
 
-    & .entry-meta {
-      @apply border-b-0 shrink grow-0;
-    }
+      & .entry-meta {
+        @apply border-b-0 shrink grow-0;
+      }
 
-    & .entry-meta__last-modified {
-      @apply border-l-0;
-    }
+      & .entry-meta__last-modified {
+        @apply border-l-0;
+      }
 
-    & .entry-meta__duration {
-      @apply border-r-0;
+      & .entry-meta__duration {
+        @apply border-r-0;
+      }
     }
   }
 }
