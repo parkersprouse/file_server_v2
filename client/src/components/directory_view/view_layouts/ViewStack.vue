@@ -50,7 +50,7 @@ const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
 const container_ref = ref<HTMLElement | null>(null);
 const scroll_margin = ref<number>(0);
 
-function update_scroll_margin(): void {
+function updateScrollMargin(): void {
   const container = get(container_ref);
   const scroller = scroll_element?.value;
   if (!container || !scroller) return;
@@ -60,7 +60,7 @@ function update_scroll_margin(): void {
 
 watch(
   [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
-  update_scroll_margin,
+  updateScrollMargin,
   { immediate: true },
 );
 

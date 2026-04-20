@@ -5,23 +5,35 @@
     :style='{ height: `${virtualizer.getTotalSize()}px`, position: "relative" }'
   >
     <div
-      v-for='item in virtual_items'
-      :key='String(item.key)'
-      :data-index='item.index'
+      v-for='(virtual_row, idx) in virtual_rows'
+      :key='String(virtual_row.key)'
+      :data-index='virtual_row.index'
       :ref='(el) => virtualizer.measureElement(el as Element | null)'
-      class='entry-grid-cell'
+      class='entry-grid-row'
       :style='{
         position: "absolute",
         top: 0,
-        left: `calc(${item.lane} * (100% / ${columns} + ${GAP_PX / columns}px))`,
-        width: `calc(100% / ${columns} - ${GAP_PX * (columns - 1) / columns}px)`,
-        transform: `translateY(${item.start - scroll_margin}px)`,
+        left: 0,
+        width: "100%",
+        transform: `translateY(${virtual_row.start - scroll_margin}px)`,
         paddingBottom: `${GAP_PX}px`,
       }'
     >
-      <EntryItem :entry='entries[item.index]!'>
-        <GridItem :entry='entries[item.index]!' />
+      <EntryItem
+        v-for='entry in rows[virtual_row.index]'
+        :key='encodeURI(entry.path)'
+        :entry='entry'
+      >
+        <GridItem :entry='entry' />
       </EntryItem>
+
+      <template v-if='idx === virtual_rows.length - 1 && entries.length % columns !== 0'>
+        <div
+          v-for='num in columns - (entries.length % columns)'
+          :key='`grid-spacer-${num}`'
+          class='entry grow! shrink-0!'
+        />
+      </template>
     </div>
   </div>
 </template>
@@ -45,7 +57,7 @@ const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
 const container_ref = ref<HTMLElement | null>(null);
 const scroll_margin = ref<number>(0);
 
-function update_scroll_margin(): void {
+function updateScrollMargin(): void {
   const container = get(container_ref);
   const scroller = scroll_element?.value;
   if (!container || !scroller) return;
@@ -55,7 +67,7 @@ function update_scroll_margin(): void {
 
 watch(
   [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
-  update_scroll_margin,
+  updateScrollMargin,
   { immediate: true },
 );
 
@@ -73,16 +85,25 @@ const columns = computed<number>(() => {
   return 2;
 });
 
+// Group entries into rows of `columns` items each
+const rows = computed<Entry[][]>(() => {
+  const cols = get(columns);
+  const result: Entry[][] = [];
+  for (let i = 0; i < entries.length; i += cols) {
+    result.push(entries.slice(i, i + cols));
+  }
+  return result;
+});
+
 const virtualizer = useVirtualizer(computed(() => ({
-  count: entries.length,
+  count: get(rows).length,
   getScrollElement: () => scroll_element?.value ?? null,
   estimateSize: () => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
-  lanes: get(columns),
   overscan: 2,
   scrollMargin: get(scroll_margin),
 })));
 
-const virtual_items = computed(() => get(virtualizer).getVirtualItems());
+const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
 </script>
 
 <style>
@@ -91,14 +112,12 @@ const virtual_items = computed(() => get(virtualizer).getVirtualItems());
 .entries--grid {
   @apply w-full;
 
-  & .entry-grid-cell {
-    & .entry {
-      @apply h-full;
-    }
+  & .entry-grid-row {
+    @apply flex flex-row flex-nowrap justify-start items-stretch gap-4;
   }
 
   & .entry {
-    @apply grow-0 shrink h-auto min-h-[200px];
+    @apply flex-1 min-w-0 shrink grow min-h-[200px];
 
     & .entry-title {
       @apply text-sm py-1 px-2;
