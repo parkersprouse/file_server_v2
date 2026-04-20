@@ -62,7 +62,7 @@ import { get } from '@vueuse/core';
 import { VisuallyHidden } from 'reka-ui';
 import { useTemplateRef } from 'vue';
 
-import type SortToggles from 'components/navbar/SortToggles.vue';
+import type SortToggles from 'components/nav/SortToggles.vue';
 
 const sort_toggle = useTemplateRef<typeof SortToggles>('sort_toggle');
 </script>

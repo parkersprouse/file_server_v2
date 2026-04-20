@@ -29,7 +29,7 @@
 
 <script setup lang='ts'>
 import { get, set } from '@vueuse/core';
-import { computed, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef } from 'vue';
 import { useRoute } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -58,6 +58,8 @@ const $store = useStore();
 let entries_abort_controller = new AbortController();
 
 const main_content_wrapper = useTemplateRef('main_content_wrapper');
+
+provide('scroll_element', main_content_wrapper);
 
 const error = ref<boolean>(false);
 const entries = ref<Entry[]>();
