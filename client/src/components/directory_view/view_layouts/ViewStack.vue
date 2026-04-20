@@ -50,17 +50,18 @@ const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
 const container_ref = ref<HTMLElement | null>(null);
 const scroll_margin = ref<number>(0);
 
-function updateScrollMargin(): void {
-  const container = get(container_ref);
-  const scroller = scroll_element?.value;
-  if (!container || !scroller) return;
-  const rect_top_diff = container.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-  set(scroll_margin, rect_top_diff + scroller.scrollTop);
-}
-
-watch(
+// Computed once when both refs are available and never updated again.
+// See ViewGrid.vue for a full explanation of why this must be one-shot.
+const stopMarginWatch = watch(
   [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
-  updateScrollMargin,
+  ([container, scroller]) => {
+    if (!container || !scroller) return;
+    set(
+      scroll_margin,
+      container.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop,
+    );
+    stopMarginWatch();
+  },
   { immediate: true },
 );
 

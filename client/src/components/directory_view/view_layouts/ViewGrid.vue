@@ -50,17 +50,21 @@ const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
 const container_ref = ref<HTMLElement | null>(null);
 const scroll_margin = ref<number>(0);
 
-function updateScrollMargin(): void {
-  const container = get(container_ref);
-  const scroller = scroll_element?.value;
-  if (!container || !scroller) return;
-  const rect_top_diff = container.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
-  set(scroll_margin, rect_top_diff + scroller.scrollTop);
-}
-
-watch(
+// Computed once when both refs are available and never updated again.
+// scroll_margin is a static layout offset — the distance from the top of the
+// scroll element to the top of this container. It doesn't change as the user
+// scrolls, and re-computing it on every measurement cycle causes a feedback
+// loop that makes rows jitter when scrolling upward through unmeasured items.
+const stopMarginWatch = watch(
   [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
-  updateScrollMargin,
+  ([container, scroller]) => {
+    if (!container || !scroller) return;
+    set(
+      scroll_margin,
+      container.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop,
+    );
+    stopMarginWatch();
+  },
   { immediate: true },
 );
 
@@ -92,7 +96,7 @@ const virtualizer = useVirtualizer(computed(() => ({
   count: get(rows).length,
   getScrollElement: () => scroll_element?.value ?? null,
   estimateSize: () => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
-  overscan: 2,
+  overscan: 3,
   scrollMargin: get(scroll_margin),
 })));
 
@@ -109,7 +113,7 @@ const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
     @apply grid items-stretch gap-4;
 
     & .entry {
-      @apply min-w-0 min-h-[200px];
+      @apply min-w-0 h-[200px];
 
       & .entry-title {
         @apply text-sm py-1 px-2;
