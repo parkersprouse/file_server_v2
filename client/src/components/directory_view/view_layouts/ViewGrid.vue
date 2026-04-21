@@ -41,6 +41,9 @@ import GridItem from '../item_layouts/GridItem.vue';
 import type { Entry } from 'types/entry.d.ts';
 import type { Ref } from 'vue';
 
+const GAP_PX = 16;
+const GRID_ITEM_ESTIMATE_HEIGHT = 200;
+
 const { entries } = defineProps<{
   entries: Entry[];
 }>();
@@ -49,27 +52,6 @@ const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
 
 const container_ref = ref<HTMLElement | null>(null);
 const scroll_margin = ref<number>(0);
-
-// Computed once when both refs are available and never updated again.
-// scroll_margin is a static layout offset — the distance from the top of the
-// scroll element to the top of this container. It doesn't change as the user
-// scrolls, and re-computing it on every measurement cycle causes a feedback
-// loop that makes rows jitter when scrolling upward through unmeasured items.
-const stopMarginWatch = watch(
-  [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
-  ([container, scroller]) => {
-    if (!container || !scroller) return;
-    set(
-      scroll_margin,
-      container.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop,
-    );
-    stopMarginWatch();
-  },
-  { immediate: true },
-);
-
-const GAP_PX = 16;
-const GRID_ITEM_ESTIMATE_HEIGHT = 230;
 
 const { width: scroll_width } = useElementSize(computed(() => scroll_element?.value ?? null));
 
@@ -92,15 +74,35 @@ const rows = computed<Entry[][]>(() => {
   return result;
 });
 
-const virtualizer = useVirtualizer(computed(() => ({
+const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
+
+const virtualizer_options = computed(() => ({
   count: get(rows).length,
-  getScrollElement: () => scroll_element?.value ?? null,
   estimateSize: () => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
+  getScrollElement: () => scroll_element?.value ?? null,
   overscan: 3,
   scrollMargin: get(scroll_margin),
-})));
+}));
 
-const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
+const virtualizer = useVirtualizer(virtualizer_options);
+
+// Computed once when both refs are available and never updated again.
+// scroll_margin is a static layout offset - the distance from the top of the
+// scroll element to the top of this container. It doesn't change as the user
+// scrolls, and re-computing it on every measurement cycle causes a feedback
+// loop that makes rows jitter when scrolling upward through unmeasured items.
+const stopMarginWatch = watch(
+  [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
+  ([container, scroller]) => {
+    if (!container || !scroller) return;
+    set(
+      scroll_margin,
+      container.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop,
+    );
+    stopMarginWatch();
+  },
+  { immediate: true },
+);
 </script>
 
 <style>

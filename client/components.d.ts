@@ -169,6 +169,7 @@ declare module 'vue' {
     RiconFullscreenFill: typeof import('~icons/ri/fullscreen-fill')['default']
     RiconPauseFill: typeof import('~icons/ri/pause-fill')['default']
     RiconPlayFill: typeof import('~icons/ri/play-fill')['default']
+    RiconRepeatLine: typeof import('~icons/ri/repeat-line')['default']
     RiconReplay5Fill: typeof import('~icons/ri/replay5-fill')['default']
     RiconTextWrap: typeof import('~icons/ri/text-wrap')['default']
     RiconVolumeDownFill: typeof import('~icons/ri/volume-down-fill')['default']

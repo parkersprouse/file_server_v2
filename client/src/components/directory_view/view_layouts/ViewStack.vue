@@ -50,6 +50,25 @@ const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
 const container_ref = ref<HTMLElement | null>(null);
 const scroll_margin = ref<number>(0);
 
+const estimate_size = computed(() => mode === 'row' ? 65 : 45);
+
+const mapping = computed(() => ({
+  list: ListItem,
+  row: RowItem,
+}));
+
+const virtual_items = computed(() => get(virtualizer).getVirtualItems());
+
+const virtualizer_options = computed(() => ({
+  count: entries.length,
+  estimateSize: () => get(estimate_size),
+  getScrollElement: () => scroll_element?.value ?? null,
+  overscan: 3,
+  scrollMargin: get(scroll_margin),
+}));
+
+const virtualizer = useVirtualizer(virtualizer_options);
+
 // Computed once when both refs are available and never updated again.
 // See ViewGrid.vue for a full explanation of why this must be one-shot.
 const stopMarginWatch = watch(
@@ -64,23 +83,6 @@ const stopMarginWatch = watch(
   },
   { immediate: true },
 );
-
-const estimate_size = computed(() => mode === 'row' ? 65 : 45);
-
-const virtualizer = useVirtualizer(computed(() => ({
-  count: entries.length,
-  getScrollElement: () => scroll_element?.value ?? null,
-  estimateSize: () => get(estimate_size),
-  overscan: 5,
-  scrollMargin: get(scroll_margin),
-})));
-
-const virtual_items = computed(() => get(virtualizer).getVirtualItems());
-
-const mapping = computed(() => ({
-  list: ListItem,
-  row: RowItem,
-}));
 </script>
 
 <style>
