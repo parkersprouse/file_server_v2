@@ -23,30 +23,31 @@ export default defineConfig({
         // Manually define the chunks that dependencies will be bundled
         //   into to keep them as small as possible.
         manualChunks: {
-          a: [
-            'emittery',
-            'media-chrome',
-            'ua-parser-js',
-          ],
-          b: [
-            'axios',
-            'clsx',
-            'dayjs',
-            'pinia',
-            'reka-ui',
-          ],
-          // tailwind: [
-          //   '@tailwindcss/vite',
-          //   'tailwindcss',
-          //   'tailwind-merge',
-          // ],
-          c: [
-            '@vueuse/core',
+          'vendor-core': [
             'vue',
             'vue-router',
+            'pinia',
           ],
-          d: [
-            'caniuse-lite',
+          'vendor-data': [
+            'dayjs',
+            'emittery',
+            'ua-parser-js',
+          ],
+          'vendor-http': [
+            'axios',
+          ],
+          'vendor-media': [
+            'media-chrome',
+          ],
+          'vendor-ui': [
+            'reka-ui',
+            'vaul-vue',
+            'class-variance-authority',
+          ],
+          'vendor-utils': [
+            '@vueuse/core',
+            'clsx',
+            'tailwind-merge',
           ],
         },
       },

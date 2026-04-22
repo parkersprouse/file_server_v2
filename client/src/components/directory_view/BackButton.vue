@@ -25,10 +25,6 @@ const $router_store = useRouterStore();
 const at_root = computed<boolean>(() => $route.path === '/');
 const previous_path = computed<string | undefined>(() => {
   const { breadcrumbs } = $router_store;
-  console.log('-----------------');
-  console.log(get(at_root));
-  console.log(breadcrumbs.length);
-  console.log(breadcrumbs[breadcrumbs.length - 2]);
   if (get(at_root) || breadcrumbs.length === 0) return;
   if (breadcrumbs.length === 1) return '/';
   return breadcrumbs[breadcrumbs.length - 2]?.path;

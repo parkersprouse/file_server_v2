@@ -1,31 +1,31 @@
 use crate::{
   AppState,
   enums::disposition_kind::DispositionKind,
+  lib::error::{AppError, AppResult},
   services::{read_dir, read_file},
   util,
 };
-use actix_web::{
-  HttpRequest, HttpResponse,
-  web::Data,
-};
+use actix_web::{HttpRequest, HttpResponse, ResponseError, web::Data};
+use log::warn;
 use std::fs;
 
 pub async fn handle(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
-  let path = match util::validate_path(&req, &data) {
-    Ok(result) => result,
-    Err(err) => return err,
-  };
+  match handle_impl(req, data).await {
+    Ok(response) => response,
+    Err(err) => err.error_response(),
+  }
+}
 
-  let Ok(metadata) = fs::metadata(&path) else {
-    return HttpResponse::InternalServerError().finish();
-  };
+async fn handle_impl(req: HttpRequest, data: Data<AppState>) -> AppResult<HttpResponse> {
+  let path = util::validate_path(&req, &data)?;
+
+  let metadata = fs::metadata(&path).map_err(|err| AppError::Internal(format!("Failed to read metadata: {err}")))?;
 
   // If the path we're requesting points to a directory
   if metadata.is_dir() {
-    return match read_dir::read(&path, &data).await {
-      Ok(result) => HttpResponse::Ok().json(result),
-      Err(_) => HttpResponse::InternalServerError().finish(),
-    }
+    return read_dir::read(&path, &data)
+      .await
+      .map(|result| HttpResponse::Ok().json(result));
   }
 
   // Or if it points to a file
@@ -36,12 +36,15 @@ pub async fn handle(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
       _ => DispositionKind::Auto,
     };
 
-    match read_file::read(&path, disposition).await {
-      Ok(result) => return result.into_response(&req),
-      Err(_) => return HttpResponse::InternalServerError().finish(),
-    }
+    return read_file::read(&path, disposition)
+      .await
+      .map(|result| result.into_response(&req))
+      .map_err(|err| AppError::Internal(format!("Failed to read file: {err}")));
   }
 
   // Otherwise, 404
-  HttpResponse::NotFound().finish()
+  warn!("Requested path is neither a file nor directory: {:?}", path);
+  Err(AppError::NotFound(
+    "Resource is neither a file nor directory".to_string(),
+  ))
 }

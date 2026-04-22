@@ -1,58 +1,58 @@
 <template>
-  <EntryItem :entry='entry'>
-    <Card class='p-0! h-full! gap-2!'>
-      <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink'>
-        <img
-          v-if='entry.thumbnail && heic_check'
-          :src='entry.thumbnail'
-          class='w-auto h-auto object-contain aspect-square'
+  <Card class='p-0! h-full! gap-2!'>
+    <CardContent class='flex flex-row flex-nowrap justify-center items-center p-0! grow shrink h-40 overflow-hidden'>
+      <img
+        v-if='entry.thumbnail && heic_check'
+        :src='entry.thumbnail'
+        loading='lazy'
+        decoding='async'
+        class='w-full h-full object-contain aspect-square'
+      >
+      <component
+        v-else
+        :is='fileTypeToIcon(entry.file_type || entry.entry_type)'
+        class='size-1/2 aspect-square'
+      />
+    </CardContent>
+    <CardFooter class='flex flex-col flex-nowrap justify-center items-start p-0! grow-0'>
+      <div class='entry-title scrollbar-hidden'>
+        {{ entry.name }}
+      </div>
+      <div class='flex flex-row flex-nowrap justify-between items-center w-full'>
+        <Tooltip
+          :delay-duration='500'
+          :disable-closing-trigger='true'
+          :disable-hoverable-content='true'
+          :skip-delay-duration='300'
         >
-        <component
-          v-else
-          :is='fileTypeToIcon(entry.file_type || entry.entry_type)'
-          class='size-1/2 aspect-square'
-        />
-      </CardContent>
-      <CardFooter class='flex flex-col flex-nowrap justify-center items-start p-0! grow-0'>
-        <div class='entry-title scrollbar-hidden'>
-            {{ entry.name }}
-        </div>
-        <div class='flex flex-row flex-nowrap justify-between items-center w-full'>
-          <Tooltip
-            :delay-duration='500'
-            :disable-closing-trigger='true'
-            :disable-hoverable-content='true'
-            :skip-delay-duration='300'
-          >
-            <TooltipTrigger as-child>
-              <Badge
-                variant='outline'
-                class='entry-meta entry-meta__last-modified'
-              >
-                <icon-clock-counter-clockwise />
-                {{ relative(entry.last_modified_at) }}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div class='text-center'>
-                Last modified on
-                <br>
-                {{ absolute(entry.last_modified_at) }}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-          <Badge
-            v-if='Boolean(entry.duration)'
-            variant='outline'
-            class='entry-meta entry-meta__duration'
-          >
-            <icon-timer />
-            {{ entry.duration }}
-          </Badge>
-        </div>
-      </CardFooter>
-    </Card>
-  </EntryItem>
+          <TooltipTrigger as-child>
+            <Badge
+              variant='outline'
+              class='entry-meta entry-meta__last-modified'
+            >
+              <icon-clock-counter-clockwise />
+              {{ relative(entry.last_modified_at) }}
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent>
+            <div class='text-center'>
+              Last modified on
+              <br>
+              {{ absolute(entry.last_modified_at) }}
+            </div>
+          </TooltipContent>
+        </Tooltip>
+        <Badge
+          v-if='Boolean(entry.duration)'
+          variant='outline'
+          class='entry-meta entry-meta__duration'
+        >
+          <icon-timer />
+          {{ entry.duration }}
+        </Badge>
+      </div>
+    </CardFooter>
+  </Card>
 </template>
 
 <script setup lang='ts'>

@@ -4,10 +4,12 @@
       v-if='entry.thumbnail && heic_check'
       variant='image'
     >
-      <img
-        :src='entry.thumbnail'
-        class='object-contain! aspect-square!'
-      >
+       <img
+         :src='entry.thumbnail'
+         loading='lazy'
+         decoding='async'
+         class='object-contain! aspect-square!'
+       >
     </ItemMedia>
     <ItemMedia v-else>
       <component :is='fileTypeToIcon(entry.file_type || entry.entry_type)' />
@@ -75,26 +77,32 @@ const heic_check = inject<boolean>('heic_check', false);
 @reference '../../../assets/styles/index.css';
 
 .entries--row {
-  & .entry {
+  & .entry-wrapper {
     @apply z-10 hover:z-20;
 
-    &:nth-child(odd) {
+    &[data-odd='true'] {
       @apply bg-accent dark:bg-zinc-900;
     }
 
-    &:not(:last-of-type) {
-      @apply -mb-px;
-    }
-
-    & [data-slot='item-media'] {
+    & .entry {
+      & [data-slot='item-media'] {
         & * {
-        @apply size-10;
+          @apply size-10;
+        }
+      }
+
+      & [data-slot='item'] {
+        /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
+        @apply py-2! flex-nowrap;
       }
     }
 
-    & [data-slot='item'] {
-      /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-      @apply py-2! flex-nowrap;
+    &:not(:last-of-type) {
+      & .entry {
+        & [data-slot='item'] {
+          @apply -mb-px;
+        }
+      }
     }
   }
 }

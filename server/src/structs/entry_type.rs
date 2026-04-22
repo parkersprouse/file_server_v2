@@ -17,7 +17,14 @@ impl EntryType {
 
   pub fn valid(entry: &fs::DirEntry, data: &Data<AppState>) -> bool {
     // We're only concerned about hiding the root thumbnails folder
-    if entry.path().to_str().unwrap_or("").replace(&data.config.root_dir_path, "").trim_matches('/') == ".thumbnails" {
+    if entry
+      .path()
+      .to_str()
+      .unwrap_or("")
+      .replace(&data.config.root_dir_path, "")
+      .trim_matches('/')
+      == ".thumbnails"
+    {
       return false;
     }
     match entry.metadata() {

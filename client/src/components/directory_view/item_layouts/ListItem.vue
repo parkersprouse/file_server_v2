@@ -70,24 +70,30 @@ defineProps<{
 @reference '../../../assets/styles/index.css';
 
 .entries--list {
-  & .entry {
+  & .entry-wrapper {
     @apply z-10 hover:z-20;
 
-    &:nth-child(odd) {
+    &[data-odd='true'] {
       @apply bg-accent dark:bg-zinc-900;
     }
 
-    &:not(:last-of-type) {
-      @apply -mb-px;
+    & .entry {
+      & [data-slot='item'] {
+        /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
+        @apply py-2! flex-nowrap border-l-0 border-r-0;
+
+        & * {
+          --tw-translate-x: 0;
+          --tw-translate-y: 0;
+        }
+      }
     }
 
-    & [data-slot='item'] {
-      /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-      @apply py-2! flex-nowrap border-l-0 border-r-0;
-
-      & * {
-        --tw-translate-x: 0;
-        --tw-translate-y: 0;
+    &:not(:last-of-type) {
+      & .entry {
+        & [data-slot='item'] {
+          @apply -mb-px;
+        }
       }
     }
   }

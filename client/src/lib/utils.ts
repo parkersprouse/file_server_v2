@@ -46,6 +46,7 @@ export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string
 
 export function toFileUrl(value: Entry | string): string {
   const path = typeof value === 'string' ? value : value.path;
+  if (path.startsWith('http')) return path;
   return `${http.defaults.baseURL!}/${encodeURIComponent(trim(path))}`;
 }
 

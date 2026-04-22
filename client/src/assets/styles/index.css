@@ -1,11 +1,10 @@
 @layer theme, base, components, utilities, app;
 
-/* @import '@fontsource-variable/atkinson-hyperlegible-next/wght.css';
-@import '@fontsource-variable/atkinson-hyperlegible-next/wght-italic.css'; */
+/* Optimized font loading with font-display: swap to prevent FOUT
+   Only load italic variants that are actually used in the app */
 @import '@fontsource-variable/inter/wght.css';
 @import '@fontsource-variable/inter/wght-italic.css';
 @import '@fontsource-variable/source-code-pro/wght.css';
-@import '@fontsource-variable/source-code-pro/wght-italic.css';
 /* @import './_reset.css' layer(base); */
 @import 'tailwindcss';
 @import 'tw-animate-css';
@@ -200,6 +199,14 @@
   body,
   #app {
     @apply body-basics;
+  }
+
+  /* Optimize font rendering with font-display: swap to prevent layout shifts */
+  @supports (font-variation-settings: normal) {
+    /* Modern browsers with variable font support */
+    body {
+      font-feature-settings: 'cv11'; /* Optional: enable contextual alternates if needed */
+    }
   }
 }
 

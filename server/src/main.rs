@@ -1,7 +1,9 @@
-use crate::{lib::{cors, gatekeeper}, services::resource_handler};
+use crate::{
+  lib::{cache, cors, gatekeeper, media_cache},
+  services::resource_handler,
+};
 use actix_web::{
-  App, HttpRequest, HttpResponse, HttpServer, guard,
-  middleware,
+  App, HttpRequest, HttpResponse, HttpServer, guard, middleware,
   web::{self, Data, get},
 };
 use app_config::AppConfig;
@@ -12,8 +14,11 @@ mod enums {
   pub mod disposition_kind;
 }
 mod lib {
+  pub mod cache;
   pub mod cors;
+  pub mod error;
   pub mod gatekeeper;
+  pub mod media_cache;
 }
 mod services {
   pub mod read_dir;
@@ -28,6 +33,8 @@ mod util;
 
 pub struct AppState {
   pub config: AppConfig,
+  pub directory_cache: cache::DirectoryCache,
+  pub media_cache: media_cache::MediaMetadataCache,
 }
 
 async fn index_route(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
@@ -37,7 +44,11 @@ async fn index_route(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
 #[actix_web::main]
 async fn main() -> io::Result<()> {
   let config: AppConfig = AppConfig::init();
-  let app_state: Data<AppState> = Data::new(AppState { config: config.clone() });
+  let app_state: Data<AppState> = Data::new(AppState {
+    config: config.clone(),
+    directory_cache: cache::DirectoryCache::new(300), // 5 minute TTL
+    media_cache: media_cache::MediaMetadataCache::new(3600), // 1 hour TTL for media metadata
+  });
 
   env_logger::Builder::new()
     .filter(None, app_state.config.log_level)
@@ -46,13 +57,14 @@ async fn main() -> io::Result<()> {
   HttpServer::new(move || {
     App::new()
       .app_data(app_state.to_owned())
+      .wrap(middleware::Compress::default())
       .wrap(middleware::Logger::default())
       .wrap(middleware::NormalizePath::trim())
       .wrap(cors::default())
       .service(
         web::scope("/{path:.*}")
           .guard(guard::fn_guard(gatekeeper::verify))
-          .route("", get().to(index_route))
+          .route("", get().to(index_route)),
       )
   })
   .bind(("0.0.0.0", config.port))?

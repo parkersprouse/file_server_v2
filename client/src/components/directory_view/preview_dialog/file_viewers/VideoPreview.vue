@@ -1,11 +1,13 @@
 <template>
   <media-controller
+    ref='media_controller'
     autohide='2'
     autohideovercontrols
     keyboardbackwardseekoffset='5'
     keyboardforwardseekoffset='5'
   >
     <video
+      ref='video_ele'
       slot='media'
       preload='auto'
       :src='entry.url'
@@ -71,6 +73,7 @@
         <ricon-volume-down-fill slot='low' />
         <ricon-volume-mute-fill slot='off' />
       </media-mute-button>
+      <media-loop-toggle-button class='preview-video-player__control' />
       <media-time-display
         showduration
         class='preview-video-player__control'
@@ -86,11 +89,36 @@
 </template>
 
 <script setup lang='ts'>
+import { get } from '@vueuse/core';
+import { onMounted, onUnmounted, useTemplateRef } from 'vue';
+
+import './video_preview/media_loop_button.ts';
+
+import type MediaLoopToggleButton from './video_preview/media_loop_button.ts';
+import type { MediaController } from 'media-chrome';
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
+
+const media_controller = useTemplateRef<MediaController>('media_controller');
+const video_ele = useTemplateRef<HTMLVideoElement>('video_ele');
+
+function toggleVideoLoop(event: Event): void {
+  const video = get(video_ele);
+  if (!video) return;
+  const toggle_button = event.target as MediaLoopToggleButton;
+  video.loop = toggle_button.mediaLooping;
+}
+
+onMounted(() => {
+  get(media_controller)?.addEventListener('mediatogglelooprequest', toggleVideoLoop);
+});
+
+onUnmounted(() => {
+  get(media_controller)?.removeEventListener('mediatogglelooprequest', toggleVideoLoop);
+});
 </script>
 
 <style>
