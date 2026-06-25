@@ -1,14 +1,12 @@
 <template>
   <!--
-    Render documents in a sandboxed <iframe> rather than <object>. An empty
-    `sandbox` applies all restrictions (no script execution, no same-origin), so
-    previewing a document that embeds <script> (e.g. an HTML or SVG document)
-    can't run code, while the browser still renders PDFs/images natively.
+    Render documents in an <iframe> (not <object>). Script execution in the
+    framed file — e.g. a malicious HTML or SVG document — is blocked by the
+    server's `Content-Security-Policy: script-src 'none'` on file responses,
+    NOT by an iframe `sandbox`: a strict sandbox also stops the browser's PDF
+    viewer from rendering.
   -->
-  <iframe
-    :src='entry.url'
-    sandbox=''
-  />
+  <iframe :src='entry.url' />
 </template>
 
 <script setup lang='ts'>

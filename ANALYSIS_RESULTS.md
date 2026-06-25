@@ -424,11 +424,14 @@ duration metadata requires it).
 
 > **✅ Resolved (2026-06-25):** images (including SVGs) now render via `<img>`
 > instead of `<object>` — an `<img>` does not execute `<script>` embedded in an
-> SVG. Documents render in an `<iframe sandbox=''>` (all restrictions, including
-> no script execution and no same-origin) instead of `<object>`, while the
-> browser still renders PDFs/images natively. As defense in depth, the server
-> now sends `X-Content-Type-Options: nosniff` on all responses
-> (`server/src/main.rs`).
+> SVG. Documents render in a plain `<iframe>` (instead of `<object>`), and
+> script execution in a framed file (e.g. a malicious HTML/SVG document) is
+> blocked by a server-sent **`Content-Security-Policy: script-src 'none'`** on
+> responses rather than an iframe `sandbox` — a strict sandbox also prevents the
+> browser's PDF viewer from rendering, so the CSP is used instead (the
+> alternative the analysis itself suggested). The server also sends
+> `X-Content-Type-Options: nosniff`. Both headers are added in
+> `server/src/main.rs` and verified present on file responses.
 
 SVGs are rendered with `<object :data='entry.url' type='image/svg+xml'>`, and
 documents/spreadsheets with `<object :data='entry.url'>`. An `<object>` loading

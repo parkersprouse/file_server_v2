@@ -70,8 +70,14 @@ async fn main() -> io::Result<()> {
       .wrap(middleware::Logger::default())
       .wrap(middleware::NormalizePath::trim())
       // Stop browsers from MIME-sniffing responses (e.g. a `.txt` containing
-      // HTML) into an executable content type.
-      .wrap(middleware::DefaultHeaders::new().add(("X-Content-Type-Options", "nosniff")))
+      // HTML) into an executable content type, and block script execution in any
+      // file rendered directly (e.g. a malicious HTML/SVG document) — this is
+      // what protects document previews now that the iframe is not sandboxed.
+      .wrap(
+        middleware::DefaultHeaders::new()
+          .add(("X-Content-Type-Options", "nosniff"))
+          .add(("Content-Security-Policy", "script-src 'none'")),
+      )
       .wrap(cors::build(app_state.config.allowed_origins.clone()))
       .service(web::scope("/{path:.*}").route("", get().to(index_route)))
   })
