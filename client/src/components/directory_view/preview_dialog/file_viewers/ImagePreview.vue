@@ -1,25 +1,18 @@
 <template>
-  <object
-    v-if='is_svg'
-    :data='entry.url'
-    type='image/svg+xml'
-  />
-  <img
-    v-else
-    :src='entry.url'
-  >
+  <!--
+    Render every image (including SVGs) via <img>. Unlike <object>, an <img>
+    does not execute <script> embedded in an SVG, so previewing a malicious SVG
+    can't run code in the server's origin.
+  -->
+  <img :src='entry.url'>
 </template>
 
 <script setup lang='ts'>
-import { computed } from 'vue';
-
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
-
-const is_svg = computed<boolean>(() => entry.name.endsWith('.svg'));
 </script>
 
 <style>
@@ -37,7 +30,7 @@ const is_svg = computed<boolean>(() => entry.name.endsWith('.svg'));
       & .preview-dialog__content {
         @apply h-auto w-auto grow shrink;
 
-        & object {
+        & img {
           @apply w-full h-full;
         }
       }

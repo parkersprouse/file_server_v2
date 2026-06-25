@@ -356,9 +356,17 @@ duration metadata requires it).
 
 ## 4. Client — Security
 
-### 4.1 (Medium) SVG previews execute embedded scripts
+### 4.1 (Medium) SVG previews execute embedded scripts — ✅ Resolved
 `client/src/components/directory_view/preview_dialog/file_viewers/ImagePreview.vue`,
 `DocumentPreview.vue`
+
+> **✅ Resolved (2026-06-25):** images (including SVGs) now render via `<img>`
+> instead of `<object>` — an `<img>` does not execute `<script>` embedded in an
+> SVG. Documents render in an `<iframe sandbox=''>` (all restrictions, including
+> no script execution and no same-origin) instead of `<object>`, while the
+> browser still renders PDFs/images natively. As defense in depth, the server
+> now sends `X-Content-Type-Options: nosniff` on all responses
+> (`server/src/main.rs`).
 
 SVGs are rendered with `<object :data='entry.url' type='image/svg+xml'>`, and
 documents/spreadsheets with `<object :data='entry.url'>`. An `<object>` loading
@@ -374,8 +382,15 @@ scripts) instead of `<object>`, or serve user files with a restrictive
 `X-Content-Type-Options: nosniff`. Sandbox document previews in an
 `<iframe sandbox>` rather than `<object>`.
 
-### 4.2 (Low) Text preview is fetched and highlighted client-side — verify escaping
+### 4.2 (Low) Text preview is fetched and highlighted client-side — verify escaping — ✅ Resolved
 `client/src/components/.../file_viewers/TextPreview.vue`
+
+> **✅ Resolved (2026-06-25):** verified Prism's `fileHighlight` tokenizes the
+> fetched text into the DOM (it does not inject raw HTML), so the preview path
+> escapes content. As the recommended hardening, text files are served as
+> `text/plain` (already the case) **and** now carry `X-Content-Type-Options:
+> nosniff` (added in `server/src/main.rs`), so a `.txt` containing HTML can't be
+> sniffed into an executable type — verified against a live response.
 
 Prism's `fileHighlight` plugin fetches the raw file (`data-src`) and injects it
 into `<pre><code>`. Prism escapes text content, so this is generally safe, but
@@ -532,7 +547,7 @@ explicit and avoids any chance of shipping the inspector hooks.
 | 4 | Server perf | High | Med | ✅ Move blocking FS/ffprobe off the async executor (2.1) |
 | 5 | Server sec | Med | Low | Lock down CORS to known origins (1.4) |
 | 6 | Server perf | Med | Med | ✅ Bound/evict caches; `Arc` the cached vec; fix miss-locking (2.3, 2.4) |
-| 7 | Client sec | Med | Low | Render images via `<img>`; sandbox/CSP document previews (4.1) |
+| 7 | Client sec | Med | Low | ✅ Render images via `<img>`; sandbox/CSP document previews (4.1) |
 | 8 | Client correctness | Med | Low | ✅ Fix inverted version-range check (5.1) |
 | 9 | Server hygiene | Low | Low | ✅ Delete/finish `read_dir.v2.rs`; fix Make/compose/Docker ffmpeg (3.3, 3.5) |
 | 10 | Client correctness | Low | Low | ✅ `replaceAll` backslash, per-segment URL encoding (5.2, 5.3) |

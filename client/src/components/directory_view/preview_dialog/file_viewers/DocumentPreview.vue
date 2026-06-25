@@ -1,5 +1,14 @@
 <template>
-  <object :data='entry.url' />
+  <!--
+    Render documents in a sandboxed <iframe> rather than <object>. An empty
+    `sandbox` applies all restrictions (no script execution, no same-origin), so
+    previewing a document that embeds <script> (e.g. an HTML or SVG document)
+    can't run code, while the browser still renders PDFs/images natively.
+  -->
+  <iframe
+    :src='entry.url'
+    sandbox=''
+  />
 </template>
 
 <script setup lang='ts'>
@@ -19,8 +28,8 @@ const { entry } = defineProps<{
   & .preview-dialog__content {
     @apply max-w-full max-h-full w-full h-full p-0;
 
-    & object {
-      @apply w-full h-full overflow-auto;
+    & iframe {
+      @apply w-full h-full overflow-auto border-0;
     }
   }
 }

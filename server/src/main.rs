@@ -60,6 +60,9 @@ async fn main() -> io::Result<()> {
       .wrap(middleware::Compress::default())
       .wrap(middleware::Logger::default())
       .wrap(middleware::NormalizePath::trim())
+      // Stop browsers from MIME-sniffing responses (e.g. a `.txt` containing
+      // HTML) into an executable content type.
+      .wrap(middleware::DefaultHeaders::new().add(("X-Content-Type-Options", "nosniff")))
       .wrap(cors::default())
       .service(
         web::scope("/{path:.*}")
