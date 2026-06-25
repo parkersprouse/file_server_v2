@@ -115,9 +115,16 @@ rejected/invalid paths at `warn`/`debug`, not `error`.
 
 ## 2. Server — Performance
 
-### 2.1 (High) Blocking filesystem & subprocess work runs on the async executor
+### 2.1 (High) Blocking filesystem & subprocess work runs on the async executor — ✅ Resolved
 `server/src/services/read_dir.rs`, `server/src/structs/entry_details.rs`,
 `server/src/services/read_file.rs`
+
+> **✅ Resolved (2026-06-25):** `read_dir::read` now enumerates the directory
+> inside `web::block` (the blocking `read_dir`/`metadata`/thumbnail `stat`s),
+> then resolves each entry's header sniff and `ffprobe` concurrently via a
+> `futures` stream bounded with `buffered(8)`. Both `FileFormat::from_file` and
+> `ffprobe::ffprobe` are wrapped in `web::block`, so no blocking filesystem or
+> subprocess work runs on the async executor.
 
 The request handlers are `async`, but the heavy work is **synchronous and
 blocking**, executed directly on the actix/tokio worker threads:
@@ -138,9 +145,16 @@ metadata/format/duration work concurrently (e.g. `futures::stream` with
 bounded concurrency) rather than in a sequential `for` loop. Use an async
 ffprobe wrapper or cap concurrent subprocesses with a semaphore.
 
-### 2.2 (Medium) Directory listing does O(N) header reads + ffprobe on every cold load
+### 2.2 (Medium) Directory listing does O(N) header reads + ffprobe on every cold load — 🟡 Partially addressed
 `server/src/structs/entry_details.rs` (`new`, `determine_file_format`,
 `determine_duration`)
+
+> **🟡 Partially addressed (2026-06-25):** the cold-load cost is now paid
+> concurrently (≤8 entries in flight) rather than sequentially, and listings are
+> cached behind an `Arc` so repeat visits are a pointer clone. The remaining
+> recommendations — deferring expensive metadata to a lazy/on-demand endpoint,
+> persisting the media cache across restarts, and a longer/invalidation-based
+> TTL — were **not** implemented and remain open.
 
 Even ignoring the blocking concern, every cold directory load reads each
 file's header and probes each media file's duration. For large directories
@@ -152,8 +166,14 @@ TTL means it is re-paid regularly.
 lazy/on-demand endpoint or compute it only for the entries actually shown;
 persist the media cache across restarts; consider a longer or invalidation-based TTL.
 
-### 2.3 (Medium) Caches are unbounded and never proactively evicted
+### 2.3 (Medium) Caches are unbounded and never proactively evicted — ✅ Resolved
 `server/src/lib/cache.rs`, `server/src/lib/media_cache.rs`
+
+> **✅ Resolved (2026-06-25):** both caches were replaced with
+> `moka::future::Cache`, which enforces a bounded `max_capacity` (1024 directory
+> listings / 8192 media entries) with LRU eviction plus TTL. Memory can no
+> longer grow without bound, and the hand-rolled `HashMap`/`RwLock` code was
+> removed.
 
 Both caches are `HashMap`s that only remove an entry when that exact key is
 requested again *after* it expired. Keys that are never revisited live
@@ -165,8 +185,14 @@ sweeper (the `cleanup`-style logic exists only on the client).
 `moka` or `lru`), or run a periodic sweep task. `moka` would also give you
 async-aware TTL + size bounds and remove most of this hand-rolled code.
 
-### 2.4 (Medium) Cache `get()` takes a write lock on every miss; full `Vec` clones on every hit
+### 2.4 (Medium) Cache `get()` takes a write lock on every miss; full `Vec` clones on every hit — ✅ Resolved
 `server/src/lib/cache.rs`, `server/src/lib/media_cache.rs`
+
+> **✅ Resolved (2026-06-25):** the `moka` switch (2.3) shards locking
+> internally, so a miss no longer takes a global write lock to remove a
+> non-existent key. Directory listings are stored as `Arc<Vec<EntryDetails>>`,
+> so a hit returns a cheap `Arc::clone` instead of deep-copying the vector
+> (`read_dir::read` now returns the `Arc`, serialized via `.json(result.as_ref())`).
 
 ```rust
 pub async fn get(&self, path: &str) -> Option<Vec<EntryDetails>> {
@@ -190,8 +216,17 @@ pub async fn get(&self, path: &str) -> Option<Vec<EntryDetails>> {
 actually found. Store `Arc<Vec<EntryDetails>>` so hits hand back a cheap
 `Arc::clone` instead of a deep copy.
 
-### 2.5 (Low) Redundant `stat` / header reads on the file path
+### 2.5 (Low) Redundant `stat` / header reads on the file path — ✅ Resolved
 `server/src/services/resource_handler.rs`, `server/src/services/read_file.rs`
+
+> **✅ Resolved (2026-06-25):** `validate_path` now performs a single
+> `fs::metadata` (replacing its `fs::exists`) and returns the `Metadata`, which
+> the resource handler reuses and threads into `read_file::read` — so a file
+> request is `stat`ed once rather than three times, and per-entry metadata is
+> read once during enumeration (was twice). One residual is left intentionally:
+> the `Auto` file-serve still sniffs the header once rather than reusing the
+> listing's already-computed type, since wiring that to a possibly-cold
+> directory-cache lookup would be fragile for a one-read-per-view cost.
 
 For a file request the path is `stat`ed in `validate_path` (`fs::exists`),
 again in `resource_handler` (`fs::metadata`), and a third time inside
@@ -205,8 +240,16 @@ the file-type determination rather than recomputing it.
 
 ## 3. Server — Correctness & Robustness
 
-### 3.1 (High) Panics on non-UTF-8 filenames and metadata errors
+### 3.1 (High) Panics on non-UTF-8 filenames and metadata errors — ✅ Resolved
 `server/src/structs/entry_details.rs` (`EntryDetails::new`)
+
+> **✅ Resolved (2026-06-25):** entry construction was split into
+> `enumerate_dir` + `from_raw` (during the 2.1 refactor); metadata is now read
+> once and entries whose metadata can't be read are skipped instead of
+> `unwrap()`-panicking, and the filename uses `to_string_lossy()` rather than
+> `into_string().unwrap()`. The remaining request-path `unwrap()`s on
+> `file_format` (`file_type`/`full_type`) were rewritten to `match`/`let else`,
+> so they can't panic.
 
 ```rust
 let metadata: fs::Metadata = entry.metadata().unwrap();
@@ -224,9 +267,15 @@ directory unbrowsable.
 `metadata`/format errors gracefully (skip the entry or mark it as
 unreadable). Audit all `unwrap()`s in request paths.
 
-### 3.2 (Medium) `str::replace` used for prefix stripping
+### 3.2 (Medium) `str::replace` used for prefix stripping — ✅ Resolved
 `server/src/structs/entry_details.rs` (`path_to_url`), `entry_type.rs`
 (`valid`)
+
+> **✅ Resolved (2026-06-25):** both `path_to_url` and `EntryType::valid` now
+> use `Path::strip_prefix(root_dir_path)`, which removes only the leading root
+> prefix on path-component boundaries instead of substring-replacing every
+> occurrence of the root string. Non-UTF-8 paths fall back to the unmodified
+> path rather than collapsing to `""`.
 
 ```rust
 path.to_str().unwrap_or("").replace(&data.config.root_dir_path, "")
@@ -240,8 +289,11 @@ descendant path, the URL is mangled. It also silently drops non-UTF-8 paths to
 **Recommendation:** Use `Path::strip_prefix(root_dir)` for correct,
 prefix-only removal.
 
-### 3.3 (Low) Dead / non-compiling code committed
+### 3.3 (Low) Dead / non-compiling code committed — ✅ Resolved
 `server/src/services/read_dir.v2.rs`
+
+> **✅ Resolved (2026-06-25):** the file was deleted. The commented-out
+> server-side-sorting reference implementation remains available in git history.
 
 This file is not declared in `main.rs`'s module tree (so it is not compiled),
 references structs that don't exist in the crate (`query_params`, `sort_dir`,
@@ -252,8 +304,15 @@ large commented-out block. It is confusing dead weight.
 file; keep the commented-out reference implementation in git history, not in
 the tree.
 
-### 3.4 (Low) Config & startup ergonomics
+### 3.4 (Low) Config & startup ergonomics — ✅ Resolved
 `server/src/app_config.rs`
+
+> **✅ Resolved (2026-06-25):** the file source is now `.required(false)`, so
+> env-only configuration works without a (possibly empty) `config.toml` present
+> (verified by booting the server from a directory with no config file). The
+> build error message is clearer (`.expect("Failed to load configuration")`),
+> the friendly "must set root_dir" panic is retained, and `parse_app_log_level`
+> is now a single allocation-free `app_levels.get(level)` lookup.
 
 - `.build().unwrap()` panics with an opaque message if `config.toml` is
   missing; the env-var fallback exists but the file source is not marked
@@ -267,7 +326,18 @@ the tree.
 neither config source yields `root_dir`, and simplify the log-level lookup to a
 single `get`.
 
-### 3.5 (Low) Tooling / repo hygiene
+### 3.5 (Low) Tooling / repo hygiene — ✅ Resolved
+
+> **✅ Resolved (2026-06-25):** the local Make target was renamed to `serve`
+> (matching its `.PHONY`) so `start` is no longer defined twice, and a stray
+> `--filter name=livestream` in `status` was corrected. `docker-compose.yml` was
+> rewritten to run out of the box: aligned port (`8100`), inline `environment`
+> (replacing the missing `docker/local.env`), a read-only volume mount for the
+> browse root, and the obsolete `version`/external-network removed. The
+> `Dockerfile` now installs `ffmpeg`, and the `README` documents the runtime
+> `ffprobe` dependency. (Note: the compose container is still subject to the
+> source-IP gatekeeper from 1.1 — Docker bridge IPs aren't in its allowlist.)
+
 - `server/Makefile` defines `start` twice (once aliased to `serve`/`cargo run`,
   once to `docker-compose up`) — the second silently wins.
 - `server/docker-compose.yml` maps port `1234:1234` and references
@@ -425,11 +495,11 @@ explicit and avoids any chance of shipping the inspector hooks.
 |---|------|----------|--------|------|
 | 1 | Server sec | High | Med | Canonicalize paths to block symlink escape (1.2) |
 | 2 | Server sec | High | Med | Real auth; fix IP gate semantics & proxy bypass (1.1) |
-| 3 | Server robustness | High | Low | Remove panicking `unwrap()`s on filenames/metadata (3.1) |
-| 4 | Server perf | High | Med | Move blocking FS/ffprobe off the async executor (2.1) |
+| 3 | Server robustness | High | Low | ✅ Remove panicking `unwrap()`s on filenames/metadata (3.1) |
+| 4 | Server perf | High | Med | ✅ Move blocking FS/ffprobe off the async executor (2.1) |
 | 5 | Server sec | Med | Low | Lock down CORS to known origins (1.4) |
-| 6 | Server perf | Med | Med | Bound/evict caches; `Arc` the cached vec; fix miss-locking (2.3, 2.4) |
+| 6 | Server perf | Med | Med | ✅ Bound/evict caches; `Arc` the cached vec; fix miss-locking (2.3, 2.4) |
 | 7 | Client sec | Med | Low | Render images via `<img>`; sandbox/CSP document previews (4.1) |
 | 8 | Client correctness | Med | Low | Fix inverted version-range check (5.1) |
-| 9 | Server hygiene | Low | Low | Delete/finish `read_dir.v2.rs`; fix Make/compose/Docker ffmpeg (3.3, 3.5) |
+| 9 | Server hygiene | Low | Low | ✅ Delete/finish `read_dir.v2.rs`; fix Make/compose/Docker ffmpeg (3.3, 3.5) |
 | 10 | Client correctness | Low | Low | `replaceAll` backslash, per-segment URL encoding (5.2, 5.3) |

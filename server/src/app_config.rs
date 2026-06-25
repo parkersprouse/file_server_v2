@@ -14,12 +14,13 @@ pub struct AppConfig {
 impl AppConfig {
   pub fn init() -> AppConfig {
     let settings = Config::builder()
-      // Read config values from `./config.toml`
-      .add_source(config::File::with_name("config"))
+      // Read config values from `./config.toml` (optional — configuration can
+      // be supplied entirely via environment variables instead, e.g. in Docker).
+      .add_source(config::File::with_name("config").required(false))
       // Or as environment variables that start with `WEB_FILE_BROWSER`
       .add_source(config::Environment::with_prefix("WEB_FILE_BROWSER").ignore_empty(true))
       .build()
-      .unwrap();
+      .expect("Failed to load configuration");
 
     AppConfig {
       log_level: AppConfig::parse_app_log_level(&settings.get_string("log_level").unwrap_or("info".into())),
@@ -42,9 +43,7 @@ impl AppConfig {
       ("trace", LevelFilter::Trace),
     ]);
 
-    match app_levels.clone().into_keys().collect::<Vec<&str>>().contains(&level) {
-      true => *app_levels.get(level).unwrap_or(&LevelFilter::Info),
-      false => LevelFilter::Info,
-    }
+    // Unknown/unset levels fall back to Info.
+    *app_levels.get(level).unwrap_or(&LevelFilter::Info)
   }
 }

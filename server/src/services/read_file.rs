@@ -5,13 +5,9 @@ use crate::{
 };
 use actix_files::NamedFile;
 use actix_web::http::header::{ContentDisposition, DispositionType};
-use log::error as log_error;
-use std::{
-  fs,
-  path::{Path, PathBuf},
-};
+use std::{fs, path::Path};
 
-pub async fn read<P>(path: P, disposition_kind: DispositionKind) -> AppResult<NamedFile>
+pub async fn read<P>(path: P, disposition_kind: DispositionKind, metadata: &fs::Metadata) -> AppResult<NamedFile>
 where
   P: AsRef<Path>,
 {
@@ -45,18 +41,13 @@ where
     DispositionKind::Auto => {
       let mut disposition = DispositionType::Attachment;
 
-      if let Ok(file_meta) = fs::metadata(&path) {
-        let mut path_buf = PathBuf::new();
-        path_buf.push(&path);
+      // Reuse the metadata already obtained during path validation rather than
+      // re-`stat`ing the file here.
+      let file_format = EntryDetails::determine_file_format(EntryType::stringify(&metadata.file_type()), path.as_ref());
+      let file_type = EntryDetails::file_type(file_format);
 
-        let file_format = EntryDetails::determine_file_format(EntryType::stringify(&file_meta.file_type()), &path_buf);
-        let file_type = EntryDetails::file_type(file_format);
-
-        if EntryDetails::INLINE_TYPES.contains(&file_type.as_str()) {
-          disposition = DispositionType::Inline;
-        }
-      } else {
-        log_error!("Failed to read file metadata for disposition detection, defaulting to attachment");
+      if EntryDetails::INLINE_TYPES.contains(&file_type.as_str()) {
+        disposition = DispositionType::Inline;
       }
 
       let file: NamedFile = NamedFile::open_async(&path)

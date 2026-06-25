@@ -17,8 +17,11 @@ RUN cargo build --target x86_64-unknown-linux-musl --release
 ##=============##
 FROM alpine:latest AS deploy
 
+# `ffmpeg` provides the `ffprobe` binary that the `ffprobe` crate shells out to
+# for media duration probing; without it, duration metadata silently fails.
 RUN apk update && apk add --no-cache \
-    dumb-init
+    dumb-init \
+    ffmpeg
 
 # Import from build
 COPY --from=build /app/target/x86_64-unknown-linux-musl/release/web_file_browser_server .

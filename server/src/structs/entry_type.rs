@@ -1,6 +1,4 @@
-use crate::AppState;
-use actix_web::web::Data;
-use std::fs;
+use std::{fs, path::Path};
 
 pub struct EntryType {}
 
@@ -15,21 +13,14 @@ impl EntryType {
     Self::FILE
   }
 
-  pub fn valid(entry: &fs::DirEntry, data: &Data<AppState>) -> bool {
-    // We're only concerned about hiding the root thumbnails folder
-    if entry
-      .path()
-      .to_str()
-      .unwrap_or("")
-      .replace(&data.config.root_dir_path, "")
-      .trim_matches('/')
-      == ".thumbnails"
-    {
+  pub fn valid(entry: &fs::DirEntry, root_dir_path: &str, metadata: &fs::Metadata) -> bool {
+    // We're only concerned about hiding the root thumbnails folder. Compare the
+    // path relative to the root (prefix-only, on component boundaries) rather
+    // than substring-replacing the root string anywhere in the path.
+    let path = entry.path();
+    if path.strip_prefix(root_dir_path) == Ok(Path::new(".thumbnails")) {
       return false;
     }
-    match entry.metadata() {
-      Ok(metadata) => metadata.is_dir() || metadata.is_file(),
-      Err(_) => false,
-    }
+    metadata.is_dir() || metadata.is_file()
   }
 }
