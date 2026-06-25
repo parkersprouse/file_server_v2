@@ -1,6 +1,4 @@
-import { get } from '@vueuse/core';
 import Emittery from 'emittery';
-import { computed } from 'vue';
 
 import type { AppEvent } from 'types/app_event.d.ts';
 
@@ -17,6 +15,5 @@ const emittery = new Emittery<AppEvent>();
  *   unsub();
  */
 export function useEventBus(): Emittery<AppEvent> {
-  const event_bus = computed<Emittery<AppEvent>>(() => emittery);
-  return get(event_bus);
+  return emittery;
 }

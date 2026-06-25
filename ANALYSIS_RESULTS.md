@@ -390,8 +390,11 @@ HTML can never be sniffed into an executable type.
 
 ## 5. Client — Correctness
 
-### 5.1 (Medium) `checkSupport` version-range comparison is inverted
+### 5.1 (Medium) `checkSupport` version-range comparison is inverted — ✅ Resolved
 `client/src/lib/browser.ts`
+
+> **✅ Resolved (2026-06-25):** the ranged-stats check is now the intended
+> inclusive interval `Number(lower) <= details.version && details.version <= Number(higher)`.
 
 ```rust
 if (Number(lower) < details.version && details.version > Number(higher)) { return true; }
@@ -404,8 +407,14 @@ intended interval and feature detection for ranged browser stats is broken.
 
 **Recommendation:** `Number(lower) <= details.version && details.version <= Number(higher)`.
 
-### 5.2 (Low) Backslash path fix only replaces the first occurrence
+### 5.2 (Low) Backslash path fix only replaces the first occurrence — ✅ Resolved
 `client/src/stores/router.ts`
+
+> **✅ Resolved (2026-06-25):** the fix now uses a global regex
+> (`to.path.replace(/%5C/g, '//')`) so every encoded backslash is rewritten, not
+> just the first, with a comment explaining the Windows-path intent. A global
+> regex is used in preference to `replaceAll` to stay within the `since 2018`
+> browserslist / `es2020` build target.
 
 ```ts
 const should_update = path.includes('%5C');
@@ -418,8 +427,12 @@ path with multiple encoded backslashes is only partially fixed.
 **Recommendation:** Use `replaceAll('%5C', '//')` (or a global regex), and add a
 comment explaining the Windows-path intent.
 
-### 5.3 (Low) `toFileUrl` percent-encodes path separators
+### 5.3 (Low) `toFileUrl` percent-encodes path separators — ✅ Resolved
 `client/src/lib/utils.ts`
+
+> **✅ Resolved (2026-06-25):** the path is now split on `/`, each segment
+> `encodeURIComponent`-encoded, and re-joined with `/`, so separators stay as
+> `/` instead of becoming `%2F`.
 
 ```ts
 return `${http.defaults.baseURL!}/${encodeURIComponent(trim(path))}`;
@@ -434,8 +447,13 @@ it is fragile.
 **Recommendation:** Encode each path **segment** separately and re-join with
 `/`, or use `encodeURI` for the path portion.
 
-### 5.4 (Low) `RequestCache.setPending` stores `undefined` as `T`
+### 5.4 (Low) `RequestCache.setPending` stores `undefined` as `T` — ✅ Resolved
 `client/src/lib/request_cache.ts`
+
+> **✅ Resolved (2026-06-25):** `CacheEntry.data` is now optional (`data?: T`),
+> the `as T` cast in `setPending` is gone, and `get()` returns `null` (via
+> `entry.data ?? null`) for a pending-only entry instead of handing back
+> `undefined` typed as a valid `T`.
 
 ```ts
 this.cache.set(key, { data: existing?.data as T, promise, timestamp: ... });
@@ -452,24 +470,39 @@ result. Callers happen to treat it as falsy, but the type lies.
 
 ## 6. Client — Performance & General Improvements
 
-### 6.1 (Low) `event_bus` wraps a module singleton in a `computed`
+### 6.1 (Low) `event_bus` wraps a module singleton in a `computed` — ✅ Resolved
 `client/src/composables/event_bus.ts`
+
+> **✅ Resolved (2026-06-25):** `useEventBus` now returns the module-level
+> `Emittery` singleton directly; the `computed`/`get` wrapper (and their imports)
+> were removed.
 
 `useEventBus` creates a `computed` that just returns a module-level `Emittery`
 instance and immediately unwraps it. The reactivity wrapper adds nothing.
 
 **Recommendation:** Return the singleton directly.
 
-### 6.2 (Low) `scroll_offset` map grows unbounded
+### 6.2 (Low) `scroll_offset` map grows unbounded — ✅ Resolved
 `client/src/stores/global.ts`, `client/src/views/DirectoryView.vue`
+
+> **✅ Resolved (2026-06-25):** `scroll_offset` is now encapsulated behind
+> `rememberScrollOffset`/`getScrollOffset` store methods (the raw ref is no
+> longer exported). Writes cap the map at `MAX_SCROLL_OFFSETS` (50) entries,
+> evicting the oldest (least-recently-used) keys, so it stays bounded over long
+> sessions. `DirectoryView` calls the methods instead of mutating the map
+> directly.
 
 Scroll positions are stored per path forever. Long browsing sessions
 accumulate entries indefinitely (minor, but trivially bounded).
 
 **Recommendation:** Cap the map size or prune on navigation.
 
-### 6.3 (Low) Vue Devtools plugin is always registered
+### 6.3 (Low) Vue Devtools plugin is always registered — ✅ Resolved
 `client/vite.config.ts`
+
+> **✅ Resolved (2026-06-25):** the config was converted to the function form
+> and `VueDevtools(...)` is now spread in only when `command === 'serve'`, so it
+> is never registered for production builds.
 
 `VueDevtools({...})` is added unconditionally. The plugin disables itself in
 production builds, but gating it behind `mode === 'development'` makes intent
@@ -500,6 +533,6 @@ explicit and avoids any chance of shipping the inspector hooks.
 | 5 | Server sec | Med | Low | Lock down CORS to known origins (1.4) |
 | 6 | Server perf | Med | Med | ✅ Bound/evict caches; `Arc` the cached vec; fix miss-locking (2.3, 2.4) |
 | 7 | Client sec | Med | Low | Render images via `<img>`; sandbox/CSP document previews (4.1) |
-| 8 | Client correctness | Med | Low | Fix inverted version-range check (5.1) |
+| 8 | Client correctness | Med | Low | ✅ Fix inverted version-range check (5.1) |
 | 9 | Server hygiene | Low | Low | ✅ Delete/finish `read_dir.v2.rs`; fix Make/compose/Docker ffmpeg (3.3, 3.5) |
-| 10 | Client correctness | Low | Low | `replaceAll` backslash, per-segment URL encoding (5.2, 5.3) |
+| 10 | Client correctness | Low | Low | ✅ `replaceAll` backslash, per-segment URL encoding (5.2, 5.3) |

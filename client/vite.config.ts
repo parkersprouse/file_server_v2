@@ -10,7 +10,7 @@ import { ViteToml } from 'vite-plugin-toml';
 import VueDevtools from 'vite-plugin-vue-devtools';
 
 // https://vite.dev/config/
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   appType: 'spa',
   build: {
     assetsDir: '.',
@@ -24,7 +24,7 @@ export default defineConfig({
         //   into to keep them as small as possible. Rolldown (Vite 8) no
         //   longer accepts the object form of `manualChunks`, so map each
         //   package to its chunk via the function form instead.
-        manualChunks(id) {
+        manualChunks(id): string | undefined {
           if (!id.includes('node_modules')) return;
           const chunk_groups: Record<string, string[]> = {
             'vendor-core': [
@@ -84,10 +84,14 @@ export default defineConfig({
         },
       },
     }),
-    VueDevtools({
-      componentInspector: true,
-      launchEditor: 'code',
-    }),
+    // Only register the Vue Devtools inspector for the dev server; keep it out
+    // of production builds entirely.
+    ...(command === 'serve' ?
+      [VueDevtools({
+        componentInspector: true,
+        launchEditor: 'code',
+      })] :
+      []),
     UnpluginComponents({
       resolvers: [
         UnpluginIconsResolver({
@@ -129,4 +133,4 @@ export default defineConfig({
       views: fileURLToPath(new URL('./src/views', import.meta.url)),
     },
   },
-});
+}));

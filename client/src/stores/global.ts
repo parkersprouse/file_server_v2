@@ -4,6 +4,10 @@ import { computed, ref } from 'vue';
 
 import type { FileHighlightResult } from 'types/file_highlight_result.d.ts';
 
+// Cap on the number of remembered per-path scroll offsets, to bound growth over
+// long browsing sessions.
+const MAX_SCROLL_OFFSETS = 50;
+
 export const useStore = defineStore('global', () => {
   /*-- State --*/
   const file_highlight_result = ref<FileHighlightResult>();
@@ -27,13 +31,30 @@ export const useStore = defineStore('global', () => {
     set(preview_text_wrapped, !get<boolean>(preview_text_wrapped));
   }
 
+  function getScrollOffset(path: string): number | undefined {
+    return get(scroll_offset)[path];
+  }
+
+  function rememberScrollOffset(path: string, offset: number): void {
+    const offsets = get(scroll_offset);
+    // Re-insert so the most-recently-used keys sort last in insertion order.
+    if (path in offsets) delete offsets[path];
+    offsets[path] = offset;
+    // Bound the map: evict the oldest entries once past the cap.
+    const overflow = Object.keys(offsets).length - MAX_SCROLL_OFFSETS;
+    if (overflow > 0) {
+      for (const key of Object.keys(offsets).slice(0, overflow)) {
+        delete offsets[key];
+      }
+    }
+  }
+
   return {
     /*-- State --*/
     file_highlight_result,
     preview_bg_enabled,
     preview_inline_colors_disabled,
     preview_text_wrapped,
-    scroll_offset,
     toolbar_height,
 
     /*-- Computed --*/
@@ -41,6 +62,8 @@ export const useStore = defineStore('global', () => {
     wrap_text_preview,
 
     /*-- Methods --*/
+    getScrollOffset,
+    rememberScrollOffset,
     toggleInlineColorsPreview,
     togglePreviewLineWrap,
   };

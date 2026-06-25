@@ -47,7 +47,11 @@ export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string
 export function toFileUrl(value: Entry | string): string {
   const path = typeof value === 'string' ? value : value.path;
   if (path.startsWith('http')) return path;
-  return `${http.defaults.baseURL!}/${encodeURIComponent(trim(path))}`;
+  // Encode each segment individually so the `/` separators are preserved; a
+  // single `encodeURIComponent` would turn them into `%2F`, which many servers
+  // (including actix by default) reject inside a path.
+  const encoded = trim(path).split('/').map((segment) => encodeURIComponent(segment)).join('/');
+  return `${http.defaults.baseURL!}/${encoded}`;
 }
 
 

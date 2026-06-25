@@ -128,7 +128,7 @@ function processEntries(data: Entry[]): void {
 
 function onBeforeRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
   const content = get(main_content_wrapper);
-  if (content) $store.scroll_offset[$route.path] = content.scrollTop;
+  if (content) $store.rememberScrollOffset($route.path, content.scrollTop);
 
   set(transitioning, true);
 }
@@ -138,7 +138,7 @@ async function setScrollPosition(): Promise<void> {
   await new Promise((resolve) => requestAnimationFrame(resolve));
   const content = get(main_content_wrapper);
   if (!content) return;
-  const offset = $store.scroll_offset[$route.path];
+  const offset = $store.getScrollOffset($route.path);
   if (!offset || content.scrollTop === offset) return;
   content.scrollTop = offset ?? 0;
 }

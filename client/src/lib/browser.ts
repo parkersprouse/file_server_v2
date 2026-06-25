@@ -61,7 +61,8 @@ export function checkSupport(packed_feature?: PackedFeature): boolean {
     const ranges = versions.filter((id) => id.includes('-'));
     for (const range of ranges) {
       const [lower, higher] = range.split('-');
-      if (Number(lower) < details.version && details.version > Number(higher)) {
+      // Inclusive range check: the version must fall within [lower, higher].
+      if (Number(lower) <= details.version && details.version <= Number(higher)) {
         return true;
       }
     }

@@ -4,7 +4,7 @@
  */
 
 interface CacheEntry<T> {
-  data: T;
+  data?: T;
   timestamp: number;
   promise?: Promise<T>;
 }
@@ -34,7 +34,9 @@ export class RequestCache<T> {
       return null;
     }
 
-    return entry.data;
+    // A pending-only entry (created by `setPending` before its data arrives)
+    // has no `data` yet — report it as a miss rather than returning `undefined`.
+    return entry.data ?? null;
   }
 
   /**
@@ -61,7 +63,7 @@ export class RequestCache<T> {
   setPending(key: string, promise: Promise<T>): void {
     const existing = this.cache.get(key);
     this.cache.set(key, {
-      data: existing?.data as T,
+      data: existing?.data,
       promise,
       timestamp: existing?.timestamp ?? Date.now(),
     });
