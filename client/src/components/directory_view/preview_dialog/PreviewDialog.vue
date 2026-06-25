@@ -137,7 +137,7 @@ async function onClickDialog(event: Event): Promise<void> {
 
 onMounted(() => {
   get(event_unsubs).push(
-    $event_bus.on('show_dialog', (new_entry) => open(new_entry)),
+    $event_bus.on('show_dialog', ({ data: new_entry }) => open(new_entry)),
     $event_bus.on('hide_dialog', async () => await close()),
   );
 });

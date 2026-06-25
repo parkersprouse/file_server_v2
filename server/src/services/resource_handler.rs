@@ -7,7 +7,6 @@ use crate::{
 };
 use actix_web::{HttpRequest, HttpResponse, ResponseError, web::Data};
 use log::warn;
-use std::fs;
 
 pub async fn handle(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
   match handle_impl(req, data).await {
@@ -17,15 +16,14 @@ pub async fn handle(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
 }
 
 async fn handle_impl(req: HttpRequest, data: Data<AppState>) -> AppResult<HttpResponse> {
-  let path = util::validate_path(&req, &data)?;
-
-  let metadata = fs::metadata(&path).map_err(|err| AppError::Internal(format!("Failed to read metadata: {err}")))?;
+  // `validate_path` performs the single `stat` and hands back the metadata.
+  let (path, metadata) = util::validate_path(&req, &data)?;
 
   // If the path we're requesting points to a directory
   if metadata.is_dir() {
     return read_dir::read(&path, &data)
       .await
-      .map(|result| HttpResponse::Ok().json(result));
+      .map(|result| HttpResponse::Ok().json(result.as_ref()));
   }
 
   // Or if it points to a file
@@ -36,7 +34,7 @@ async fn handle_impl(req: HttpRequest, data: Data<AppState>) -> AppResult<HttpRe
       _ => DispositionKind::Auto,
     };
 
-    return read_file::read(&path, disposition)
+    return read_file::read(&path, disposition, &metadata)
       .await
       .map(|result| result.into_response(&req))
       .map_err(|err| AppError::Internal(format!("Failed to read file: {err}")));

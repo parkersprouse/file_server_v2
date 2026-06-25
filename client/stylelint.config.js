@@ -130,15 +130,10 @@ export default {
      * "Defensive CSS" plugin:
      * https://www.npmjs.com/package/stylelint-plugin-defensive-css
      */
-    'plugin/use-defensive-css': [
-      true,
-      {
-        'accidental-hover': true,
-        'background-repeat': true,
-        'flex-wrapping': true,
-        'scroll-chaining': true,
-        'vendor-prefix-grouping': true,
-      },
-    ],
+    'defensive-css/no-accidental-hover': true,
+    'defensive-css/no-mixed-vendor-prefixes': true,
+    'defensive-css/require-background-repeat': true,
+    'defensive-css/require-flex-wrap': true,
+    'defensive-css/require-overscroll-behavior': true,
   },
 };

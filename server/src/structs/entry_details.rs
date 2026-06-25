@@ -1,5 +1,9 @@
-use crate::{AppState, structs::entry_type::EntryType};
-use actix_web::web::Data;
+use crate::{
+  AppState,
+  lib::error::{AppError, AppResult},
+  structs::entry_type::EntryType,
+};
+use actix_web::web::{self, Data};
 use chrono::{DateTime, Utc};
 use file_format::{FileFormat, Kind};
 use log::{error, warn};
@@ -30,28 +34,94 @@ pub struct EntryDetails {
   pub thumbnail: Option<String>,
 }
 
+/// The cheap, blocking-syscall portion of a directory entry, gathered up front
+/// during the directory enumeration (see [`EntryDetails::enumerate_dir`]). The
+/// expensive work — header sniffing and ffprobe — is deferred to
+/// [`EntryDetails::from_raw`] so it can run concurrently off the executor.
+pub struct RawEntry {
+  full_path: PathBuf,
+  metadata: fs::Metadata,
+  name: String,
+  entry_type: String,
+  as_url: String,
+  thumbnail: Option<String>,
+}
+
 impl EntryDetails {
   pub const INLINE_TYPES: [&str; 6] = ["audio", "document", "image", "spreadsheet", "text", "video"];
 
-  pub async fn new(entry: &fs::DirEntry, data: &Data<AppState>) -> Self {
-    let metadata: fs::Metadata = entry.metadata().unwrap();
-    let entry_type: String = EntryType::stringify(&metadata.file_type()).into();
-    let full_path: PathBuf = entry.path();
-    let file_format: Option<FileFormat> = Self::determine_file_format(&entry_type, &full_path);
+  /// Enumerate a directory, returning the cheap per-entry data for each valid
+  /// child. This performs the blocking `read_dir`, `metadata`, and thumbnail
+  /// `stat` syscalls and is intended to run inside `web::block`.
+  pub fn enumerate_dir(dir_path: &Path, root_dir_path: &str) -> AppResult<Vec<RawEntry>> {
+    let entries =
+      fs::read_dir(dir_path).map_err(|err| AppError::Internal(format!("Failed to read directory: {err}")))?;
+
+    let mut output: Vec<RawEntry> = Vec::new();
+    for entry_result in entries {
+      let entry = entry_result.map_err(|err| AppError::Internal(format!("Failed to read directory entry: {err}")))?;
+
+      // Read metadata once and reuse it for validity, type, size, and times.
+      // An entry whose metadata can't be read was already treated as invalid
+      // by the previous `EntryType::valid` check, so skip it.
+      let metadata = match entry.metadata() {
+        Ok(metadata) => metadata,
+        Err(_) => continue,
+      };
+
+      // skip "invalid" entry types - i.e. anything not a directory or file
+      if !EntryType::valid(&entry, root_dir_path, &metadata) {
+        continue;
+      }
+
+      let full_path: PathBuf = entry.path();
+      let as_url: String = Self::path_to_url(&full_path, root_dir_path);
+      let thumbnail: Option<String> = Self::get_thumbnail(&as_url, root_dir_path);
+
+      output.push(RawEntry {
+        // Filenames on Unix are arbitrary bytes and need not be valid UTF-8;
+        // lossily convert rather than panicking on a non-UTF-8 name.
+        name: entry.file_name().to_string_lossy().into_owned(),
+        entry_type: EntryType::stringify(&metadata.file_type()).into(),
+        metadata,
+        full_path,
+        as_url,
+        thumbnail,
+      });
+    }
+
+    Ok(output)
+  }
+
+  /// Finish building an entry from its [`RawEntry`], resolving the file format
+  /// (header sniff) and media duration (ffprobe). Both blocking operations are
+  /// offloaded to `web::block`, and this is invoked concurrently per entry.
+  pub async fn from_raw(raw: RawEntry, data: &Data<AppState>) -> Self {
+    let RawEntry {
+      full_path,
+      metadata,
+      name,
+      entry_type,
+      as_url,
+      thumbnail,
+    } = raw;
+
+    let file_format: Option<FileFormat> = if entry_type == EntryType::DIR {
+      None
+    } else {
+      let sniff_type = entry_type.clone();
+      let sniff_path = full_path.clone();
+      web::block(move || Self::determine_file_format(&sniff_type, &sniff_path))
+        .await
+        .unwrap_or(Some(FileFormat::PlainText))
+    };
     let file_type: String = Self::file_type(file_format);
 
-    let name: String = entry.file_name().into_string().unwrap();
-    let file_size: u64 = metadata.len();
-
-    let as_url: String = Self::path_to_url(&full_path, data);
     let duration_tuple = Self::determine_duration(&full_path, &file_type, data).await;
     let created_at = Self::determine_created_at(&metadata);
     let last_modified_at = Self::determine_modified_at(&metadata);
 
-    let mut duration_order: u8 = 0;
-    if duration_tuple.0 == 0 {
-      duration_order = 1;
-    }
+    let duration_order: u8 = if duration_tuple.0 == 0 { 1 } else { 0 };
 
     Self {
       created_at: created_at.1,
@@ -60,15 +130,15 @@ impl EntryDetails {
       duration_order,
       duration_raw: duration_tuple.0,
       entry_type,
-      file_size,
+      file_size: metadata.len(),
       file_type,
       full_type: Self::full_type(file_format),
       last_modified_at: last_modified_at.1,
       last_modified_at_epoch: last_modified_at.0,
-      name: name.clone(),
       name_lowercase: name.to_lowercase(),
-      path: as_url.clone(),
-      thumbnail: Self::get_thumbnail(as_url, data),
+      name,
+      path: as_url,
+      thumbnail,
     }
   }
 
@@ -82,7 +152,7 @@ impl EntryDetails {
     }
   }
 
-  pub async fn determine_duration(path: &PathBuf, file_type: &str, data: &Data<AppState>) -> (u64, String) {
+  pub async fn determine_duration(path: &Path, file_type: &str, data: &Data<AppState>) -> (u64, String) {
     if !["audio", "video"].contains(&file_type) {
       return (0, "".into());
     }
@@ -94,32 +164,36 @@ impl EntryDetails {
       return (duration_raw, duration_formatted);
     }
 
-    let output = match ffprobe::ffprobe(path) {
-      Ok(info) => info,
-      Err(err) => {
+    // ffprobe spawns and waits on an external subprocess, so run it off the
+    // async executor.
+    let probe_path = path.to_path_buf();
+    let total_secs = match web::block(move || ffprobe::ffprobe(&probe_path)).await {
+      Ok(Ok(info)) => match info.format.get_duration() {
+        Some(value) => value.as_secs(),
+        None => return (0, "".into()),
+      },
+      Ok(Err(err)) => {
         error!("{}", err);
+        return (0, "".into());
+      },
+      Err(err) => {
+        error!("ffprobe task failed: {err}");
         return (0, "".into());
       },
     };
 
-    match output.format.get_duration() {
-      Some(value) => {
-        let total_secs = value.as_secs();
-        let duration_formatted = Self::parse_ffmpeg_duration(total_secs);
+    let duration_formatted = Self::parse_ffmpeg_duration(total_secs);
 
-        // Cache the result
-        data
-          .media_cache
-          .set(path_str, total_secs, duration_formatted.clone())
-          .await;
+    // Cache the result
+    data
+      .media_cache
+      .set(path_str, total_secs, duration_formatted.clone())
+      .await;
 
-        (total_secs, duration_formatted)
-      },
-      None => (0, "".into()),
-    }
+    (total_secs, duration_formatted)
   }
 
-  pub fn determine_file_format(entry_type: &str, path: &PathBuf) -> Option<FileFormat> {
+  pub fn determine_file_format(entry_type: &str, path: &Path) -> Option<FileFormat> {
     if entry_type.eq(EntryType::DIR) {
       return None;
     }
@@ -144,11 +218,10 @@ impl EntryDetails {
   }
 
   pub fn file_type(file_format: Option<FileFormat>) -> String {
-    if file_format.is_none() {
+    let Some(format) = file_format else {
       return "".into();
-    }
+    };
 
-    let format = file_format.unwrap();
     match format.kind() {
       Kind::Archive => "archive".into(), // https://github.com/mmalecot/file-format#archive
       Kind::Audio => "audio".into(),     // https://github.com/mmalecot/file-format#audio
@@ -184,19 +257,19 @@ impl EntryDetails {
   }
 
   pub fn full_type(file_format: Option<FileFormat>) -> String {
-    if file_format.is_none() {
-      return "".into();
+    match file_format {
+      Some(format) => format.media_type().into(),
+      None => "".into(),
     }
-    file_format.unwrap().media_type().into()
   }
 
-  pub fn get_thumbnail(as_url: String, data: &Data<AppState>) -> Option<String> {
-    let mut thumb_url_path = PathBuf::from(["/.thumbnails", &as_url].join(""));
+  pub fn get_thumbnail(as_url: &str, root_dir_path: &str) -> Option<String> {
+    let mut thumb_url_path = PathBuf::from(["/.thumbnails", as_url].join(""));
     thumb_url_path.set_extension("png");
 
     let thumb_url_path = thumb_url_path.to_str()?;
 
-    let thumb_system_path = format!("{}{}", &data.config.root_dir_path, thumb_url_path);
+    let thumb_system_path = format!("{}{}", root_dir_path, thumb_url_path);
     match PathBuf::from(thumb_system_path).try_exists() {
       Ok(exists) => {
         if exists {
@@ -216,15 +289,11 @@ impl EntryDetails {
     format!("{:02}:{:02}:{:02}", hours, minutes, seconds)
   }
 
-  pub fn path_to_url(path: &Path, data: &Data<AppState>) -> String {
-    format!(
-      "/{}",
-      path
-        .to_str()
-        .unwrap_or("")
-        .replace(&data.config.root_dir_path, "")
-        .trim_matches('/')
-    )
+  pub fn path_to_url(path: &Path, root_dir_path: &str) -> String {
+    // Strip only the leading root prefix (on path-component boundaries) rather
+    // than every occurrence of the root string anywhere in the path.
+    let relative = path.strip_prefix(root_dir_path).unwrap_or(path);
+    format!("/{}", relative.to_str().unwrap_or("").trim_matches('/'))
   }
 }
 

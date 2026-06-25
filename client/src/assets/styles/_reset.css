@@ -36,12 +36,12 @@ body {
   padding: 0;
 
   font-weight: normal;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
   text-wrap: balance;
   text-rendering: optimizeLegibility;
 
-  font-synthesis: none;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 :where(canvas, img, picture, video) {

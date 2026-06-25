@@ -1,5 +1,5 @@
 use actix_web::{HttpResponse, ResponseError};
-use log::error;
+use log::{debug, error, warn};
 use std::fmt;
 use std::io;
 
@@ -31,11 +31,14 @@ impl ResponseError for AppError {
   fn error_response(&self) -> HttpResponse {
     match self {
       AppError::InvalidPath(_) => {
-        error!("{}", self);
+        // Client error / possible probing — not a server fault. Keep it visible
+        // but off the error stream, and don't disclose the offending path.
+        warn!("{}", self);
         HttpResponse::NotFound().finish()
       },
       AppError::NotFound(_) => {
-        error!("{}", self);
+        // Very high volume under scanning; keep it out of the default logs.
+        debug!("{}", self);
         HttpResponse::NotFound().finish()
       },
       AppError::IoError(err) => {

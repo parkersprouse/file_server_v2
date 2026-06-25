@@ -3,7 +3,7 @@ use crate::{
   services::resource_handler,
 };
 use actix_web::{
-  App, HttpRequest, HttpResponse, HttpServer, guard, middleware,
+  App, HttpRequest, HttpResponse, HttpServer, middleware,
   web::{self, Data, get},
 };
 use app_config::AppConfig;
@@ -38,6 +38,15 @@ pub struct AppState {
 }
 
 async fn index_route(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
+  // Enforce the source-IP gate in the handler (rather than as a route guard) so
+  // a blocked request gets an explicit 403 instead of a misleading 404.
+  if !gatekeeper::verify(&req, &data.config.allowed_cidrs) {
+    return HttpResponse::Forbidden().finish();
+  }
+  // Reject unrecognized Host headers to blunt DNS-rebinding attacks.
+  if !cors::host_allowed(&req, &data.config.allowed_hosts) {
+    return HttpResponse::Forbidden().finish();
+  }
   resource_handler::handle(req, data).await
 }
 
@@ -60,12 +69,17 @@ async fn main() -> io::Result<()> {
       .wrap(middleware::Compress::default())
       .wrap(middleware::Logger::default())
       .wrap(middleware::NormalizePath::trim())
-      .wrap(cors::default())
-      .service(
-        web::scope("/{path:.*}")
-          .guard(guard::fn_guard(gatekeeper::verify))
-          .route("", get().to(index_route)),
+      // Stop browsers from MIME-sniffing responses (e.g. a `.txt` containing
+      // HTML) into an executable content type, and block script execution in any
+      // file rendered directly (e.g. a malicious HTML/SVG document) — this is
+      // what protects document previews now that the iframe is not sandboxed.
+      .wrap(
+        middleware::DefaultHeaders::new()
+          .add(("X-Content-Type-Options", "nosniff"))
+          .add(("Content-Security-Policy", "script-src 'none'")),
       )
+      .wrap(cors::build(app_state.config.allowed_origins.clone()))
+      .service(web::scope("/{path:.*}").route("", get().to(index_route)))
   })
   .bind(("0.0.0.0", config.port))?
   .run()

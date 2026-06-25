@@ -1,5 +1,5 @@
 {
-  "extends": "@tsconfig/node22/tsconfig.json",
+  "extends": "@tsconfig/node24/tsconfig.json",
   "include": [
     "*.config.*",
     "modules.d.ts",
@@ -20,6 +20,7 @@
     "strict": true,
     "strictNullChecks": true,
 
+    "ignoreDeprecations": "6.0",
     "baseUrl": ".",
     "paths": {
       "@/*": [

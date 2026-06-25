@@ -1,87 +1,39 @@
 use crate::structs::entry_details::EntryDetails;
-use std::collections::HashMap;
+use moka::future::Cache;
 use std::sync::Arc;
-use std::time::{Duration, Instant};
-use tokio::sync::RwLock;
+use std::time::Duration;
 
-/// Cache entry that stores directory listings with expiration time
+/// Upper bound on the number of cached directory listings. Beyond this, moka
+/// evicts the least-recently-used entries, so memory can't grow without bound.
+const MAX_ENTRIES: u64 = 1024;
+
+/// Directory listing cache with a TTL and a bounded, LRU-evicting capacity.
+///
+/// Values are stored behind an `Arc` so a cache hit hands back a cheap
+/// `Arc::clone` rather than deep-copying the whole `Vec<EntryDetails>`.
 #[derive(Clone)]
-struct CacheEntry {
-  data: Vec<EntryDetails>,
-  expires_at: Instant,
-}
-
-impl CacheEntry {
-  fn is_expired(&self) -> bool {
-    Instant::now() > self.expires_at
-  }
-}
-
-/// Directory listing cache with TTL support
 pub struct DirectoryCache {
-  cache: Arc<RwLock<HashMap<String, CacheEntry>>>,
-  ttl: Duration,
+  cache: Cache<String, Arc<Vec<EntryDetails>>>,
 }
 
 impl DirectoryCache {
   /// Create a new directory cache with specified TTL (in seconds)
   pub fn new(ttl_seconds: u64) -> Self {
     Self {
-      cache: Arc::new(RwLock::new(HashMap::new())),
-      ttl: Duration::from_secs(ttl_seconds),
+      cache: Cache::builder()
+        .max_capacity(MAX_ENTRIES)
+        .time_to_live(Duration::from_secs(ttl_seconds))
+        .build(),
     }
   }
 
   /// Get a cached directory listing if it exists and hasn't expired
-  pub async fn get(&self, path: &str) -> Option<Vec<EntryDetails>> {
-    let cache = self.cache.read().await;
-
-    if let Some(entry) = cache.get(path)
-      && !entry.is_expired()
-    {
-      return Some(entry.data.clone());
-    }
-
-    drop(cache);
-
-    // Clean up expired entry
-    let mut cache = self.cache.write().await;
-    cache.remove(path);
-
-    None
+  pub async fn get(&self, path: &str) -> Option<Arc<Vec<EntryDetails>>> {
+    self.cache.get(path).await
   }
 
   /// Store a directory listing in the cache
-  pub async fn set(&self, path: String, data: Vec<EntryDetails>) {
-    let entry = CacheEntry {
-      data,
-      expires_at: Instant::now() + self.ttl,
-    };
-
-    let mut cache = self.cache.write().await;
-    cache.insert(path, entry);
-  }
-
-  /// Clear the entire cache
-  pub async fn clear(&self) {
-    let mut cache = self.cache.write().await;
-    cache.clear();
-  }
-
-  /// Get cache statistics (mainly for debugging/monitoring)
-  pub async fn stats(&self) -> (usize, usize) {
-    let cache = self.cache.read().await;
-    let total = cache.len();
-    let valid = cache.values().filter(|e| !e.is_expired()).count();
-    (valid, total)
-  }
-}
-
-impl Clone for DirectoryCache {
-  fn clone(&self) -> Self {
-    Self {
-      cache: Arc::clone(&self.cache),
-      ttl: self.ttl,
-    }
+  pub async fn set(&self, path: String, data: Arc<Vec<EntryDetails>>) {
+    self.cache.insert(path, data).await;
   }
 }

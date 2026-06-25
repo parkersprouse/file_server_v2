@@ -120,8 +120,10 @@ export const useRouterStore = defineStore('router', () => {
 
     $router.beforeEach(async (to, from) => {
       const { path } = to;
+      // Windows-style paths arrive with backslashes percent-encoded as `%5C`;
+      // rewrite every occurrence (not just the first) to forward slashes.
       const should_update = path.includes('%5C');
-      if (should_update) to.path = to.path.replace('%5C', '//');
+      if (should_update) to.path = to.path.replace(/%5C/g, '//');
       if (to.path !== from.path) $event_bus.emit('path_updating', {
         from,
         to,

@@ -45,7 +45,6 @@ import { useStore } from 'stores/global.ts';
 import { useRouterStore } from 'stores/router.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
-import type { QueryParamValue } from 'stores/router.ts';
 import type { Entry } from 'types/entry.d.ts';
 import type { RouteLocationNormalizedGeneric } from 'vue-router';
 
@@ -129,7 +128,7 @@ function processEntries(data: Entry[]): void {
 
 function onBeforeRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
   const content = get(main_content_wrapper);
-  if (content) $store.scroll_offset[$route.path] = content.scrollTop;
+  if (content) $store.rememberScrollOffset($route.path, content.scrollTop);
 
   set(transitioning, true);
 }
@@ -139,7 +138,7 @@ async function setScrollPosition(): Promise<void> {
   await new Promise((resolve) => requestAnimationFrame(resolve));
   const content = get(main_content_wrapper);
   if (!content) return;
-  const offset = $store.scroll_offset[$route.path];
+  const offset = $store.getScrollOffset($route.path);
   if (!offset || content.scrollTop === offset) return;
   content.scrollTop = offset ?? 0;
 }
@@ -152,7 +151,7 @@ onMounted(async () => {
   await getEntries();
 
   get(event_unsubs).push(
-    $event_bus.on('path_updating', ({ to }) => {
+    $event_bus.on('path_updating', ({ data: { to } }) => {
       if (
         $route.path !== to?.path &&
         (entries_abort_controller && !entries_abort_controller.signal.aborted)
@@ -171,7 +170,7 @@ onMounted(async () => {
       set(transitioning, false);
     }),
 
-    $event_bus.on('query_updated', (params: QueryParamValue[]): void => {
+    $event_bus.on('query_updated', ({ data: params }): void => {
       const current_entries = get(entries);
       if (current_entries && params.some((param) => sort_param_keys.includes(param.toUpperCase()))) {
         set(entries, sortEntries(current_entries, $router_store.key, $router_store.dir));

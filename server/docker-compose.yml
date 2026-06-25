@@ -1,16 +1,18 @@
-version: '3.8'
-
 services:
   api:
     build:
       context: .
     image: web_file_browser_server:latest
     container_name: web_file_browser_server
-    env_file:
-      - docker/local.env
+    environment:
+      # Configuration is supplied via env vars (no config.toml is baked into the
+      # image). `WEB_FILE_BROWSER_ROOT_DIR` points at the in-container path that
+      # the volume below is mounted to.
+      WEB_FILE_BROWSER_ROOT_DIR: /data
+      WEB_FILE_BROWSER_PORT: "8100"
+      WEB_FILE_BROWSER_LOG_LEVEL: info
+    volumes:
+      # Mount the host directory you want to browse as the server root (read-only).
+      - ./files:/data:ro
     ports:
-      - "1234:1234"
-
-networks:
-  web_file_browser_server_default:
-    external: true
+      - "8100:8100"

@@ -12,7 +12,7 @@ else
 endif
 
 .PHONY: serve
-start:
+serve:
 	@cargo run
 
 
@@ -41,7 +41,7 @@ start:
 .PHONY: status
 status:
 	@echo "Running services:"
-	@docker ps --filter name=livestream --format "table {{.Names}}\t{{.RunningFor}}\t{{.Status}}"
+	@docker ps --filter name=web_file_browser_server --format "table {{.Names}}\t{{.RunningFor}}\t{{.Status}}"
 
 .PHONY: stop
 stop:
