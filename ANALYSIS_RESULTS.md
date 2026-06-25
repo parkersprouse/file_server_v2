@@ -49,8 +49,17 @@ token / basic-auth / reverse-proxy auth). For the IP allowlist itself, parse
 crate), include loopback v6 and the other RFC1918 ranges, and **never** trust
 `X-Forwarded-For` unless a trusted-proxy list is configured.
 
-### 1.2 (High) Symlinks can escape the root directory
+### 1.2 (High) Symlinks can escape the root directory — ✅ Resolved
 `server/src/util.rs` (`validate_path`)
+
+> **✅ Resolved (2026-06-25):** the root is canonicalized once at startup
+> (`AppConfig::root_dir_canonical`), and `validate_path` now `fs::canonicalize`s
+> the requested path and rejects it unless it `starts_with` the canonical root —
+> so a symlink inside the tree that points outside it is blocked. Verified: a
+> `root/escape -> /etc` symlink returns 404 for `/escape` and `/escape/hosts`,
+> while a legitimate in-root symlink still resolves (200). Note: such escaping
+> symlinks are still *listed* (only access is blocked); hiding them from
+> listings would be a further enhancement.
 
 `validate_path` builds `"{root_dir}/{pathname}"` and checks for `../`, but it
 **never canonicalizes** the final path. A symlink anywhere inside `root_dir`
@@ -63,8 +72,17 @@ all follow symlinks.
 still `starts_with` the canonicalized `root_dir`. Reject otherwise. This also
 hardens the traversal check below.
 
-### 1.3 (Medium) Path is URL-decoded twice; traversal check relies on string matching
+### 1.3 (Medium) Path is URL-decoded twice; traversal check relies on string matching — ✅ Resolved
 `server/src/util.rs`
+
+> **✅ Resolved (2026-06-25):** `validate_path` now decodes the raw request path
+> (`req.uri().path()`) exactly once and no longer relies on actix's match-info
+> capture. (Empirically, actix's quoter only *partially* decodes — it preserves
+> `%25`/`%2F` — so decoding the raw URI ourselves is the clean single decode and
+> correctly handles filenames containing `%`, verified: `100%done.txt` now
+> returns 200 with its contents.) The canonicalize + `starts_with` check from
+> 1.2 is the authoritative containment guard; the `/../` string check is kept
+> only as defense in depth (runs after the single decode).
 
 actix already percent-decodes path captures, and `validate_path` then calls
 `urlencoding::decode` **again** on the captured `path`. Two issues:
@@ -99,8 +117,16 @@ if it were local and exfiltrate the user's files.
 from config instead of `allow_any_origin()`. Consider a `Host`-header
 allowlist to blunt DNS rebinding.
 
-### 1.5 (Low) Blocked requests return 404 instead of 403, and errors leak paths into logs
+### 1.5 (Low) Blocked requests return 404 instead of 403, and errors leak paths into logs — ✅ Resolved
 `server/src/main.rs`, `server/src/lib/error.rs`
+
+> **✅ Resolved (2026-06-25):** the source-IP gate moved from a route `guard`
+> into the handler (`gatekeeper::verify(&req)`), so a blocked request now gets an
+> explicit **403** instead of a misleading 404 (verified). In `error.rs`,
+> `InvalidPath` is logged at `warn` and `NotFound` at `debug` (instead of
+> `error`), so high-volume scanning no longer floods the error stream
+> (verified — a 404 produces no default-level log line); the messages remain
+> generic and don't disclose the offending path.
 
 Because the gatekeeper is a route `guard`, a rejected request simply fails to
 match and returns the default 404 — harmless but confusing for debugging.
@@ -541,7 +567,7 @@ explicit and avoids any chance of shipping the inspector hooks.
 
 | # | Area | Severity | Effort | Item |
 |---|------|----------|--------|------|
-| 1 | Server sec | High | Med | Canonicalize paths to block symlink escape (1.2) |
+| 1 | Server sec | High | Med | ✅ Canonicalize paths to block symlink escape (1.2) |
 | 2 | Server sec | High | Med | Real auth; fix IP gate semantics & proxy bypass (1.1) |
 | 3 | Server robustness | High | Low | ✅ Remove panicking `unwrap()`s on filenames/metadata (3.1) |
 | 4 | Server perf | High | Med | ✅ Move blocking FS/ffprobe off the async executor (2.1) |

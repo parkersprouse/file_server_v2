@@ -3,7 +3,7 @@ use crate::{
   services::resource_handler,
 };
 use actix_web::{
-  App, HttpRequest, HttpResponse, HttpServer, guard, middleware,
+  App, HttpRequest, HttpResponse, HttpServer, middleware,
   web::{self, Data, get},
 };
 use app_config::AppConfig;
@@ -38,6 +38,11 @@ pub struct AppState {
 }
 
 async fn index_route(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
+  // Enforce the source-IP gate in the handler (rather than as a route guard) so
+  // a blocked request gets an explicit 403 instead of a misleading 404.
+  if !gatekeeper::verify(&req) {
+    return HttpResponse::Forbidden().finish();
+  }
   resource_handler::handle(req, data).await
 }
 
@@ -64,11 +69,7 @@ async fn main() -> io::Result<()> {
       // HTML) into an executable content type.
       .wrap(middleware::DefaultHeaders::new().add(("X-Content-Type-Options", "nosniff")))
       .wrap(cors::default())
-      .service(
-        web::scope("/{path:.*}")
-          .guard(guard::fn_guard(gatekeeper::verify))
-          .route("", get().to(index_route)),
-      )
+      .service(web::scope("/{path:.*}").route("", get().to(index_route)))
   })
   .bind(("0.0.0.0", config.port))?
   .run()

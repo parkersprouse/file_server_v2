@@ -2,6 +2,7 @@ use config::Config;
 use log::LevelFilter;
 use regex_lite::Regex;
 use std::collections::HashMap;
+use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
 pub struct AppConfig {
@@ -9,6 +10,9 @@ pub struct AppConfig {
   pub nonalpha_pattern: Regex,
   pub port: u16,
   pub root_dir_path: String,
+  /// The root directory resolved to an absolute, symlink-free path. Requests
+  /// are validated against this so symlinks inside the tree can't escape it.
+  pub root_dir_canonical: PathBuf,
 }
 
 impl AppConfig {
@@ -22,13 +26,21 @@ impl AppConfig {
       .build()
       .expect("Failed to load configuration");
 
+    let root_dir_path: String = settings.get("root_dir").unwrap_or_else(|_| {
+      panic!("Must set either \"root_dir\" in config.toml, or \"WEB_FILE_BROWSER_ROOT_DIR\" environment variable")
+    });
+
+    // Resolve the root once at startup; requests are validated against this
+    // canonical form to block symlink escapes.
+    let root_dir_canonical = std::fs::canonicalize(&root_dir_path)
+      .unwrap_or_else(|err| panic!("Configured root_dir \"{root_dir_path}\" could not be resolved: {err}"));
+
     AppConfig {
       log_level: AppConfig::parse_app_log_level(&settings.get_string("log_level").unwrap_or("info".into())),
       nonalpha_pattern: Regex::new(r"^[^A-Za-z0-9]").unwrap(),
       port: settings.get_int("port").unwrap_or(9000) as u16,
-      root_dir_path: settings.get("root_dir").unwrap_or_else(|_| {
-        panic!("Must set either \"root_dir\" in config.toml, or \"WEB_FILE_BROWSER_ROOT_DIR\" environment variable")
-      }),
+      root_dir_path,
+      root_dir_canonical,
     }
   }
 
