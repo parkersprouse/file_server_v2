@@ -3,8 +3,8 @@
   "private": true,
   "type": "module",
   "engines": {
-    "node": "^22",
-    "pnpm": "^10"
+    "node": "^24",
+    "pnpm": "^11"
   },
   "scripts": {
     "start": "concurrently --kill-others --names \"Dev Client\",\"Dev Server\" --prefix-colors blue,yellow \"pnpm run client:dev\" \"pnpm run server:dev\"",
@@ -16,7 +16,7 @@
   },
   "dependencies": {
     "@types/caniuse-lite": "^1.0.5",
-    "caniuse-lite": "^1.0.30001788",
-    "concurrently": "^9.2.1"
+    "caniuse-lite": "^1.0.30001799",
+    "concurrently": "^9.2.3"
   }
 }
