@@ -28,12 +28,10 @@
   &::-webkit-scrollbar-thumb {
     border-radius: 0;
     background: var(--color-zinc-400);
-    background-color: var(--color-zinc-400);
 
     @media (hover: hover) {
       &:hover {
         background: var(--color-primary);
-        background-color: var(--color-primary);
       }
     }
   }
@@ -56,12 +54,10 @@
 
   &::-webkit-scrollbar-thumb {
     background: var(--color-zinc-700);
-    background-color: var(--color-zinc-700);
 
     @media (hover: hover) {
       &:hover {
         background: var(--color-primary);
-        background-color: var(--color-primary);
       }
     }
   }

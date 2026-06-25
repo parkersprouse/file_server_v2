@@ -57,7 +57,7 @@ async function showCopied(successful: boolean): Promise<void> {
 }
 
 onMounted(() => {
-  const onCopyText = $event_bus.on('text_copied', showCopied);
+  const onCopyText = $event_bus.on('text_copied', ({ data }) => showCopied(data));
   get(event_unsubs).push(onCopyText);
 });
 

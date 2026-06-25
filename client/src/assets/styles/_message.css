@@ -70,6 +70,7 @@
     & .message-icon {
       display: inline-flex;
       flex-shrink: 0;
+      flex-wrap: nowrap;
       align-items: center;
       justify-content: center;
     }

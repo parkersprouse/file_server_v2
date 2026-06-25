@@ -21,34 +21,42 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Manually define the chunks that dependencies will be bundled
-        //   into to keep them as small as possible.
-        manualChunks: {
-          'vendor-core': [
-            'vue',
-            'vue-router',
-            'pinia',
-          ],
-          'vendor-data': [
-            'dayjs',
-            'emittery',
-            'ua-parser-js',
-          ],
-          'vendor-http': [
-            'axios',
-          ],
-          'vendor-media': [
-            'media-chrome',
-          ],
-          'vendor-ui': [
-            'reka-ui',
-            'vaul-vue',
-            'class-variance-authority',
-          ],
-          'vendor-utils': [
-            '@vueuse/core',
-            'clsx',
-            'tailwind-merge',
-          ],
+        //   into to keep them as small as possible. Rolldown (Vite 8) no
+        //   longer accepts the object form of `manualChunks`, so map each
+        //   package to its chunk via the function form instead.
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return;
+          const chunk_groups: Record<string, string[]> = {
+            'vendor-core': [
+              'vue',
+              'vue-router',
+              'pinia',
+            ],
+            'vendor-data': [
+              'dayjs',
+              'emittery',
+              'ua-parser-js',
+            ],
+            'vendor-http': [
+              'axios',
+            ],
+            'vendor-media': [
+              'media-chrome',
+            ],
+            'vendor-ui': [
+              'reka-ui',
+              'vaul-vue',
+              'class-variance-authority',
+            ],
+            'vendor-utils': [
+              '@vueuse/core',
+              'clsx',
+              'tailwind-merge',
+            ],
+          };
+          for (const [chunk, packages] of Object.entries(chunk_groups)) {
+            if (packages.some((pkg) => id.includes(`/node_modules/${pkg}/`))) return chunk;
+          }
         },
       },
     },

@@ -17,6 +17,6 @@
   "dependencies": {
     "@types/caniuse-lite": "^1.0.5",
     "caniuse-lite": "^1.0.30001799",
-    "concurrently": "^9.2.3"
+    "concurrently": "^10.0.3"
   }
 }
