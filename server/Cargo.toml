@@ -14,6 +14,7 @@ env_logger = "0.11.8"
 ffprobe = "0.4.0"
 file-format = { version = "0.28.0", features = ["reader"] }
 futures = "0.3.32"
+ipnet = "2.12.0"
 log = "0.4.27"
 moka = { version = "0.12.15", features = ["future"] }
 regex-lite = "0.1.8"

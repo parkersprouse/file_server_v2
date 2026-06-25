@@ -4,3 +4,18 @@ log_level = "info"
 port = 8100
 # The absolute system path to the directory that will be the file browser root directory
 root_dir = "/my/files"
+# Networks (CIDR) or bare IPs whose clients are allowed through the source-IP
+# gate. This is a convenience filter, NOT authentication, and the immediate TCP
+# peer is used (X-Forwarded-For is not trusted). When unset, defaults to
+# loopback + RFC1918 private ranges + IPv6 unique-local.
+# allowed_cidrs = ["127.0.0.0/8", "10.0.0.0/8", "172.16.0.0/12", "192.168.0.0/16", "::1/128", "fc00::/7"]
+
+# Exact CORS origins permitted to read responses cross-origin. When unset, only
+# same-network (localhost / loopback / private-IP) origins are allowed, which
+# blocks public websites from reading file contents cross-origin.
+# allowed_origins = ["http://localhost:8080", "http://192.168.1.10:8080"]
+
+# Exact Host header values to accept (DNS-rebinding guard). When unset, only
+# local hosts (localhost / loopback / private IP) are accepted. Set this if you
+# reach the server via a custom hostname.
+# allowed_hosts = ["localhost:8100", "192.168.1.10:8100"]
