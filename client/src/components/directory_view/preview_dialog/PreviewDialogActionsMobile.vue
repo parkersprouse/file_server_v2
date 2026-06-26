@@ -96,12 +96,21 @@
 
     <!-- Floating control pill: the in-use VIEW controls, thumb-reachable.
          Teleported to the dialog's isolated overlay host so it floats over
-         the content rather than living inside the top header bar. -->
-    <Teleport
-      v-if='has_pill_controls'
-      to='.preview-dialog__overlays'
-    >
-      <div class='preview-dialog__pill'>
+         the content rather than living inside the top header bar.
+
+         The Teleport is ALWAYS mounted and only its contents toggle (via the
+         pill's `v-if`). Toggling the `<Teleport>` element itself with `v-if`
+         instead — as it did when navigating image → video, where the pill
+         appears for images but not videos — mounts/unmounts the teleport while
+         the enclosing modal dialog is mid-patch (content swap + root class
+         change), which desyncs the block's insertion anchors and throws inside
+         Vue's patch ("emitsOptions"/"nextSibling"/"insertBefore" of null),
+         freezing the dialog's DOM out of sync with state. -->
+    <Teleport to='.preview-dialog__overlays'>
+      <div
+        v-if='has_pill_controls'
+        class='preview-dialog__pill'
+      >
         <!-- Image: full zoom / rotate / reset cluster (reused verbatim) -->
         <PreviewDialogImageActions v-if='entry.preview_type === PreviewType.IMAGE' />
 
