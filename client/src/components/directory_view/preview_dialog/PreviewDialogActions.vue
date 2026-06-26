@@ -38,7 +38,7 @@
           align='end'
           :side-offset='6'
           class='preview-dialog__overflow'
-          to='.preview-dialog'
+          to='.preview-dialog__overlays'
         >
           <DropdownMenuItem
             :class='{
@@ -90,11 +90,11 @@
       </Button>
 
       <!-- Floating control pill: the in-use VIEW controls, thumb-reachable.
-           Teleported to the dialog root so it floats over the content rather
-           than living inside the top header bar. -->
+           Teleported to the dialog's isolated overlay host so it floats over
+           the content rather than living inside the top header bar. -->
       <Teleport
         v-if='has_pill_controls'
-        to='.preview-dialog'
+        to='.preview-dialog__overlays'
       >
         <div class='preview-dialog__pill'>
           <!-- Image: full zoom / rotate / reset cluster (reused verbatim) -->

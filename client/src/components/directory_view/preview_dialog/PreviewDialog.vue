@@ -51,6 +51,19 @@
         </div>
       </template>
     </template>
+
+    <!--
+      Dedicated, always-present mount point for teleported overlays (the mobile
+      action pill, dropdown menus). Teleports MUST target this isolated node
+      rather than `.preview-dialog` directly: the dialog's own children are
+      patched dynamically (the `v-if='entry'` block, the `has_media_nav`
+      fragment), and mixing Vue-managed siblings with foreign teleported nodes
+      in the same container corrupts the patch anchors on re-render/resize
+      ("Node.insertBefore: Child to insert before is not a child of this node").
+      `display: contents` keeps it out of layout; the dialog's top-layer
+      promotion still covers its (fixed-positioned) teleported children.
+    -->
+    <div class='preview-dialog__overlays' />
   </dialog>
 </template>
 
@@ -237,6 +250,10 @@ onUnmounted(() => {
            m-auto p-0 border-none z-1000 bg-transparent;
 
     cursor: initial;
+
+    & .preview-dialog__overlays {
+      display: contents;
+    }
 
     &[open] {
       @apply flex flex-col flex-nowrap items-center justify-center;
