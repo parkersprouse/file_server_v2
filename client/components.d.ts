@@ -166,6 +166,8 @@ declare module 'vue' {
     PopoverTrigger: typeof import('./src/components/ui/popover/PopoverTrigger.vue')['default']
     PreviewDialog: typeof import('./src/components/directory_view/preview_dialog/PreviewDialog.vue')['default']
     PreviewDialogActions: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogActions.vue')['default']
+    PreviewDialogActionsDesktop: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogActionsDesktop.vue')['default']
+    PreviewDialogActionsMobile: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogActionsMobile.vue')['default']
     PreviewDialogContent: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogContent.vue')['default']
     PreviewDialogCopyTextAction: typeof import('./src/components/directory_view/preview_dialog/actions/PreviewDialogCopyTextAction.vue')['default']
     PreviewDialogImageActions: typeof import('./src/components/directory_view/preview_dialog/actions/PreviewDialogImageActions.vue')['default']
