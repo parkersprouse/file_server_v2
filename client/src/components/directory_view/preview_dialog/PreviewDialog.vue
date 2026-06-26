@@ -21,6 +21,35 @@
           :entry='entry'
         />
       </PreviewDialogContent>
+
+      <!--
+        Gallery navigation: cycle through the images/videos of the current
+        directory, in the order they're currently listed. Only shown when the
+        open file is itself media and there is more than one to move between.
+      -->
+      <template v-if='has_media_nav'>
+        <button
+          type='button'
+          class='preview-dialog__nav preview-dialog__nav--prev'
+          aria-label='Previous media'
+          @click.stop='showPreviousMedia'
+        >
+          <icon-caret-left />
+        </button>
+
+        <button
+          type='button'
+          class='preview-dialog__nav preview-dialog__nav--next'
+          aria-label='Next media'
+          @click.stop='showNextMedia'
+        >
+          <icon-caret-right />
+        </button>
+
+        <div class='preview-dialog__counter'>
+          {{ current_media_index + 1 }} / {{ media_entries.length }}
+        </div>
+      </template>
     </template>
   </dialog>
 </template>
@@ -51,6 +80,13 @@ const TextPreview = defineAsyncComponent(() =>
 const VideoPreview = defineAsyncComponent(() =>
   import('components/directory_view/preview_dialog/file_viewers/VideoPreview.vue'));
 
+// The preview types that participate in the prev/next media gallery.
+const MEDIA_PREVIEW_TYPES: PreviewType[] = [PreviewType.IMAGE, PreviewType.VIDEO];
+
+const { entries = [] } = defineProps<{
+  entries?: Entry[];
+}>();
+
 const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $store = useStore();
@@ -58,6 +94,21 @@ const $store = useStore();
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 const entry = ref<Entry>();
 const is_open = ref<boolean>(false);
+
+// The directory's images/videos, in the order they're currently listed.
+const media_entries = computed<Entry[]>(() =>
+  entries.filter((candidate) =>
+    candidate.preview_type !== undefined && MEDIA_PREVIEW_TYPES.includes(candidate.preview_type)));
+
+const current_media_index = computed<number>(() => {
+  const current = get(entry);
+  if (!current) return -1;
+  return get(media_entries).findIndex((candidate) => candidate.path === current.path);
+});
+
+// Only offer navigation when the open file is media and there's somewhere to go.
+const has_media_nav = computed<boolean>(() =>
+  get(current_media_index) !== -1 && get(media_entries).length > 1);
 
 const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   const file_entry = get(entry);
@@ -95,6 +146,8 @@ const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
 });
 
 onKeyStroke('Escape', async () => await close(), { dedupe: true });
+onKeyStroke('ArrowLeft', (event) => onArrowNav(event, showPreviousMedia), { dedupe: true });
+onKeyStroke('ArrowRight', (event) => onArrowNav(event, showNextMedia), { dedupe: true });
 
 useMutationObserver(dialog, (changes) => {
   const change = changes[0];
@@ -122,6 +175,34 @@ async function close(): Promise<void> {
   document.body.classList.remove('overflow-hidden!');
   set(entry, undefined);
   dialog_ele.close();
+}
+
+// Swap the open file to another media entry without re-opening the dialog;
+// reassigning `entry` re-renders the matching preview component in place.
+function showMediaAt(index: number): void {
+  const media = get(media_entries);
+  if (media.length === 0) return;
+  // Wrap around so the gallery is endless in both directions.
+  const target = media[(index + media.length) % media.length];
+  if (target) set(entry, target);
+}
+
+function showPreviousMedia(): void {
+  if (!get(has_media_nav)) return;
+  showMediaAt(get(current_media_index) - 1);
+}
+
+function showNextMedia(): void {
+  if (!get(has_media_nav)) return;
+  showMediaAt(get(current_media_index) + 1);
+}
+
+function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
+  if (!get(is_open) || !get(has_media_nav)) return;
+  // Leave the arrow keys to a focused video player so they still seek it.
+  if (document.activeElement?.closest('media-controller')) return;
+  event.preventDefault();
+  navigate();
 }
 
 async function onClickDialog(event: Event): Promise<void> {
@@ -180,6 +261,31 @@ onUnmounted(() => {
 
     & .preview-dialog__content {
       @apply z-1005 relative;
+    }
+
+    & .preview-dialog__nav {
+      @apply fixed top-1/2 -translate-y-1/2 z-1008 flex items-center justify-center
+             size-11 sm:size-12 rounded-full border bg-background/80 backdrop-blur-sm
+             text-muted-foreground hover:text-primary hover:bg-background transition-colors;
+
+      cursor: pointer;
+
+      &.preview-dialog__nav--prev {
+        @apply left-2 sm:left-4;
+      }
+
+      &.preview-dialog__nav--next {
+        @apply right-2 sm:right-4;
+      }
+
+      & svg {
+        @apply size-6 sm:size-7 shrink-0;
+      }
+    }
+
+    & .preview-dialog__counter {
+      @apply fixed top-2 left-1/2 -translate-x-1/2 z-1008 px-2.5 py-0.5 rounded-full border
+             bg-background/80 backdrop-blur-sm text-muted-foreground text-xs tabular-nums select-none;
     }
   }
 }

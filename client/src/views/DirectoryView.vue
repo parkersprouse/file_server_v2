@@ -24,7 +24,7 @@
     </template>
   </main>
 
-  <PreviewDialog />
+  <PreviewDialog :entries='entries' />
 </template>
 
 <script setup lang='ts'>
