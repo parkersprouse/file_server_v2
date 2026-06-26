@@ -13,6 +13,7 @@ export const useStore = defineStore('global', () => {
   const file_highlight_result = ref<FileHighlightResult>();
   const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
   const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
+  const preview_markdown_rendered = useLocalStorage<boolean>('preview_markdown_rendered', true);
   const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
   const scroll_offset = ref<{ [key: string]: number; }>({});
   const toolbar_height = ref<number>(0);
@@ -25,6 +26,10 @@ export const useStore = defineStore('global', () => {
   /*-- Methods --*/
   function toggleInlineColorsPreview(): void {
     set(preview_inline_colors_disabled, !get<boolean>(preview_inline_colors_disabled));
+  }
+
+  function toggleMarkdownRendered(): void {
+    set(preview_markdown_rendered, !get<boolean>(preview_markdown_rendered));
   }
 
   function togglePreviewLineWrap(): void {
@@ -54,6 +59,7 @@ export const useStore = defineStore('global', () => {
     file_highlight_result,
     preview_bg_enabled,
     preview_inline_colors_disabled,
+    preview_markdown_rendered,
     preview_text_wrapped,
     toolbar_height,
 
@@ -65,6 +71,7 @@ export const useStore = defineStore('global', () => {
     getScrollOffset,
     rememberScrollOffset,
     toggleInlineColorsPreview,
+    toggleMarkdownRendered,
     togglePreviewLineWrap,
   };
 });
