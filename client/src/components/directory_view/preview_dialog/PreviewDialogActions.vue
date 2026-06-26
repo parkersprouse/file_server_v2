@@ -23,6 +23,16 @@
       />
     </template>
 
+    <!-- Zoom / rotate controls, only for the image preview -->
+    <template v-if='entry.preview_type === PreviewType.IMAGE'>
+      <PreviewDialogImageActions />
+
+      <Separator
+        orientation='vertical'
+        class='h-auto! self-stretch!'
+      />
+    </template>
+
     <!-- Actions that apply universally -->
     <PreviewDialogTitleAction
       v-if='$is_mobile'
