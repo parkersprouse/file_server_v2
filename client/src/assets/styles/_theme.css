@@ -93,22 +93,21 @@
         @apply text-background dark:text-foreground;
       }
     }
+  }
+}
 
-    &.ghost-ext--active {
-      @apply text-cerise-red-500 dark:text-cerise-red-600;
+@utility ghost-ext--active {
+  @apply text-cerise-red-500 dark:text-cerise-red-600;
 
-      & * {
-        @apply text-cerise-red-500 dark:text-cerise-red-600;
-      }
+  * {
+    @apply text-cerise-red-500 dark:text-cerise-red-600;
+  }
 
-      @variant hover {
-        @apply text-red-400 dark:text-cerise-red-600;
+  @variant hover {
+    @apply text-red-400 dark:text-cerise-red-600;
 
-        & * {
-          @apply text-red-400 dark:text-cerise-red-600;
-        }
-      }
-
+    * {
+      @apply text-red-400 dark:text-cerise-red-600;
     }
   }
 }

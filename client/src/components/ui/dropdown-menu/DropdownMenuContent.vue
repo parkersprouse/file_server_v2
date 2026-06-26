@@ -11,20 +11,24 @@ import {
 import { cn } from "@/lib/utils"
 
 const props = withDefaults(
-  defineProps<DropdownMenuContentProps & { class?: HTMLAttributes["class"] }>(),
+  defineProps<DropdownMenuContentProps & {
+    class?: HTMLAttributes["class"],
+    to?: string | HTMLElement,
+  }>(),
   {
     sideOffset: 4,
+    to: 'body',
   },
 )
 const emits = defineEmits<DropdownMenuContentEmits>()
 
-const delegatedProps = reactiveOmit(props, "class")
+const delegatedProps = reactiveOmit(props, ["class", "to"])
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
 
 <template>
-  <DropdownMenuPortal>
+  <DropdownMenuPortal :to='props.to'>
     <DropdownMenuContent
       data-slot="dropdown-menu-content"
       v-bind="forwarded"

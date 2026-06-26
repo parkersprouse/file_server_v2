@@ -1,20 +1,4 @@
 <template>
-  <PreviewDialogTooltip>
-    <Button
-      ref='preview_title_button'
-      variant='ghost'
-      class='ghost-ext h-auto!'
-      :class='{ "ghost-ext--active": open }'
-      @click='open = !open'
-    >
-      <icon-info />
-    </Button>
-
-    <template #content>
-      File Info
-    </template>
-  </PreviewDialogTooltip>
-
   <div
     ref='preview_title_wrapper'
     class='preview-dialog__title__wrapper'
@@ -34,8 +18,8 @@
 </template>
 
 <script setup lang='ts'>
-import { get, onClickOutside, set, useThrottleFn } from '@vueuse/core';
-import { onMounted, nextTick, ref, useTemplateRef, onUnmounted } from 'vue';
+import { get, set, useThrottleFn } from '@vueuse/core';
+import { onMounted, ref, useTemplateRef, onUnmounted, computed } from 'vue';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -43,18 +27,13 @@ const { entry } = defineProps<{
   entry: Entry;
 }>();
 
-const open = ref<boolean>(false);
-const preview_title = useTemplateRef('preview_title');
-const preview_title_button = useTemplateRef('preview_title_button');
-const preview_title_wrapper = useTemplateRef('preview_title_wrapper');
-
-onClickOutside(preview_title, async () => {
-  await nextTick(() => {
-    set(open, false);
-  });
-}, {
-  ignore: [preview_title_button],
+defineExpose({
+  is_open: computed(() => get(open)),
+  toggleInfo: () => set(open, !get(open)),
 });
+
+const open = ref<boolean>(false);
+const preview_title_wrapper = useTemplateRef('preview_title_wrapper');
 
 const onResize = useThrottleFn((entries) => {
   const target = entries[0]!.target as HTMLDivElement;
