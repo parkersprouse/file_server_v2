@@ -43,7 +43,7 @@
       <PreviewDialogTooltip>
         <Button
           variant='ghost'
-          :aria-label='`{{ $store.show_media_tools ? "Hide" : "Show" }} Controls`'
+          :aria-label='`${$store.show_media_tools ? "Hide" : "Show"} Controls`'
           class='ghost-ext h-auto!'
           @click.prevent='() => { $store.show_media_tools = !$store.show_media_tools; }'
         >

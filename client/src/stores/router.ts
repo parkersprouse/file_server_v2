@@ -31,27 +31,14 @@ export const useRouterStore = defineStore('router', () => {
 
   const breadcrumbs = ref<Breadcrumb[]>([]);
 
-  const dir = computed({
-    get: () => validate($route.query.dir, SortDir, SortDir.ASC),
-    set: async (new_dir: SortDir) => {
-      await updateQueryParam(QueryParam.DIR, new_dir);
-    },
-  });
+  const dir = computed<SortDir>(() => validate($route.query.dir, SortDir, SortDir.ASC));
 
-  const key = computed({
-    get: () => validate($route.query.key, SortKey, SortKey.NAME),
-    set: async (new_key: SortKey) => {
-      await updateQueryParam(QueryParam.KEY, new_key);
-    },
-  });
+  const key = computed<SortKey>(() => validate($route.query.key, SortKey, SortKey.NAME));
 
   const view = computed({
     get: () => validate($route.query.view, ViewType, ViewType.LIST),
-    set: async (new_view: ViewType) => {
-      await updateQueryParam(QueryParam.VIEW, new_view);
-    },
+    set: (new_view: ViewType) => { pushQuery({ [QueryParam.VIEW]: new_view }); },
   });
-
 
   function addAfterCallback(callback: RouterEventCallback): void {
     const ac = get(after_callbacks);
@@ -75,35 +62,15 @@ export const useRouterStore = defineStore('router', () => {
     if (bc.includes(callback)) set(before_callbacks, bc.filter((cb) => cb !== callback));
   }
 
-  async function updateQueryParam(
-    name: QueryParam,
-    value: QueryParamValue,
-  ): Promise<void> {
+  async function pushQuery(patches: Record<string, QueryParamValue>): Promise<void> {
     try {
-      await $router.push({
-        query: {
-          ...$route.query,
-          [name]: value,
-        },
-      });
-      await $event_bus.emit('query_updated', [value]);
+      await $router.push({ query: { ...$route.query, ...patches } });
+      await $event_bus.emit('query_updated', Object.values(patches));
     } catch { /**/ }
   }
 
-  async function updateSorting(
-    new_dir: SortDir,
-    new_key: SortKey,
-  ): Promise<void> {
-    try {
-      await $router.push({
-        query: {
-          ...$route.query,
-          [QueryParam.DIR]: new_dir,
-          [QueryParam.KEY]: new_key,
-        },
-      });
-      await $event_bus.emit('query_updated', [new_dir, new_key]);
-    } catch { /**/ }
+  async function updateSorting(new_dir: SortDir, new_key: SortKey): Promise<void> {
+    await pushQuery({ [QueryParam.DIR]: new_dir, [QueryParam.KEY]: new_key });
   }
 
   function validate<T extends string, TEnumValue extends string>(
@@ -119,18 +86,19 @@ export const useRouterStore = defineStore('router', () => {
     set(breadcrumbs, breadcrumbify($route));
 
     $router.beforeEach(async (to, from) => {
-      const { path } = to;
       // Windows-style paths arrive with backslashes percent-encoded as `%5C`;
       // rewrite every occurrence (not just the first) to forward slashes.
-      const should_update = path.includes('%5C');
-      if (should_update) to.path = to.path.replace(/%5C/g, '//');
-      if (to.path !== from.path) $event_bus.emit('path_updating', {
+      const corrected_path = to.path.includes('%5C')
+        ? to.path.replace(/%5C/g, '//')
+        : null;
+
+      if ((corrected_path ?? to.path) !== from.path) $event_bus.emit('path_updating', {
         from,
         to,
       });
 
       for (const callback of get(before_callbacks)) await callback(to, from);
-      if (should_update) return to;
+      if (corrected_path) return { path: corrected_path, query: to.query, hash: to.hash };
     });
 
     $router.afterEach(async (to, from) => {

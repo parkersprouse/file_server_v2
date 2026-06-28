@@ -19,7 +19,7 @@
 
 <script setup lang='ts'>
 import { get, set, useThrottleFn } from '@vueuse/core';
-import { onMounted, ref, useTemplateRef, onUnmounted, computed } from 'vue';
+import { computed, onMounted, onUnmounted, shallowRef, useTemplateRef } from 'vue';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -32,7 +32,7 @@ defineExpose({
   toggleInfo: () => set(open, !get(open)),
 });
 
-const open = ref<boolean>(false);
+const open = shallowRef<boolean>(false);
 const preview_title_wrapper = useTemplateRef('preview_title_wrapper');
 
 const onResize = useThrottleFn((entries) => {

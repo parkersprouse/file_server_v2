@@ -68,18 +68,17 @@ const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`)
 
 async function getEntries(): Promise<void> {
   try {
-    const path_route = pathToRoute($route);
-    const cache_key = path_route;
+    const path = pathToRoute($route);
 
     // Check if we have a cached result
-    const cached_data = directory_cache.get(cache_key);
+    const cached_data = directory_cache.get(path);
     if (cached_data) {
       processEntries(cached_data as Entry[]);
       return;
     }
 
     // Check if there's a pending request for the same path
-    const pending = directory_cache.getPending(cache_key);
+    const pending = directory_cache.getPending(path);
     if (pending) {
       const cached = await pending;
       processEntries(cached as Entry[]);
@@ -88,15 +87,13 @@ async function getEntries(): Promise<void> {
 
     // Make the request and cache the promise for deduplication
     const timer_id = setTimeout(() => set(entries, undefined), 150);
-    const request_promise = http.get(path_route, {
-      signal: entries_abort_controller?.signal,
-    });
-    directory_cache.setPending(cache_key, request_promise.then((res) => res.data));
+    const request_promise = http.get(path, { signal: entries_abort_controller.signal });
+    directory_cache.setPending(path, request_promise.then((res) => res.data));
 
     const res = await request_promise;
     clearTimeout(timer_id);
 
-    directory_cache.set(cache_key, res.data);
+    directory_cache.set(path, res.data);
     processEntries(res.data);
   } catch {
     if (entries_abort_controller.signal.aborted) return;
@@ -126,7 +123,7 @@ function processEntries(data: Entry[]): void {
   set(entries, sortEntries(results, $router_store.key, $router_store.dir));
 }
 
-function onBeforeRouteUpdate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
+function handleBeforeNavigate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
   const content = get(main_content_wrapper);
   if (content) $store.rememberScrollOffset($route.path, content.scrollTop);
 
@@ -144,7 +141,7 @@ async function setScrollPosition(): Promise<void> {
 }
 
 onMounted(async () => {
-  $router_store.addBeforeCallback(onBeforeRouteUpdate);
+  $router_store.addBeforeCallback(handleBeforeNavigate);
 
   const sort_param_keys = [...Object.keys(SortKey), ...Object.keys(SortDir)];
 
@@ -152,14 +149,11 @@ onMounted(async () => {
 
   get(event_unsubs).push(
     $event_bus.on('path_updating', ({ data: { to } }) => {
-      if (
-        $route.path !== to?.path &&
-        (entries_abort_controller && !entries_abort_controller.signal.aborted)
-      ) {
-        entries_abort_controller?.abort();
+      if ($route.path !== to?.path && !entries_abort_controller.signal.aborted) {
+        entries_abort_controller.abort();
       }
 
-      if (!entries_abort_controller || entries_abort_controller?.signal.aborted) {
+      if (entries_abort_controller.signal.aborted) {
         entries_abort_controller = new AbortController();
       }
     }),
@@ -181,7 +175,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  $router_store.removeBeforeCallback(onBeforeRouteUpdate);
+  $router_store.removeBeforeCallback(handleBeforeNavigate);
   for (const unsub of get(event_unsubs)) unsub();
 });
 </script>

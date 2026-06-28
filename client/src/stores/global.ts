@@ -19,7 +19,6 @@ export const useStore = defineStore('global', () => {
   const show_media_tools = useLocalStorage<boolean>('show_media_tooling', true);
   const toolbar_height = ref<number>(0);
 
-
   /*-- Computed --*/
   const inline_colors_present = computed<boolean>(() =>
     get<FileHighlightResult | undefined>(file_highlight_result)?.inline_colors_present ?? false);
