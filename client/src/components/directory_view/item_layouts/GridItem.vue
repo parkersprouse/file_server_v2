@@ -4,6 +4,7 @@
       <img
         v-if='entry.thumbnail && heic_check'
         :src='entry.thumbnail'
+        :alt='entry.name'
         loading='lazy'
         decoding='async'
         class='w-full h-full object-contain aspect-square'
@@ -11,6 +12,7 @@
       <component
         v-else
         :is='fileTypeToIcon(entry.file_type || entry.entry_type)'
+        aria-hidden='true'
         class='size-1/2 aspect-square'
       />
     </CardContent>

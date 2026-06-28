@@ -1,6 +1,7 @@
 <template>
   <dialog
     ref='dialog'
+    :aria-label='entry?.name'
     :class='cn(
       "preview-dialog",
       `${$store.preview_bg_enabled && "preview-dialog--opaque-bg" || ""}`,
@@ -34,7 +35,7 @@
           aria-label='Previous media'
           @click.stop='showPreviousMedia'
         >
-          <icon-caret-left />
+          <icon-caret-left aria-hidden='true' />
         </button>
 
         <button
@@ -43,11 +44,13 @@
           aria-label='Next media'
           @click.stop='showNextMedia'
         >
-          <icon-caret-right />
+          <icon-caret-right aria-hidden='true' />
         </button>
 
         <div
           v-if='$store.show_media_tools'
+          aria-live='polite'
+          aria-atomic='true'
           class='preview-dialog__counter'
         >
           {{ current_media_index + 1 }} / {{ media_entries.length }}

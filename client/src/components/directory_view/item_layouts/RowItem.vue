@@ -6,13 +6,17 @@
     >
        <img
          :src='entry.thumbnail'
+         :alt='entry.name'
          loading='lazy'
          decoding='async'
          class='object-contain! aspect-square!'
        >
     </ItemMedia>
     <ItemMedia v-else>
-      <component :is='fileTypeToIcon(entry.file_type || entry.entry_type)' />
+      <component
+        :is='fileTypeToIcon(entry.file_type || entry.entry_type)'
+        aria-hidden='true'
+      />
     </ItemMedia>
     <ItemContent class='w-auto overflow-hidden'>
       <ItemTitle class='entry-title scrollbar-hidden'>

@@ -16,9 +16,10 @@
       aria-label='Toggle Line Wrap'
       class='ghost-ext h-auto!'
       :class='{ "ghost-ext--active": enabled }'
+      :aria-pressed='enabled'
       @click='() => onClick()'
     >
-      <ricon-text-wrap />
+      <ricon-text-wrap aria-hidden='true' />
     </Button>
 
     <template #content>

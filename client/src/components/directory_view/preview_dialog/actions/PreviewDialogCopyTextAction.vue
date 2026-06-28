@@ -2,7 +2,7 @@
   <PreviewDialogTooltip>
     <Button
       variant='ghost'
-      aria-label='Copy Text'
+      :aria-label='tooltip_text'
       class='ghost-ext h-auto! copy-text-dialog-action'
       :class='{
         failed: failed_copy,
@@ -10,15 +10,17 @@
       }'
       @click='async () => await $event_bus.emit("copy_text")'
     >
-      <icon-check v-if='successful_copy' />
-      <icon-warning v-else-if='failed_copy' />
-      <icon-clipboard v-else />
+      <icon-check v-if='successful_copy' aria-hidden='true' />
+      <icon-warning v-else-if='failed_copy' aria-hidden='true' />
+      <icon-clipboard v-else aria-hidden='true' />
     </Button>
 
     <template #content>
       {{ tooltip_text }}
     </template>
   </PreviewDialogTooltip>
+
+  <span role='status' class='sr-only'>{{ copied ? tooltip_text : '' }}</span>
 </template>
 
 <script setup lang='ts'>

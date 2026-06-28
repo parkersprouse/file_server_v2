@@ -3,9 +3,10 @@
     <DrawerTrigger as-child>
       <Button
         variant='ghost'
+        aria-label='Open settings'
         class='p-1! h-auto ghost-ext'
       >
-        <icon-list class='size-8!' />
+        <icon-list aria-hidden='true' class='size-8!' />
       </Button>
     </DrawerTrigger>
     <DrawerContent class='border-t border-muted'>

@@ -3,14 +3,17 @@
     variant='ghost'
     class='p-1.5! h-auto ghost-ext'
     :class='!$is_mobile ? "self-stretch" : ""'
+    :aria-label='$is_dark ? "Switch to light mode" : "Switch to dark mode"'
     @click='$is_dark = !$is_dark'
   >
     <icon-sun
       v-if='$is_dark'
+      aria-hidden='true'
       :class='$is_mobile ? "size-12!" : "size-6!"'
     />
     <icon-moon
       v-else
+      aria-hidden='true'
       :class='$is_mobile ? "size-12!" : "size-6!"'
     />
   </Button>

@@ -7,13 +7,16 @@
       style='flex: 1 0 auto;'
       class='ghost-ext flex flex-row flex-nowrap justify-center items-center self-stretch gap-1 w-auto h-auto p-1.5!'
       :class='props.class ?? ""'
+      aria-label='Sort options'
     >
       <component
         :is='dir_icons[local_dir || SortDir.ASC]'
+        aria-hidden='true'
         class='size-6!'
       />
       <component
         :is='key_icons[local_key || SortKey.NAME]'
+        aria-hidden='true'
         class='size-6!'
       />
     </DropdownMenuTrigger>

@@ -49,7 +49,7 @@ const $is_mobile = useIsMobile();
     & .preview-dialog__header {
       & .preview-dialog__actions {
         @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
-               bg-background border-b border-l;
+               bg-background border-b border-l overflow-hidden;
 
         border-bottom-left-radius: var(--preview-dialog-action-ending-radius);
 
@@ -64,8 +64,6 @@ const $is_mobile = useIsMobile();
 
         & .preview-dialog__overflow__trigger {
           &[data-slot='dropdown-menu-trigger'] {
-            border-bottom-left-radius: calc(var(--preview-dialog-action-ending-radius) / 2);
-
             &[data-state='open'] {
               @apply ghost-ext--active!;
             }

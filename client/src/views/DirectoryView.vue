@@ -2,6 +2,7 @@
   <NavBar />
 
   <main
+    id='main-content'
     ref='main_content_wrapper'
     :style='{
       height: `calc(100% - ${toolbar_height})`,

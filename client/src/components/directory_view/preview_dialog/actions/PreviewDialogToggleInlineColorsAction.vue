@@ -17,10 +17,11 @@
       aria-label='Toggle CSS Color Previews'
       class='ghost-ext h-auto!'
       :class='{ "ghost-ext--active": enabled }'
+      :aria-pressed='enabled'
       @click='() => onClick()'
     >
-      <icon-swatches-fill v-if='enabled' />
-      <icon-swatches v-else />
+      <icon-swatches-fill v-if='enabled' aria-hidden='true' />
+      <icon-swatches v-else aria-hidden='true' />
     </Button>
 
     <template #content>

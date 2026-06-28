@@ -1,6 +1,10 @@
 <template>
-  <section class='container pt-4 flex justify-center items-center h-full'>
-    <Spinner class='size-20!' />
+  <section
+    role='status'
+    aria-label='Loading'
+    class='container pt-4 flex justify-center items-center h-full'
+  >
+    <Spinner aria-hidden='true' class='size-20!' />
   </section>
 </template>
 

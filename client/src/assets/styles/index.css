@@ -145,9 +145,6 @@
 }
 
 * {
-  /* This is unacceptable for accessibility and shouldn't be done in projects that people will actually use */
-  outline: none !important;
-
   /* Prevent "Flash of Unstyled Content" (FOUC) for custom components */
   &:not(:defined) {
     opacity: 0;
@@ -155,13 +152,19 @@
 
   &:active,
   &:focus,
-  &:focus-visible,
   &:focus-within,
   &:visited {
     --tw-ring-shadow: none !important;
     --tw-shadow: none !important;
     --tw-ring-color: inherit !important;
     outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Restore focus indicator for keyboard navigation (WCAG 2.4.7) */
+  &:focus-visible {
+    outline: 2px solid currentColor !important;
+    outline-offset: 2px !important;
     box-shadow: none !important;
   }
 
@@ -173,6 +176,17 @@
       outline: none !important;
       box-shadow: none !important;
     }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
 

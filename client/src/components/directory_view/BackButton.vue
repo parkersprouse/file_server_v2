@@ -7,7 +7,7 @@
     }'
     class='dir-back-btn'
   >
-    <icon-caret-left />
+    <icon-caret-left aria-hidden='true' />
     Back
   </RouterLink>
 </template>

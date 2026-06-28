@@ -47,8 +47,8 @@
           class='ghost-ext h-auto!'
           @click.prevent='() => { $store.show_media_tools = !$store.show_media_tools; }'
         >
-          <icon-resize-fill v-if='$store.show_media_tools' />
-          <icon-resize v-else />
+          <icon-slideshow-fill v-if='$store.show_media_tools' />
+          <icon-slideshow v-else />
         </Button>
 
         <template #content>

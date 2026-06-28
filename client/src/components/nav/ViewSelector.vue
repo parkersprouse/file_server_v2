@@ -4,9 +4,11 @@
       style='flex: 1 0 auto;'
       class='flex flex-row flex-nowrap justify-center items-center self-stretch gap-1 w-auto h-auto p-1.5! ghost-ext'
       :class='props.class ?? ""'
+      :aria-label='"Layout: " + $store.view'
     >
       <component
         :is='icons[$store.view]'
+        aria-hidden='true'
         class='size-6!'
       />
     </DropdownMenuTrigger>

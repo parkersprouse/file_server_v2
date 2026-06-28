@@ -4,10 +4,11 @@
       variant='ghost'
       aria-label='Toggle Markdown Rendering'
       class='ghost-ext h-auto!'
+      :aria-pressed='rendered'
       @click='$store.toggleMarkdownRendered()'
     >
-      <icon-code v-if='rendered' />
-      <icon-eye v-else />
+      <icon-code v-if='rendered' aria-hidden='true' />
+      <icon-eye v-else aria-hidden='true' />
     </Button>
 
     <template #content>

@@ -2,57 +2,69 @@
   <section class='flex flex-row flex-nowrap justify-center items-center gap-2 w-full'>
     <Button
       variant='ghost'
+      aria-label='Sort ascending'
       class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": local_dir === SortDir.ASC }'
+      :aria-pressed='local_dir === SortDir.ASC'
       @click='setLocalDir(SortDir.ASC)'
     >
-      <icon-sort-ascending class='size-12!' />
+      <icon-sort-ascending aria-hidden='true' class='size-12!' />
     </Button>
     <Button
       variant='ghost'
+      aria-label='Sort descending'
       class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": local_dir === SortDir.DESC }'
+      :aria-pressed='local_dir === SortDir.DESC'
       @click='setLocalDir(SortDir.DESC)'
     >
-      <icon-sort-descending class='size-12!' />
+      <icon-sort-descending aria-hidden='true' class='size-12!' />
     </Button>
   </section>
 
   <section class='flex flex-row flex-nowrap justify-center items-center gap-2 w-full'>
     <Button
       variant='ghost'
+      aria-label='Sort by name'
       class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": local_key === SortKey.NAME }'
+      :aria-pressed='local_key === SortKey.NAME'
       @click='setLocalKey(SortKey.NAME)'
     >
-      <icon-tag class='size-12!' />
+      <icon-tag aria-hidden='true' class='size-12!' />
     </Button>
 
     <Button
       variant='ghost'
+      aria-label='Sort by duration'
       class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": local_key === SortKey.DURATION }'
+      :aria-pressed='local_key === SortKey.DURATION'
       @click='setLocalKey(SortKey.DURATION)'
     >
-      <icon-timer class='size-12!' />
+      <icon-timer aria-hidden='true' class='size-12!' />
     </Button>
 
     <Button
       variant='ghost'
+      aria-label='Sort by last modified'
       class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": local_key === SortKey.MODIFIED }'
+      :aria-pressed='local_key === SortKey.MODIFIED'
       @click='setLocalKey(SortKey.MODIFIED)'
     >
-      <icon-clock-counter-clockwise class='size-12!' />
+      <icon-clock-counter-clockwise aria-hidden='true' class='size-12!' />
     </Button>
 
     <Button
       variant='ghost'
+      aria-label='Sort by date created'
       class='h-auto ghost-ext'
       :class='{ "ghost-ext--active": local_key === SortKey.CREATED }'
+      :aria-pressed='local_key === SortKey.CREATED'
       @click='setLocalKey(SortKey.CREATED)'
     >
-      <icon-file-plus class='size-12!' />
+      <icon-file-plus aria-hidden='true' class='size-12!' />
     </Button>
   </section>
 </template>

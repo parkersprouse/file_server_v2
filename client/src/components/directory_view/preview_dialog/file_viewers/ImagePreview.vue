@@ -11,6 +11,7 @@
   <img
     ref='image'
     :src='entry.url'
+    :alt='entry.name'
     :style='image_style'
     draggable='false'
     @wheel.prevent='onWheel'
