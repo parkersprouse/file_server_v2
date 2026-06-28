@@ -112,7 +112,7 @@
       aria-label='Close preview'
       variant='ghost'
       class='ghost-ext h-auto!'
-      @click='async () => await $event_bus.emit("hide_dialog")'
+      @click='() => $event_bus.emit("hide_dialog")'
     >
       <icon-x />
     </Button>

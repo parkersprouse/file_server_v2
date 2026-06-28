@@ -42,7 +42,7 @@ const onResize = useThrottleFn((entries) => {
 
 const observer = new ResizeObserver(onResize);
 
-onMounted(async () => {
+onMounted(() => {
   const actions: HTMLDivElement | null = document.querySelector('.preview-dialog__actions');
   if (actions && get(preview_title_wrapper)) {
     observer.observe(actions);

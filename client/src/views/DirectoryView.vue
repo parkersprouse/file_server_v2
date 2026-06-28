@@ -12,7 +12,7 @@
   >
     <DirectoryError v-if='error' />
     <DirectoryLoading v-else-if='!entries' />
-    <DirectoryEmpty v-else-if='Boolean(entries) && entries.length === 0' />
+    <DirectoryEmpty v-else-if='entries.length === 0' />
     <template v-else>
       <div
         class='transition-cover'
