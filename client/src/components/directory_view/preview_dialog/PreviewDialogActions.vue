@@ -41,11 +41,17 @@ const $is_mobile = useIsMobile();
 @reference '../../../assets/styles/index.css';
 
 @layer app {
+  :root {
+    --preview-dialog-action-ending-radius: 6px;
+  }
+
   .preview-dialog {
     & .preview-dialog__header {
       & .preview-dialog__actions {
         @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
                bg-background border-b border-l;
+
+        border-bottom-left-radius: var(--preview-dialog-action-ending-radius);
 
         & svg.icon {
           @apply size-7 sm:size-6;
@@ -54,6 +60,16 @@ const $is_mobile = useIsMobile();
         & a,
         & button {
           @apply dark:text-muted-foreground dark:hover:text-primary;
+        }
+
+        & .preview-dialog__overflow__trigger {
+          &[data-slot='dropdown-menu-trigger'] {
+            border-bottom-left-radius: calc(var(--preview-dialog-action-ending-radius) / 2);
+
+            &[data-state='open'] {
+              @apply ghost-ext--active!;
+            }
+          }
         }
       }
     }
@@ -90,17 +106,12 @@ const $is_mobile = useIsMobile();
     }
   }
 
-  .preview-dialog__overflow__trigger {
-    &[data-slot='dropdown-menu-trigger'] {
-      &[data-state='open'] {
-        @apply ghost-ext--active!;
-      }
-    }
-  }
-
   /* Overflow dropdown: labeled rows, comfortable touch targets, above the dialog */
   [data-slot='dropdown-menu-content'].preview-dialog__overflow {
     @apply z-1100 min-w-52;
+
+    border-top-left-radius: var(--preview-dialog-action-ending-radius);
+    border-bottom-left-radius: var(--preview-dialog-action-ending-radius);
 
     & [data-slot='dropdown-menu-item'] {
       @apply gap-3 px-3 py-2.5 text-sm cursor-pointer;

@@ -16,7 +16,9 @@ export const useStore = defineStore('global', () => {
   const preview_markdown_rendered = useLocalStorage<boolean>('preview_markdown_rendered', true);
   const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
   const scroll_offset = ref<{ [key: string]: number; }>({});
+  const show_media_tools = useLocalStorage<boolean>('show_media_tooling', true);
   const toolbar_height = ref<number>(0);
+
 
   /*-- Computed --*/
   const inline_colors_present = computed<boolean>(() =>
@@ -61,6 +63,7 @@ export const useStore = defineStore('global', () => {
     preview_inline_colors_disabled,
     preview_markdown_rendered,
     preview_text_wrapped,
+    show_media_tools,
     toolbar_height,
 
     /*-- Computed --*/

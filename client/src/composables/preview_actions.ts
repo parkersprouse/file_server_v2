@@ -37,7 +37,7 @@ export function usePreviewActions(entry: MaybeRefOrGetter<Entry>): PreviewAction
   const has_pill_controls = computed<boolean>(() => {
     const type = toValue(entry).preview_type;
     if (type === PreviewType.IMAGE) return true;
-    if (type === PreviewType.TEXT) return is_markdown.value || source_actions_visible.value;
+    // if (type === PreviewType.TEXT) return is_markdown.value || source_actions_visible.value;
     return false;
   });
 

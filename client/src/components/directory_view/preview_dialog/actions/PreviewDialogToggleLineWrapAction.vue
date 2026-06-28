@@ -1,27 +1,46 @@
 <template>
-  <PreviewDialogTooltip>
+  <DropdownMenuItem
+    v-if='$is_mobile'
+    :class='{
+      "ghost-ext--active!": enabled
+    }'
+    @select='() => onClick()'
+  >
+    <ricon-text-wrap />
+    {{ label }}
+  </DropdownMenuItem>
+
+  <PreviewDialogTooltip v-else>
     <Button
       variant='ghost'
       aria-label='Toggle Line Wrap'
       class='ghost-ext h-auto!'
       :class='{ "ghost-ext--active": enabled }'
-      @click='$store.togglePreviewLineWrap()'
+      @click='() => onClick()'
     >
       <ricon-text-wrap />
     </Button>
 
     <template #content>
-      {{ enabled ? 'Disable' : 'Enable' }} Line Wrap
+      {{ label }}
     </template>
   </PreviewDialogTooltip>
 </template>
 
 <script setup lang='ts'>
+import { get } from '@vueuse/core';
 import { computed } from 'vue';
 
+import { useIsMobile } from 'composables/is_mobile.ts';
 import { useStore } from 'stores/global.ts';
 
+const $is_mobile = useIsMobile();
 const $store = useStore();
 
 const enabled = computed<boolean>(() => $store.preview_text_wrapped);
+const label = computed<string>(() => `${get(enabled) ? 'Disable' : 'Enable'} Line Wrap`);
+
+function onClick(): void {
+  $store.togglePreviewLineWrap();
+}
 </script>

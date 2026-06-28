@@ -46,7 +46,10 @@
           <icon-caret-right />
         </button>
 
-        <div class='preview-dialog__counter'>
+        <div
+          v-if='$store.show_media_tools'
+          class='preview-dialog__counter'
+        >
           {{ current_media_index + 1 }} / {{ media_entries.length }}
         </div>
       </template>
@@ -121,7 +124,7 @@ const current_media_index = computed<number>(() => {
 
 // Only offer navigation when the open file is media and there's somewhere to go.
 const has_media_nav = computed<boolean>(() =>
-  get(current_media_index) !== -1 && get(media_entries).length > 1);
+  get(current_media_index) !== -1 && get(media_entries).length > 1 && $store.show_media_tools);
 
 const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   const file_entry = get(entry);

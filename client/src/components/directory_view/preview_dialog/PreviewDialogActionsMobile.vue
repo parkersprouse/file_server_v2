@@ -40,19 +40,24 @@
       </DropdownMenuTrigger>
 
       <DropdownMenuContent
-        align='end'
-        :side-offset='6'
+        align='start'
+        :side-offset='0'
         class='preview-dialog__overflow'
         to='.preview-dialog__overlays'
       >
+        <!-- Text: the view toggles that are used while reading -->
+        <template v-if='entry.preview_type === PreviewType.TEXT && source_actions_visible'>
+          <PreviewDialogToggleLineWrapAction />
+          <PreviewDialogToggleInlineColorsAction v-if='$store.inline_colors_present' />
+        </template>
+
         <DropdownMenuItem
-          :class='{
-            "ghost-ext--active!": title_action?.is_open
-          }'
-          @select='showFileInfo'
+          v-if='entry.preview_type && [PreviewType.IMAGE, PreviewType.VIDEO].includes(entry.preview_type)'
+          @select='() => { $store.show_media_tools = !$store.show_media_tools; }'
         >
-          <icon-info />
-          File info
+          <icon-resize-fill v-if='$store.show_media_tools' />
+          <icon-resize v-else />
+          {{ $store.show_media_tools ? 'Hide' : 'Show' }} Controls
         </DropdownMenuItem>
 
         <DropdownMenuItem @select='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'>
@@ -82,8 +87,25 @@
             Open in new tab
           </a>
         </DropdownMenuItem>
+
+        <DropdownMenuSeparator />
+
+        <DropdownMenuItem
+          :class='{
+            "ghost-ext--active!": title_action?.is_open
+          }'
+          @select='showFileInfo'
+        >
+          <icon-info />
+          File info
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+
+    <template v-if='entry.preview_type === PreviewType.TEXT'>
+      <PreviewDialogCopyTextAction v-if='clipboard_available && source_actions_visible' />
+      <PreviewDialogToggleMarkdownAction v-if='is_markdown' />
+    </template>
 
     <Button
       aria-label='Close preview'
@@ -108,21 +130,11 @@
          freezing the dialog's DOM out of sync with state. -->
     <Teleport to='.preview-dialog__overlays'>
       <div
-        v-if='has_pill_controls'
+        v-if='has_pill_controls && $store.show_media_tools'
         class='preview-dialog__pill'
       >
         <!-- Image: full zoom / rotate / reset cluster (reused verbatim) -->
         <PreviewDialogImageActions v-if='entry.preview_type === PreviewType.IMAGE' />
-
-        <!-- Text: the view toggles that are used while reading -->
-        <template v-else-if='entry.preview_type === PreviewType.TEXT'>
-          <PreviewDialogCopyTextAction v-if='clipboard_available && source_actions_visible' />
-          <PreviewDialogToggleMarkdownAction v-if='is_markdown' />
-          <PreviewDialogToggleLineWrapAction v-else-if='source_actions_visible' />
-          <PreviewDialogToggleInlineColorsAction
-            v-if='source_actions_visible && $store.inline_colors_present'
-          />
-        </template>
       </div>
     </Teleport>
   </div>

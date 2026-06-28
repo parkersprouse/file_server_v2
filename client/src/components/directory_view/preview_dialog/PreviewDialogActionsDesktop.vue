@@ -30,8 +30,31 @@
       />
     </template>
 
-    <template v-if='entry.preview_type === PreviewType.IMAGE'>
+    <template v-if='entry.preview_type === PreviewType.IMAGE && $store.show_media_tools'>
       <PreviewDialogImageActions />
+
+      <Separator
+        orientation='vertical'
+        class='h-auto! self-stretch!'
+      />
+    </template>
+
+    <template v-if='entry.preview_type && [PreviewType.IMAGE, PreviewType.VIDEO].includes(entry.preview_type)'>
+      <PreviewDialogTooltip>
+        <Button
+          variant='ghost'
+          :aria-label='`{{ $store.show_media_tools ? "Hide" : "Show" }} Controls`'
+          class='ghost-ext h-auto!'
+          @click.prevent='() => { $store.show_media_tools = !$store.show_media_tools; }'
+        >
+          <icon-resize-fill v-if='$store.show_media_tools' />
+          <icon-resize v-else />
+        </Button>
+
+        <template #content>
+          {{ $store.show_media_tools ? 'Hide' : 'Show' }} Controls
+        </template>
+      </PreviewDialogTooltip>
 
       <Separator
         orientation='vertical'

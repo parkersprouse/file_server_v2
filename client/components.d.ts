@@ -119,6 +119,8 @@ declare module 'vue' {
     IconMagnifyingGlassMinus: typeof import('~icons/ph/magnifying-glass-minus')['default']
     IconMagnifyingGlassPlus: typeof import('~icons/ph/magnifying-glass-plus')['default']
     IconMoon: typeof import('~icons/ph/moon')['default']
+    IconResize: typeof import('~icons/ph/resize')['default']
+    IconResizeFill: typeof import('~icons/ph/resize-fill')['default']
     IconRows: typeof import('~icons/ph/rows')['default']
     IconSortAscending: typeof import('~icons/ph/sort-ascending')['default']
     IconSortDescending: typeof import('~icons/ph/sort-descending')['default']

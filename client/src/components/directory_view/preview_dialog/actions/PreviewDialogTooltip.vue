@@ -4,6 +4,7 @@
     :disable-closing-trigger='true'
     :disable-hoverable-content='true'
     :skip-delay-duration='300'
+    :disabled='$is_mobile'
   >
     <TooltipTrigger as-child>
       <slot name='default' />
@@ -18,3 +19,9 @@
     </TooltipContent>
   </Tooltip>
 </template>
+
+<script setup lang="ts">
+import { useIsMobile } from 'composables/is_mobile.ts';
+
+const $is_mobile = useIsMobile();
+</script>
