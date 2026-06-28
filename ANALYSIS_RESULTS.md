@@ -600,6 +600,28 @@ explicit and avoids any chance of shipping the inspector hooks.
 - Server uses `actix-files::NamedFile` (range requests, ETag, Last-Modified)
   for efficient downloads, and gzip/brotli compression is enabled.
 
+### 6.5 (Low) `media-chrome` was eagerly loaded on every page visit — ✅ Resolved
+`client/src/main.ts`, `client/src/components/directory_view/preview_dialog/file_viewers/AudioPreview.vue`, `VideoPreview.vue`
+
+> **✅ Resolved (2026-06-28):** `import 'media-chrome'` was moved out of
+> `main.ts` and into `AudioPreview.vue` and `VideoPreview.vue`. Both viewers are
+> already lazy-loaded via `defineAsyncComponent`, so the registration now defers
+> to the first media preview. Measured result: `vendor-media` (42.89 KB gzip /
+> 181 KB raw) is no longer listed in `<link rel="modulepreload">` — first-paint
+> eager JS dropped from ≈ 301.8 KB gzip to ≈ 258.9 KB gzip (~14%).
+
+`client/src/main.ts` contained a bare `import 'media-chrome'` that caused
+the bundler to pull the entire `vendor-media` chunk (42.89 KB gzip / 181 KB
+raw) into the eager `modulepreload` set for every page load. The `<media-*>`
+custom elements only ever render inside `AudioPreview.vue` and
+`VideoPreview.vue`, which are already `defineAsyncComponent`-wrapped — so
+every user browsing directories without opening a media file paid the full
+parse-and-execute cost for nothing.
+
+Note: §6.4's claim that "Lazy-loaded preview components and Prism keep the
+initial bundle small" was accurate for Prism but incomplete — `media-chrome`
+had slipped through as an eager top-level import. This finding corrects it.
+
 ---
 
 ## 7. Suggested Priority Order
@@ -616,3 +638,4 @@ explicit and avoids any chance of shipping the inspector hooks.
 | 8 | Client correctness | Med | Low | ✅ Fix inverted version-range check (5.1) |
 | 9 | Server hygiene | Low | Low | ✅ Delete/finish `read_dir.v2.rs`; fix Make/compose/Docker ffmpeg (3.3, 3.5) |
 | 10 | Client correctness | Low | Low | ✅ `replaceAll` backslash, per-segment URL encoding (5.2, 5.3) |
+| 11 | Client perf | Low | Low | ✅ Defer `media-chrome` registration to first media preview (6.5) |

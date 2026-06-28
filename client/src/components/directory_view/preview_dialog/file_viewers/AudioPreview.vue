@@ -76,6 +76,8 @@
 </template>
 
 <script setup lang='ts'>
+import 'media-chrome';
+
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{

@@ -1,6 +1,5 @@
 import 'assets/styles/index.css';
 
-import 'media-chrome';
 import { createPinia } from 'pinia';
 import { createApp } from 'vue';
 
