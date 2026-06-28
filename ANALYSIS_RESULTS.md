@@ -624,7 +624,53 @@ had slipped through as an eager top-level import. This finding corrects it.
 
 ---
 
-## 7. Suggested Priority Order
+## 7. Security Audit — 2026-06-28
+
+A second pass over the server and client, run after the 2026-06-25 hardening round.
+Result: no new significant vulnerabilities found. Three items were identified:
+
+### 7.1 (Informational) esbuild@0.27.7 — GHSA-g7r4-m6w7-qqqr — ✅ Accepted/tracked
+`client/pnpm-lock.yaml`
+
+esbuild's dev server (bundled with Vite) can be configured to respond to HTTP
+requests from any host. Severity: **low**. Affects: **Windows only**, dev server
+only, not the production build output, not the Rust server.
+
+**Why not fixed now:** vite 8.1.0's peer-dep range (`^0.27.0 || ^0.28.0`) causes
+`pnpm update esbuild` to resolve to `0.27.7` (the newest `0.27.x`), not `0.28.x`
+(the patched range). Forcing it via `pnpm.overrides` is viable but requires a full
+rebuild to verify no breakage — effort not proportional to a dev-only, Windows-only,
+low-severity CVE on a macOS host. The fix will land naturally when vite bumps its
+esbuild dependency in a normal upgrade cycle.
+
+**Triage conclusion:** accepted low-risk, reviewed 2026-06-28; check again on next
+vite major bump.
+
+### 7.2 (Correctness, not security) `determine_created_at` calls `.modified()` — 🟡 Out of scope
+`server/src/structs/entry_details.rs:147`
+
+`determine_created_at` calls `metadata.modified()` instead of
+`metadata.created()`, so `created_at` and `last_modified_at` both return the
+modification time. This is a correctness bug, not a security issue.
+
+The obvious fix (`metadata.created()`) has a portability risk: `btime` is
+unavailable on several Linux filesystems and returns an error, which would regress
+`created_at` to `"n/a"` on the deploy target. Deferred to its own tracked task.
+
+### 7.3 (Defense-in-depth) `frame-ancestors 'none'` added to CSP — ✅ Resolved
+`server/src/main.rs`
+
+> **✅ Resolved (2026-06-28):** `Content-Security-Policy` extended from
+> `script-src 'none'` to `script-src 'none'; frame-ancestors 'none'`. The
+> `frame-ancestors` directive is the CSP Level 2 replacement for
+> `X-Frame-Options: DENY`: it prevents any origin from embedding any server
+> response in a frame, iframe, or object. For a no-auth server this is low real
+> risk (clickjacking buys nothing without state-changing endpoints), but the
+> directive is free to add alongside the existing `script-src 'none'`.
+
+---
+
+## 8. Suggested Priority Order
 
 | # | Area | Severity | Effort | Item |
 |---|------|----------|--------|------|

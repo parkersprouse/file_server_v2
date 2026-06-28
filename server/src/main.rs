@@ -76,7 +76,7 @@ async fn main() -> io::Result<()> {
       .wrap(
         middleware::DefaultHeaders::new()
           .add(("X-Content-Type-Options", "nosniff"))
-          .add(("Content-Security-Policy", "script-src 'none'")),
+          .add(("Content-Security-Policy", "script-src 'none'; frame-ancestors 'none'")),
       )
       .wrap(cors::build(app_state.config.allowed_origins.clone()))
       .service(web::scope("/{path:.*}").route("", get().to(index_route)))

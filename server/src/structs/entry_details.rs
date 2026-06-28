@@ -143,7 +143,10 @@ impl EntryDetails {
   }
 
   pub fn determine_created_at(metadata: &fs::Metadata) -> (i64, String) {
-    match metadata.modified() {
+    // created() returns btime (birth time); falls back to modified() on Linux
+    // filesystems / container environments that don't expose btime via statx.
+    let system_time = metadata.created().or_else(|_| metadata.modified());
+    match system_time {
       Ok(output) => {
         let datetime = DateTime::<Utc>::from(output);
         (datetime.timestamp(), datetime.to_rfc3339())
