@@ -51,7 +51,7 @@ export function checkSupport(packed_feature?: PackedFeature): boolean {
   };
 
   const key = keyify(details.name, details.platform);
-  if (details.version && key && stats[key]) {
+  if (details.version && key && Boolean(stats[key])) {
     const version_map = stats[key];
     const versions = Object.keys(version_map);
 

@@ -64,13 +64,21 @@ export const useRouterStore = defineStore('router', () => {
 
   async function pushQuery(patches: Record<string, QueryParamValue>): Promise<void> {
     try {
-      await $router.push({ query: { ...$route.query, ...patches } });
+      await $router.push({
+        query: {
+          ...$route.query,
+          ...patches,
+        },
+      });
       await $event_bus.emit('query_updated', Object.values(patches));
     } catch { /**/ }
   }
 
   async function updateSorting(new_dir: SortDir, new_key: SortKey): Promise<void> {
-    await pushQuery({ [QueryParam.DIR]: new_dir, [QueryParam.KEY]: new_key });
+    await pushQuery({
+      [QueryParam.DIR]: new_dir,
+      [QueryParam.KEY]: new_key,
+    });
   }
 
   function validate<T extends string, TEnumValue extends string>(
@@ -88,9 +96,9 @@ export const useRouterStore = defineStore('router', () => {
     $router.beforeEach(async (to, from) => {
       // Windows-style paths arrive with backslashes percent-encoded as `%5C`;
       // rewrite every occurrence (not just the first) to forward slashes.
-      const corrected_path = to.path.includes('%5C')
-        ? to.path.replace(/%5C/g, '//')
-        : null;
+      const corrected_path = to.path.includes('%5C') ?
+        to.path.replace(/%5C/g, '//') :
+        null;
 
       if ((corrected_path ?? to.path) !== from.path) $event_bus.emit('path_updating', {
         from,
@@ -98,7 +106,11 @@ export const useRouterStore = defineStore('router', () => {
       });
 
       for (const callback of get(before_callbacks)) await callback(to, from);
-      if (corrected_path) return { path: corrected_path, query: to.query, hash: to.hash };
+      if (corrected_path) return {
+        hash: to.hash,
+        path: corrected_path,
+        query: to.query,
+      };
     });
 
     $router.afterEach(async (to, from) => {

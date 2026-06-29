@@ -73,6 +73,9 @@ export default defineConfigWithVueTs(
         ...globals.node,
       },
       parserOptions: {
+        cacheLifetime: {
+          glob: 0,
+        },
         ecmaVersion: 'latest',
         parser: {
           js: '@typescript-eslint/parser',

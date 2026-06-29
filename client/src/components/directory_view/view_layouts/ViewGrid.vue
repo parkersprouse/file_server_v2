@@ -78,8 +78,8 @@ const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
 
 const virtualizer_options = computed(() => ({
   count: get(rows).length,
-  estimateSize: () => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
-  getScrollElement: () => scroll_element?.value ?? null,
+  estimateSize: (): number => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
+  getScrollElement: (): HTMLElement | null => scroll_element?.value ?? null,
   overscan: 3,
   scrollMargin: get(scroll_margin),
 }));

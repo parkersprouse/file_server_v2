@@ -28,17 +28,20 @@ watch($is_mobile, (now_mobile) => {
 <style>
 .skip-link {
   position: absolute;
-  left: -9999px;
   z-index: 99999;
+  left: -9999px;
+
   padding: 0.5rem 1rem;
-  background: var(--background);
-  color: var(--foreground);
   border: 2px solid var(--border);
+
+  color: var(--foreground);
   text-decoration: none;
 
+  background: var(--background);
+
   &:focus-visible {
-    left: 0.5rem;
     top: 0.5rem;
+    left: 0.5rem;
     outline: 2px solid currentColor !important;
     outline-offset: 2px !important;
   }

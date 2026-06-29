@@ -43,12 +43,14 @@ async function ensureRendererLoaded(): Promise<MarkdownRenderer> {
   }
 
   renderer_load_promise = (async (): Promise<MarkdownRenderer> => {
-    const [{ marked }, dompurify] = await Promise.all([
+    const [{ marked }, { default: alerts }, { default: dompurify }] = await Promise.all([
       import('marked'),
+      import('lib/marked_exts/alerts/index.ts'),
       import('dompurify'),
     ]);
 
-    const purify = dompurify.default;
+    marked.use(alerts());
+
     marked.setOptions({
       breaks: true,
       gfm: true,
@@ -56,7 +58,7 @@ async function ensureRendererLoaded(): Promise<MarkdownRenderer> {
 
     renderer = {
       parse: (raw: string): string | Promise<string> => marked.parse(raw),
-      sanitize: (html: string): string => purify.sanitize(html),
+      sanitize: (html: string): string => dompurify.sanitize(html),
     };
     return renderer;
   })();

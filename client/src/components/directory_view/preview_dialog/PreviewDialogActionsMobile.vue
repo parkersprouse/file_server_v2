@@ -55,8 +55,8 @@
           v-if='entry.preview_type && [PreviewType.IMAGE, PreviewType.VIDEO].includes(entry.preview_type)'
           @select='() => { $store.show_media_tools = !$store.show_media_tools; }'
         >
-          <icon-slideshow-fill v-if='$store.show_media_tools' />
-          <icon-slideshow v-else />
+          <ricon-pencil-ruler-2-fill v-if='$store.show_media_tools' />
+          <ricon-pencil-ruler-2-line v-else />
           {{ $store.show_media_tools ? 'Hide' : 'Show' }} Controls
         </DropdownMenuItem>
 

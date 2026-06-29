@@ -61,8 +61,8 @@ const virtual_items = computed(() => get(virtualizer).getVirtualItems());
 
 const virtualizer_options = computed(() => ({
   count: entries.length,
-  estimateSize: () => get(estimate_size),
-  getScrollElement: () => scroll_element?.value ?? null,
+  estimateSize: (): number => get(estimate_size),
+  getScrollElement: (): HTMLElement | null => scroll_element?.value ?? null,
   overscan: 3,
   scrollMargin: get(scroll_margin),
 }));

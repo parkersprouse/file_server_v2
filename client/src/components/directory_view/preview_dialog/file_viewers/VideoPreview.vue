@@ -89,9 +89,8 @@
 </template>
 
 <script setup lang='ts'>
-import 'media-chrome';
-
 import { get } from '@vueuse/core';
+import 'media-chrome';
 import { onMounted, onUnmounted, useTemplateRef } from 'vue';
 
 import './video_preview/media_loop_button.ts';
