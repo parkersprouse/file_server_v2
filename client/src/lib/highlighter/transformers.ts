@@ -159,35 +159,35 @@ function applyMatches(
 
 // The full set of CSS named colors (lower-cased). `transparent`/`currentcolor`
 // are intentionally excluded since they have no meaningful swatch.
-const NAMED_COLORS = new Set([
-  'aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure', 'beige', 'bisque',
-  'black', 'blanchedalmond', 'blue', 'blueviolet', 'brown', 'burlywood',
-  'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue', 'cornsilk',
-  'crimson', 'cyan', 'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray',
-  'darkgreen', 'darkgrey', 'darkkhaki', 'darkmagenta', 'darkolivegreen',
-  'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen',
-  'darkslateblue', 'darkslategray', 'darkslategrey', 'darkturquoise',
-  'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dimgrey', 'dodgerblue',
-  'firebrick', 'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro',
-  'ghostwhite', 'gold', 'goldenrod', 'gray', 'green', 'greenyellow', 'grey',
-  'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory', 'khaki', 'lavender',
-  'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral',
-  'lightcyan', 'lightgoldenrodyellow', 'lightgray', 'lightgreen', 'lightgrey',
-  'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray',
-  'lightslategrey', 'lightsteelblue', 'lightyellow', 'lime', 'limegreen',
-  'linen', 'magenta', 'maroon', 'mediumaquamarine', 'mediumblue',
-  'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue',
-  'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue',
-  'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'navy', 'oldlace',
-  'olive', 'olivedrab', 'orange', 'orangered', 'orchid', 'palegoldenrod',
-  'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff',
-  'peru', 'pink', 'plum', 'powderblue', 'purple', 'rebeccapurple', 'red',
-  'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen',
-  'seashell', 'sienna', 'silver', 'skyblue', 'slateblue', 'slategray',
-  'slategrey', 'snow', 'springgreen', 'steelblue', 'tan', 'teal', 'thistle',
-  'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke', 'yellow',
-  'yellowgreen',
-]);
+// const NAMED_COLORS = new Set([
+//   'aliceblue', 'antiquewhite', 'aqua', 'aquamarine', 'azure', 'beige', 'bisque',
+//   'black', 'blanchedalmond', 'blue', 'blueviolet', 'brown', 'burlywood',
+//   'cadetblue', 'chartreuse', 'chocolate', 'coral', 'cornflowerblue', 'cornsilk',
+//   'crimson', 'cyan', 'darkblue', 'darkcyan', 'darkgoldenrod', 'darkgray',
+//   'darkgreen', 'darkgrey', 'darkkhaki', 'darkmagenta', 'darkolivegreen',
+//   'darkorange', 'darkorchid', 'darkred', 'darksalmon', 'darkseagreen',
+//   'darkslateblue', 'darkslategray', 'darkslategrey', 'darkturquoise',
+//   'darkviolet', 'deeppink', 'deepskyblue', 'dimgray', 'dimgrey', 'dodgerblue',
+//   'firebrick', 'floralwhite', 'forestgreen', 'fuchsia', 'gainsboro',
+//   'ghostwhite', 'gold', 'goldenrod', 'gray', 'green', 'greenyellow', 'grey',
+//   'honeydew', 'hotpink', 'indianred', 'indigo', 'ivory', 'khaki', 'lavender',
+//   'lavenderblush', 'lawngreen', 'lemonchiffon', 'lightblue', 'lightcoral',
+//   'lightcyan', 'lightgoldenrodyellow', 'lightgray', 'lightgreen', 'lightgrey',
+//   'lightpink', 'lightsalmon', 'lightseagreen', 'lightskyblue', 'lightslategray',
+//   'lightslategrey', 'lightsteelblue', 'lightyellow', 'lime', 'limegreen',
+//   'linen', 'magenta', 'maroon', 'mediumaquamarine', 'mediumblue',
+//   'mediumorchid', 'mediumpurple', 'mediumseagreen', 'mediumslateblue',
+//   'mediumspringgreen', 'mediumturquoise', 'mediumvioletred', 'midnightblue',
+//   'mintcream', 'mistyrose', 'moccasin', 'navajowhite', 'navy', 'oldlace',
+//   'olive', 'olivedrab', 'orange', 'orangered', 'orchid', 'palegoldenrod',
+//   'palegreen', 'paleturquoise', 'palevioletred', 'papayawhip', 'peachpuff',
+//   'peru', 'pink', 'plum', 'powderblue', 'purple', 'rebeccapurple', 'red',
+//   'rosybrown', 'royalblue', 'saddlebrown', 'salmon', 'sandybrown', 'seagreen',
+//   'seashell', 'sienna', 'silver', 'skyblue', 'slateblue', 'slategray',
+//   'slategrey', 'snow', 'springgreen', 'steelblue', 'tan', 'teal', 'thistle',
+//   'tomato', 'turquoise', 'violet', 'wheat', 'white', 'whitesmoke', 'yellow',
+//   'yellowgreen',
+// ]);
 
 // Hex (#rgb / #rgba / #rrggbb / #rrggbbaa) and functional color notations.
 const HEX_OR_FUNC = new RegExp(
@@ -196,7 +196,7 @@ const HEX_OR_FUNC = new RegExp(
     String.raw`\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\([^)]*\)`}`,
   'gi',
 );
-const WORD = /\b[a-z]+\b/gi;
+// const WORD = /\b[a-z]+\b/gi;
 
 function findColors(text: string): Match[] {
   const matches: Match[] = [];
@@ -208,15 +208,15 @@ function findColors(text: string): Match[] {
       value: m[0],
     });
   }
-  for (const m of text.matchAll(WORD)) {
-    if (NAMED_COLORS.has(m[0].toLowerCase())) {
-      matches.push({
-        index: m.index,
-        length: m[0].length,
-        value: m[0],
-      });
-    }
-  }
+  // for (const m of text.matchAll(WORD)) {
+  //   if (NAMED_COLORS.has(m[0].toLowerCase())) {
+  //     matches.push({
+  //       index: m.index,
+  //       length: m[0].length,
+  //       value: m[0],
+  //     });
+  //   }
+  // }
 
   return matches;
 }
