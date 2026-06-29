@@ -2,8 +2,8 @@
  * Lazy-loaded Markdown renderer.
  *
  * `marked` (parser) and `dompurify` (sanitizer) are only pulled in the first
- * time a Markdown file is rendered, mirroring the lazy Prism loader so the
- * initial bundle stays lean. The rendered HTML is ALWAYS sanitized before it
+ * time a Markdown file is rendered, mirroring the lazy Shiki highlighter loader
+ * so the initial bundle stays lean. The rendered HTML is ALWAYS sanitized before it
  * reaches `v-html`, since Markdown can embed arbitrary raw HTML.
  */
 

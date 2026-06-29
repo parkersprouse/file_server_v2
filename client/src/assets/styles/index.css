@@ -224,12 +224,16 @@
   }
 
   blockquote {
-    @apply mt-6 border-l-2 pl-6 italic;
+    @apply mt-6 border-l-2 pl-6 italic py-0.5 not-dark:bg-zinc-200;
+
+    background-color: rgb(0 0 0 / 20%);
   }
 
-  code:not([class*='language']) {
-    @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] text-sm font-semibold;
-    font-family: var(--text-preview-font-family);
+  :not(pre) {
+    & > code {
+      @apply relative rounded bg-muted px-[0.3rem] py-[0.2rem] text-sm font-semibold;
+      font-family: var(--text-preview-font-family);
+    }
   }
 
   h1 {
@@ -256,7 +260,15 @@
     @apply w-full;
 
     & tr {
-      @apply m-0 border-t p-0 even:bg-muted;
+      @apply m-0 border-t p-0;
+
+      &:nth-child(even) {
+        @apply not-dark:bg-zinc-200;
+
+        @variant dark {
+          background-color: rgb(0 0 0 / 20%);
+        }
+      }
 
       & th,
       & td {
@@ -264,7 +276,9 @@
       }
 
       & th {
-        @apply font-bold;
+        @apply dark:bg-zinc-900 font-semibold;
+
+        background-color: rgb(0 0 0 / 20%);
       }
     }
   }

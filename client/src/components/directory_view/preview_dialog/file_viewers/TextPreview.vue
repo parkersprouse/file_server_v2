@@ -6,30 +6,41 @@
     v-html='rendered_html'
   />
 
-  <!-- Source view (syntax-highlighted by Prism). -->
-  <pre
+  <!-- Source view, syntax-highlighted by Shiki. `highlighted_html` comes from
+       `lib/highlighter`, which escapes all code text and only ever injects
+       http(s) links + color swatches, so it is safe to inject here. -->
+  <div
     v-else
-    :data-src='entry.url'
-    ref='text_ele'
-    class='line-numbers'
-    :class='{
-      "no-inline-preview": $store.preview_inline_colors_disabled,
-      "wrap-lines": $store.wrap_text_preview,
-    }'
-  />
+    class='shiki-wrapper'
+  >
+    <span
+      v-if='language_label'
+      class='language-tag'
+      aria-hidden='true'
+    >
+      {{ language_label }}
+    </span>
+    <div
+      class='shiki-host'
+      :class='{
+        "no-inline-preview": $store.preview_inline_colors_disabled,
+        "wrap-lines": $store.wrap_text_preview,
+      }'
+      v-html='highlighted_html'
+    />
+  </div>
 </template>
 
 <script setup lang='ts'>
 import { get, set } from '@vueuse/core';
-import { computed, nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
+import { highlightCode } from 'lib/highlighter/index.ts';
 import { isMarkdownFile, renderMarkdown } from 'lib/markdown.ts';
-import { ensurePrismLoaded, getPrism } from 'lib/prism.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
-import type { Environment } from 'prismjs';
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
@@ -40,20 +51,21 @@ const $event_bus = useEventBus();
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $store = useStore();
 
-const text_ele = useTemplateRef('text_ele');
 const rendered_html = ref<string>('');
+const highlighted_html = ref<string>('');
+// The raw file text, fetched once and shared by the rendered + source views.
+const source_text = ref<string | null>(null);
 
 const is_markdown = computed<boolean>(() => isMarkdownFile(entry.name));
 const show_rendered = computed<boolean>(() => get(is_markdown) && $store.preview_markdown_rendered);
-
-watch(() => $store.preview_inline_colors_disabled, async () => {
-  await refreshTextView();
-});
-watch(() => $store.wrap_text_preview, async () => {
-  await refreshTextView();
+const language_label = computed<string>(() => {
+  const lang = $store.file_highlight_result?.language;
+  return lang && lang !== 'text' ? lang : '';
 });
 
-// Switch between the rendered Markdown view and the Prism source view.
+// Switch between the rendered Markdown view and the highlighted source view.
+// The wrap-lines and inline-color toggles are now pure CSS, so they no longer
+// require a re-highlight (unlike the old Prism implementation).
 watch(show_rendered, async (rendered) => {
   if (rendered) {
     await renderMarkdownView();
@@ -62,57 +74,49 @@ watch(show_rendered, async (rendered) => {
   }
 });
 
+// Fetch the raw file once; subsequent views reuse the cached text.
+async function loadSourceText(): Promise<string> {
+  const cached = get(source_text);
+  if (cached !== null) return cached;
+
+  const response = await fetch(entry.url);
+  if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
+  const text = await response.text();
+  set(source_text, text);
+  return text;
+}
+
 async function copyText(): Promise<void> {
-  const ele = get(text_ele);
-  if (!ele) return;
   try {
-    await navigator.clipboard.writeText(ele.textContent);
+    await navigator.clipboard.writeText(await loadSourceText());
     await $event_bus.emit('text_copied', true);
   } catch {
     await $event_bus.emit('text_copied', false);
   }
 }
 
-// Fetch the raw file and render it into sanitized HTML for the rendered view.
+// Render the file into sanitized HTML for the rendered Markdown view.
 async function renderMarkdownView(): Promise<void> {
   try {
-    const response = await fetch(entry.url);
-    if (!response.ok) throw new Error(`Request failed with status ${response.status}`);
-    set(rendered_html, await renderMarkdown(await response.text()));
+    set(rendered_html, await renderMarkdown(await loadSourceText()));
   } catch {
     set(rendered_html, '<p class="markdown-rendered__error">Unable to load preview.</p>');
   }
 }
 
-// Run Prism's file highlighter against the (re-mounted) source <pre>.
+// Highlight the file with Shiki and publish the result so the action bar can
+// show the source-only controls (and the inline-colors toggle when relevant).
 async function highlightSource(): Promise<void> {
-  await ensurePrismLoaded();
-  const prism = getPrism();
-  if (!prism) return;
-  await nextTick();
-  prism.plugins.fileHighlight.highlight();
-}
-
-function postHightlightHandler(env: Environment): void {
-  if (env.element?.tagName.toLocaleLowerCase() !== 'code') return;
-
-  const code_toolbar = document.querySelector('.code-toolbar');
-  const code_ele = code_toolbar?.querySelector('pre code');
-  if (code_toolbar && code_ele) {
+  try {
+    const result = await highlightCode(await loadSourceText(), entry.name);
+    set(highlighted_html, result.html);
     $store.file_highlight_result = {
-      inline_colors_present: code_toolbar.querySelectorAll('.inline-color').length > 0,
-      language: env.language || 'none',
+      inline_colors_present: result.inline_colors_present,
+      language: result.language,
     };
-  }
-}
-
-async function refreshTextView(): Promise<void> {
-  if (get(show_rendered)) return;
-  await nextTick();
-  const prism = getPrism();
-  const ele = document.querySelector('pre code');
-  if (ele && prism) {
-    prism.highlightElement(ele);
+  } catch {
+    set(highlighted_html, '<p class="shiki-host__error">Unable to load preview.</p>');
+    $store.file_highlight_result = undefined;
   }
 }
 
@@ -120,32 +124,17 @@ onMounted(async () => {
   const unsubCopyText = $event_bus.on('copy_text', copyText);
   get(event_unsubs).push(unsubCopyText);
 
-  // Lazy-load Prism.js when text preview is opened
-  await ensurePrismLoaded();
-  const prism = getPrism();
-  if (!prism) {
-    return;
-  }
-
-  prism.hooks.add('complete', postHightlightHandler);
-
   if (get(show_rendered)) {
     await renderMarkdownView();
   } else {
-    prism.plugins.fileHighlight.highlight();
+    await highlightSource();
   }
 });
 
 onUnmounted(() => {
-  const prism = getPrism();
-  if (prism) {
-    // prism's doesn't have a `remove` method for its hooks, so we have to do it manually
-    for (const [idx, hook] of (prism.hooks.all.complete?.entries() ?? [])) {
-      if (hook.name === postHightlightHandler.name) {
-        prism.hooks.all.complete?.splice(idx, 1);
-      }
-    }
-  }
+  // Clear the highlight result so a stale language/inline-color flag can't leak
+  // into the next previewed file before it finishes highlighting.
+  $store.file_highlight_result = undefined;
 
   for (const unsub of get(event_unsubs)) {
     unsub();
@@ -162,69 +151,53 @@ onUnmounted(() => {
   & .preview-dialog__content {
     @apply max-w-full max-h-full w-full h-full bg-accent text-primary overflow-hidden p-0;
 
-    & object {
-      @apply w-full h-full overflow-auto;
+    & .shiki-wrapper {
+      @apply relative h-full w-full;
     }
 
-    & .code-toolbar {
-      @apply w-full h-full;
+    & .language-tag {
+      @apply absolute top-1 right-3 z-10 select-none pointer-events-none text-muted-foreground;
 
-      & .toolbar {
-        @apply opacity-100 top-1 right-2;
-
-        line-height: 1;
-
-        & .toolbar-item {
-          @apply m-0! p-0!;
-
-          & .language-tag {
-            @apply bg-transparent border-none border-0 shadow-none
-                   hover:bg-transparent hover:border-none hover:border-0 hover:shadow-none
-                   cursor-default select-none pointer-events-none p-0;
-
-            /* font-family: var(--text-preview-font-family); */
-            font-family: var(--base-font-family);
-            color: var(--syntax-fg) !important;
-            opacity: 0.5;
-          }
-        }
-      }
+      font-family: var(--base-font-family);
+      line-height: 1;
+      opacity: 0.6;
     }
 
-    & pre {
-      @apply h-full w-full m-0;
-      font-family: var(--text-preview-font-family);
+    & .shiki-host {
+      @apply h-full w-full overflow-auto;
 
-      &.no-inline-preview {
-        & .inline-color-wrapper {
-          @apply hidden;
-        }
+      &.no-inline-preview .inline-color-wrapper {
+        @apply hidden;
       }
 
-      & code {
-        @apply min-h-full min-w-full inline-block;
+      & .shiki {
+        @apply m-0 min-h-full w-full p-4;
+
         font-family: var(--text-preview-font-family);
       }
 
-      &.wrap-lines {
-        @apply max-w-full whitespace-pre-wrap;
-        overflow-wrap: break-word;
+      &.wrap-lines .shiki code {
+        @apply w-full max-w-full whitespace-pre-wrap;
 
-        & code {
-          @apply max-w-full;
-          overflow-wrap: inherit;
-          white-space: inherit;
-        }
+        overflow-wrap: break-word;
+      }
+
+      & .shiki-host__error {
+        @apply p-6 italic text-muted-foreground;
       }
     }
 
     /* Rendered Markdown view. Selectors are intentionally more specific than the
-       source `& pre` / `& code` rules above so they win without `!important`.
-       `.markdown-rendered` and the source `.line-numbers` <pre> are mutually
-       exclusive subtrees, so the descending-specificity overlap is harmless. */
+       source rules above so they win without `!important`. `.markdown-rendered`
+       and the source `.shiki` subtree are mutually exclusive, so the
+       descending-specificity overlap is harmless. */
     /* stylelint-disable no-descending-specificity */
     & .markdown-rendered {
       @apply h-full w-full overflow-auto p-6 sm:p-8 text-primary text-left text-base;
+
+      @variant dark {
+        --border: var(--color-zinc-500);
+      }
 
       font-family: var(--base-font-family);
       line-height: 1.65;
@@ -311,16 +284,26 @@ onUnmounted(() => {
 
       /* Inline code */
       & code {
-        @apply inline min-h-0 min-w-0 rounded bg-muted px-1.5 py-0.5 text-sm;
+        @apply inline min-h-0 min-w-0 rounded px-1.5 py-0.5 text-sm;
 
         font-family: var(--text-preview-font-family);
+        background-color: var(--color-zinc-200, oklch(92% 0.004 286.32deg));
+
+        @variant dark {
+          background-color: var(--color-zinc-900, oklch(21% 0.006 285.885deg));
+        }
       }
 
       /* Fenced code blocks */
       & pre {
-        @apply my-3 h-auto w-full max-w-full overflow-auto rounded-lg bg-muted p-4 text-sm;
+        @apply my-3 h-auto w-full max-w-full overflow-auto rounded-lg p-4 text-sm;
 
         font-family: var(--text-preview-font-family);
+        background-color: var(--color-zinc-200, oklch(92% 0.004 286.32deg));
+
+        @variant dark {
+          background-color: var(--color-zinc-900, oklch(21% 0.006 285.885deg));
+        }
 
         & code {
           @apply block min-h-0 min-w-0 bg-transparent p-0;
@@ -330,13 +313,13 @@ onUnmounted(() => {
       & table {
         @apply my-3 w-full border-collapse text-sm;
 
+        @variant dark {
+          --border: var(--color-zinc-700);
+        }
+
         & th,
         & td {
           @apply px-3 py-2 text-left border border-border;
-        }
-
-        & th {
-          @apply bg-muted font-semibold;
         }
       }
 

@@ -1,7 +1,3 @@
-@import '../../vendor/prism/prism.min.css';
-@import '../../vendor/prism/themes/one-light.css';
-@import '../../vendor/prism/themes/one-dark.css';
-
 :root {
   --text-preview-font-family:
     'Source Code Pro Variable',
@@ -13,12 +9,78 @@
     monospace;
 }
 
-pre[class*='language-'] {
-  @apply rounded-none; /* bg-accent */
+/* Shiki dual-theme output (`defaultColor: false`) emits every token's light and
+   dark color as CSS variables. We resolve them with class-based dark mode so
+   switching themes never re-runs the highlighter — it's pure CSS. */
+.shiki,
+.shiki span {
+  font-family: var(--text-preview-font-family);
+  color: var(--shiki-light);
+}
 
-  & code {
-    & a.url-link {
-      text-decoration: underline;
+.shiki {
+  width: max-content;
+  /* background-color: var(--shiki-light-bg); */
+  background: transparent;
+}
+
+.dark .shiki,
+.dark .shiki span {
+  color: var(--shiki-dark);
+}
+
+/* .dark .shiki {
+  background-color: var(--shiki-dark-bg);
+} */
+
+/* Line numbers via CSS counters — replaces Prism's line-numbers JS plugin. */
+.shiki code {
+  counter-reset: shiki-line;
+  display: block;
+  width: max-content;
+  min-width: 100%;
+}
+
+.shiki .line::before {
+  content: counter(shiki-line);
+  counter-increment: shiki-line;
+  user-select: none;
+
+  display: inline-block;
+
+  width: 3ch;
+  margin-right: 1.5rem;
+
+  color: color-mix(in sRGB, currentColor 40%, transparent);
+  text-align: right;
+}
+
+/* Inline CSS color swatches — replaces Prism's inline-color plugin. The swatch
+   precedes the (untouched) color literal; hiding the wrapper toggles it off. */
+.inline-color-wrapper {
+  display: inline-block;
+  margin-right: 0.35em;
+  vertical-align: middle;
+}
+
+.inline-color {
+  display: inline-block;
+
+  width: 0.8em;
+  height: 0.8em;
+  border: 1px solid rgb(128 128 128 / 50%);
+  border-radius: 2px;
+}
+
+/* Autolinked URLs — replaces Prism's autolinker plugin. */
+.shiki a.url-link {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  @media (hover: hover) {
+    &:hover {
+      text-decoration: none;
     }
   }
 }

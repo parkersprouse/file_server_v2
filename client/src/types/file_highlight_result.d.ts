@@ -1,6 +1,5 @@
-import type { LanguageMap } from 'prismjs';
-
 export type FileHighlightResult = {
   inline_colors_present: boolean;
-  language: keyof LanguageMap;
+  // Shiki language id the previewed file was highlighted as ('text' when unknown).
+  language: string;
 };
