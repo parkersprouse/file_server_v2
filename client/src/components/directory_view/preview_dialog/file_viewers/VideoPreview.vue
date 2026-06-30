@@ -6,10 +6,18 @@
     keyboardbackwardseekoffset='5'
     keyboardforwardseekoffset='5'
   >
+    <!--
+      `preload='metadata'` (not `auto`) keeps Firefox from eagerly streaming the
+      file from byte 0 on open. That sequential download is what makes Firefox
+      report a small, slowly-growing `seekable` range for videos whose MP4 `moov`
+      index is not at the front of the file (i.e. not encoded "fast-start"),
+      which manifests as the seek bar snapping back to a few seconds in. Loading
+      metadata only lets Firefox satisfy seeks with fresh range requests instead.
+    -->
     <video
       ref='video_ele'
       slot='media'
-      preload='auto'
+      preload='metadata'
       :src='entry.url'
       muted
     />

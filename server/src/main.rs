@@ -3,7 +3,9 @@ use crate::{
   services::resource_handler,
 };
 use actix_web::{
-  App, HttpRequest, HttpResponse, HttpServer, middleware,
+  App, HttpRequest, HttpResponse, HttpServer,
+  http::header::{self, HeaderValue},
+  middleware,
   web::{self, Data, get},
 };
 use app_config::AppConfig;
@@ -47,7 +49,16 @@ async fn index_route(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
   if !cors::host_allowed(&req, &data.config.allowed_hosts) {
     return HttpResponse::Forbidden().finish();
   }
-  resource_handler::handle(req, data).await
+
+  let mut response = resource_handler::handle(req, data).await;
+  // Responses are conditionally compressed based on `Accept-Encoding`, so it must
+  // be part of the cache key. Append rather than insert: the CORS middleware adds
+  // its own `Vary` on the way out, and multiple `Vary` headers are combined by
+  // caches.
+  response
+    .headers_mut()
+    .append(header::VARY, HeaderValue::from_static("Accept-Encoding"));
+  response
 }
 
 #[actix_web::main]
@@ -79,7 +90,14 @@ async fn main() -> io::Result<()> {
           .add(("Content-Security-Policy", "script-src 'none'; frame-ancestors 'none'")),
       )
       .wrap(cors::build(app_state.config.allowed_origins.clone()))
-      .service(web::scope("/{path:.*}").route("", get().to(index_route)))
+      // Handle HEAD alongside GET so clients (and caches) can probe a resource's
+      // headers without a body; actix-files strips the body from file responses
+      // for HEAD automatically.
+      .service(
+        web::scope("/{path:.*}")
+          .route("", get().to(index_route))
+          .route("", web::head().to(index_route)),
+      )
   })
   .bind(("0.0.0.0", config.port))?
   .run()
