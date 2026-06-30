@@ -19,8 +19,21 @@ Usage:
 
 Exit status is the number of files that are NOT fast-start, so it doubles as a
 CI / scripting gate:
-
     check_faststart.py "$f" >/dev/null || ffmpeg -i "$f" -c copy -movflags +faststart out.mp4
+
+Loop example:
+    for f in *.mp4; do
+        if ! python3 check_faststart.py "$f" >/dev/null; then   # exit!=0 => needs fix
+            ffmpeg -i "$f" -c copy -movflags +faststart "${f%.mp4}.fs.mp4" && mv "${f%.mp4}.fs.mp4" "$f"
+        fi
+    done
+
+Checking `moov` index solely with FFmpeg:
+    # If the first line is type:'moov' → fast-start; if type:'mdat' → needs fixing.
+    ffprobe -v trace input.mp4 2>&1 | grep -aoE "type:'(moov|mdat)'" | head -2
+
+    # Can also look for FFmpeg's own hint:
+    ffmpeg -v info -i input.mp4 -f null - 2>&1 | grep -i "use -movflags +faststart"
 """
 import struct
 import sys
