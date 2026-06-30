@@ -5,12 +5,14 @@
     }
   ],
   "settings": {
+    "css.customData": [".vscode/tailwind.json"],
     "eslint.format.enable": false,
     "eslint.ignoreUntitled": true,
     "eslint.lintTask.enable": false,
     "eslint.useFlatConfig": true,
     "eslint.workingDirectories": [
       "./client"
-    ]
+    ],
+    "explorer.fileNesting.enabled": false,
   }
 }
