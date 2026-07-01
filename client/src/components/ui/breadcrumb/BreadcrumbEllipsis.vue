@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-import type { HTMLAttributes } from 'vue'
-import { cn } from '@/lib/utils'
+
+import type { HTMLAttributes } from "vue"
+import { cn } from "@/lib/utils"
 
 const props = defineProps<{
-  class?: HTMLAttributes['class']
+  class?: HTMLAttributes["class"]
 }>()
 </script>
 
@@ -12,10 +13,10 @@ const props = defineProps<{
     data-slot="breadcrumb-ellipsis"
     role="presentation"
     aria-hidden="true"
-    :class="cn('flex size-9 items-center justify-center', props.class)"
+    :class="cn('size-4 [&>svg]:size-3.5 flex items-center justify-center', props.class)"
   >
     <slot>
-      <icon-dots-three class="size-4" />
+      <icon-dots-three />
     </slot>
     <span class="sr-only">More</span>
   </span>

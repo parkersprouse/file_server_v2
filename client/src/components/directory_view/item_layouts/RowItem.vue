@@ -82,10 +82,10 @@ const heic_check = inject<boolean>('heic_check', false);
 
 .entries--row {
   & .entry-wrapper {
-    @apply z-10 hover:z-20;
+    @apply z-10 hover:z-20 rounded-none first-of-type:rounded-t-lg last-of-type:rounded-b-lg;
 
     &[data-odd='true'] {
-      @apply bg-accent dark:bg-zinc-900;
+      @apply bg-muted dark:bg-zinc-900;
     }
 
     & .entry {
@@ -96,8 +96,11 @@ const heic_check = inject<boolean>('heic_check', false);
       }
 
       & [data-slot='item'] {
-        /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-        @apply py-2! flex-nowrap;
+        @apply py-2! flex-nowrap rounded-none;
+
+        & .entry-meta {
+          @apply rounded-lg;
+        }
       }
     }
 
@@ -106,6 +109,18 @@ const heic_check = inject<boolean>('heic_check', false);
         & [data-slot='item'] {
           @apply -mb-px;
         }
+      }
+    }
+
+    &:first-of-type {
+      & [data-slot='item'] {
+        @apply rounded-t-lg;
+      }
+    }
+
+    &:last-of-type {
+      & [data-slot='item'] {
+        @apply rounded-b-lg;
       }
     }
   }

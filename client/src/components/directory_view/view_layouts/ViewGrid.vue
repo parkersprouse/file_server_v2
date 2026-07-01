@@ -126,11 +126,11 @@ const stopMarginWatch = watch(
       }
 
       & .entry-meta__last-modified {
-        @apply border-l-0;
+        @apply border-l-0 rounded-tr-lg;
       }
 
       & .entry-meta__duration {
-        @apply border-r-0;
+        @apply border-r-0 rounded-tl-lg;
       }
     }
   }

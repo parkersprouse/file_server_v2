@@ -1,19 +1,19 @@
 <script setup lang="ts">
-import type { HTMLAttributes } from 'vue'
-import { reactiveOmit } from '@vueuse/core'
+
+import type { MenubarRadioItemEmits, MenubarRadioItemProps } from "reka-ui"
+import type { HTMLAttributes } from "vue"
+import { reactiveOmit } from "@vueuse/core"
 import {
   MenubarItemIndicator,
   MenubarRadioItem,
-  type MenubarRadioItemEmits,
-  type MenubarRadioItemProps,
   useForwardPropsEmits,
-} from 'reka-ui'
-import { cn } from '@/lib/utils'
+} from "reka-ui"
+import { cn } from "@/lib/utils"
 
-const props = defineProps<MenubarRadioItemProps & { class?: HTMLAttributes['class'] }>()
+const props = defineProps<MenubarRadioItemProps & { class?: HTMLAttributes["class"] }>()
 const emits = defineEmits<MenubarRadioItemEmits>()
 
-const delegatedProps = reactiveOmit(props, 'class')
+const delegatedProps = reactiveOmit(props, "class")
 
 const forwarded = useForwardPropsEmits(delegatedProps, emits)
 </script>
@@ -23,13 +23,15 @@ const forwarded = useForwardPropsEmits(delegatedProps, emits)
     data-slot="menubar-radio-item"
     v-bind="forwarded"
     :class="cn(
-      `focus:bg-accent focus:text-accent-foreground relative flex cursor-default items-center gap-2 rounded-xs py-1.5 pr-2 pl-8 text-sm outline-hidden select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
+      'focus:bg-accent focus:text-accent-foreground focus:**:text-accent-foreground min-h-7 gap-2 rounded-md py-1.5 pr-2 pl-7.5 text-xs data-disabled:opacity-50 data-inset:pl-7.5 [&_svg:not([class*=size-])]:size-3.5 relative flex cursor-default items-center outline-hidden select-none data-disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0',
       props.class,
     )"
   >
-    <span class="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
+    <span class="left-2 size-4 [&_svg:not([class*=size-])]:size-4 pointer-events-none absolute flex items-center justify-center">
       <MenubarItemIndicator>
-        <icon-circle class="size-2 fill-current text-current" />
+        <slot name="indicator-icon">
+          <icon-check />
+        </slot>
       </MenubarItemIndicator>
     </span>
     <slot />

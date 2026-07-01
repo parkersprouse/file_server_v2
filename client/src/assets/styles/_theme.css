@@ -1,14 +1,4 @@
 @theme inline {
-  /* Cerise Red */
-  --color-cerise-red-100: hsl(345deg 62% 10%);
-  --color-cerise-red-200: hsl(345deg 63% 20%);
-  --color-cerise-red-300: hsl(345deg 63% 31%);
-  --color-cerise-red-400: hsl(345deg 63% 41%);
-  --color-cerise-red-500: hsl(345deg 63% 51%);
-  --color-cerise-red-600: hsl(345deg 63% 61%);
-  --color-cerise-red-700: hsl(345deg 63% 71%);
-  --color-cerise-red-800: hsl(346deg 64% 81%);
-  --color-cerise-red-900: hsl(345deg 64% 90%);
   /* Soft Blue */
   --color-soft-blue-100: hsl(207deg 100% 7%);
   --color-soft-blue-200: hsl(207deg 100% 14%);
@@ -97,17 +87,17 @@
 }
 
 @utility ghost-ext--active {
-  @apply text-cerise-red-500 dark:text-cerise-red-600;
+  @apply text-primary;
 
   * {
-    @apply text-cerise-red-500 dark:text-cerise-red-600;
+    @apply text-primary;
   }
 
   @variant hover {
-    @apply text-red-400 dark:text-cerise-red-600;
+    @apply text-primary/70 dark:text-primary;
 
     * {
-      @apply text-red-400 dark:text-cerise-red-600;
+      @apply text-primary/70 dark:text-primary;
     }
   }
 }

@@ -1,0 +1,20 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "client",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["run", "client:dev"],
+      "port": 5173
+    },
+    {
+      "name": "server",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd server && WEB_FILE_BROWSER_ROOT_DIR=/private/tmp/claude-501/-Users-parker-Code-WebDev-Personal-file-server-v2-web-file-browser/b531d0b0-e9d6-4c79-a818-2eb776243819/scratchpad/preview_root WEB_FILE_BROWSER_PORT=8100 cargo run"
+      ],
+      "port": 8100
+    }
+  ]
+}

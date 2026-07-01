@@ -71,20 +71,24 @@ defineProps<{
 
 .entries--list {
   & .entry-wrapper {
-    @apply z-10 hover:z-20;
+    @apply z-10 hover:z-20 rounded-none;
 
     &[data-odd='true'] {
-      @apply bg-accent dark:bg-zinc-900;
+      @apply bg-muted dark:bg-zinc-900;
     }
 
     & .entry {
       & [data-slot='item'] {
         /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-        @apply py-2! flex-nowrap border-l-0 border-r-0;
+        @apply py-2! flex-nowrap border-l-0 border-r-0 rounded-none;
 
         & * {
           --tw-translate-x: 0;
           --tw-translate-y: 0;
+        }
+
+        & .entry-meta {
+          @apply rounded-lg;
         }
       }
     }
