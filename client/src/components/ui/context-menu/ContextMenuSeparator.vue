@@ -4,7 +4,6 @@ import type { HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import {
   ContextMenuSeparator,
-
 } from "reka-ui"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +16,6 @@ const delegatedProps = reactiveOmit(props, "class")
   <ContextMenuSeparator
     data-slot="context-menu-separator"
     v-bind="delegatedProps"
-    :class="cn('bg-border -mx-1 my-1 h-px', props.class)"
+    :class="cn('bg-border/50 -mx-1.5 my-1.5 h-px', props.class)"
   />
 </template>

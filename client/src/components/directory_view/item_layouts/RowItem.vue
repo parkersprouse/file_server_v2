@@ -85,7 +85,7 @@ const heic_check = inject<boolean>('heic_check', false);
     @apply z-10 hover:z-20;
 
     &[data-odd='true'] {
-      @apply bg-accent dark:bg-zinc-900;
+      @apply bg-muted;
     }
 
     & .entry {

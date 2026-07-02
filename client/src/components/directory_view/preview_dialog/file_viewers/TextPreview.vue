@@ -160,7 +160,7 @@ onUnmounted(() => {
   @apply h-[90%] w-[90%] p-0;
 
   & .preview-dialog__content {
-    @apply max-w-full max-h-full w-full h-full bg-accent text-primary overflow-hidden p-0;
+    @apply max-w-full max-h-full w-full h-full bg-muted text-foreground overflow-hidden p-0;
 
     & object {
       @apply w-full h-full overflow-auto;
@@ -224,7 +224,7 @@ onUnmounted(() => {
        exclusive subtrees, so the descending-specificity overlap is harmless. */
     /* stylelint-disable no-descending-specificity */
     & .markdown-rendered {
-      @apply h-full w-full overflow-auto p-6 sm:p-8 text-primary text-left text-base;
+      @apply h-full w-full overflow-auto p-6 sm:p-8 text-foreground text-left text-base;
 
       font-family: var(--base-font-family);
       line-height: 1.65;

@@ -41,17 +41,11 @@ const $is_mobile = useIsMobile();
 @reference '../../../assets/styles/index.css';
 
 @layer app {
-  :root {
-    --preview-dialog-action-ending-radius: 6px;
-  }
-
   .preview-dialog {
     & .preview-dialog__header {
       & .preview-dialog__actions {
         @apply grow-0 shrink w-fit flex flex-row flex-nowrap items-center justify-end gap-1 sm:gap-0
                bg-background border-b border-l overflow-hidden;
-
-        border-bottom-left-radius: var(--preview-dialog-action-ending-radius);
 
         & svg.icon {
           @apply size-7 sm:size-6;
@@ -76,8 +70,8 @@ const $is_mobile = useIsMobile();
     & .preview-dialog__pill {
       @apply fixed bottom-4 left-1/2 -translate-x-1/2 z-1015
              flex flex-row flex-nowrap items-center gap-0.5 p-1
-             rounded-full border bg-background/85 backdrop-blur-md
-             shadow-[0_6px_20px_rgba(0,0,0,0.4)];
+             rounded-full border hover:border-foreground transition-colors
+             bg-background/85 backdrop-blur-md;
 
       & svg.icon {
         @apply size-6;
@@ -107,9 +101,6 @@ const $is_mobile = useIsMobile();
   /* Overflow dropdown: labeled rows, comfortable touch targets, above the dialog */
   [data-slot='dropdown-menu-content'].preview-dialog__overflow {
     @apply z-1100 min-w-52;
-
-    border-top-left-radius: var(--preview-dialog-action-ending-radius);
-    border-bottom-left-radius: var(--preview-dialog-action-ending-radius);
 
     & [data-slot='dropdown-menu-item'] {
       @apply gap-3 px-3 py-2.5 text-sm cursor-pointer;
