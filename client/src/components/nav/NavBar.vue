@@ -1,7 +1,8 @@
 <template>
-  <Menubar
+  <header
     id='toolbar'
-    class='z-10 fixed top-0 left-0 right-0 h-fit justify-between items-center border-x-0 border-t-0 p-0 pl-4 gap-4'
+    class='h-fit rounded-none border border-x-0 border-t-0 p-0 pl-4 gap-4 flex items-center
+           justify-between z-10 fixed top-0 left-0 right-0'
   >
     <section ref='breadcrumbs' class='breadcrumb-wrapper scrollbar-hidden'>
       <NavBreadcrumbs />
@@ -36,7 +37,7 @@
       />
       <ThemeToggle />
     </section>
-  </Menubar>
+  </header>
 </template>
 
 <script setup lang='ts'>

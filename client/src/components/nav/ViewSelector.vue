@@ -13,7 +13,10 @@
       />
     </DropdownMenuTrigger>
 
-    <DropdownMenuContent class='p-0!'>
+    <DropdownMenuContent
+      class='p-0!'
+      :side-offset='0'
+    >
       <DropdownMenuGroup>
         <DropdownMenuItem
           class='ghost-ext'
