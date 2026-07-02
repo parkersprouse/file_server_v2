@@ -18,11 +18,11 @@
   }
 
   @variant hover {
-    @apply text-cerise-red-500! dark:text-cerise-red-600!;
+    @apply text-primary!;
 
     & [data-slot='card'],
     & [data-slot='item'] {
-      @apply border-cerise-red-500! dark:border-cerise-red-600!;
+      @apply border-primary!;
     }
 
     /* & [data-slot='item'] {
@@ -32,13 +32,13 @@
     & .entry-meta,
     & [data-slot^='card-'],
     & [data-slot^='item-'] {
-      @apply text-cerise-red-500! dark:text-cerise-red-600!;
+      @apply text-primary!;
     }
 
     & [data-slot='card-footer'],
     & [data-slot='item-description'] {
       & .entry-meta {
-        @apply border-cerise-red-500/50! dark:border-cerise-red-600/50!;
+        @apply border-primary/50!;
       }
     }
 

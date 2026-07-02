@@ -1,44 +1,4 @@
 @theme inline {
-  /* Cerise Red */
-  --color-cerise-red-100: hsl(345deg 62% 10%);
-  --color-cerise-red-200: hsl(345deg 63% 20%);
-  --color-cerise-red-300: hsl(345deg 63% 31%);
-  --color-cerise-red-400: hsl(345deg 63% 41%);
-  --color-cerise-red-500: hsl(345deg 63% 51%);
-  --color-cerise-red-600: hsl(345deg 63% 61%);
-  --color-cerise-red-700: hsl(345deg 63% 71%);
-  --color-cerise-red-800: hsl(346deg 64% 81%);
-  --color-cerise-red-900: hsl(345deg 64% 90%);
-  /* Soft Blue */
-  --color-soft-blue-100: hsl(207deg 100% 7%);
-  --color-soft-blue-200: hsl(207deg 100% 14%);
-  --color-soft-blue-300: hsl(207deg 100% 20%);
-  --color-soft-blue-400: hsl(207deg 100% 27%);
-  --color-soft-blue-500: hsl(207deg 100% 34%);
-  --color-soft-blue-600: hsl(207deg 100% 47%);
-  --color-soft-blue-700: hsl(207deg 100% 60%);
-  --color-soft-blue-800: hsl(207deg 100% 74%);
-  --color-soft-blue-900: hsl(207deg 100% 87%);
-  /* Mango Orange */
-  --color-mango-orange-100: hsl(38deg 100% 10%);
-  --color-mango-orange-200: hsl(39deg 100% 20%);
-  --color-mango-orange-300: hsl(39deg 100% 29%);
-  --color-mango-orange-400: hsl(39deg 100% 39%);
-  --color-mango-orange-500: hsl(39deg 100% 49%);
-  --color-mango-orange-600: hsl(39deg 100% 59%);
-  --color-mango-orange-700: hsl(39deg 100% 69%);
-  --color-mango-orange-800: hsl(39deg 100% 80%);
-  --color-mango-orange-900: hsl(39deg 100% 90%);
-  /* Rich Black */
-  --color-rich-black-100: hsl(220deg 33% 2%);
-  --color-rich-black-200: hsl(210deg 22% 4%);
-  --color-rich-black-300: hsl(214deg 26% 5%);
-  --color-rich-black-400: hsl(220deg 24% 7%);
-  --color-rich-black-500: hsl(218deg 24% 9%);
-  --color-rich-black-600: hsl(218deg 24% 27%);
-  --color-rich-black-700: hsl(219deg 24% 45%);
-  --color-rich-black-800: hsl(218deg 24% 64%);
-  --color-rich-black-900: hsl(217deg 25% 82%);
   /* Shamrock Green */
   --color-shamrock-green-100: hsl(163deg 100% 6%);
   --color-shamrock-green-200: hsl(164deg 100% 12%);
@@ -97,17 +57,17 @@
 }
 
 @utility ghost-ext--active {
-  @apply text-cerise-red-500 dark:text-cerise-red-600;
+  @apply text-primary;
 
   * {
-    @apply text-cerise-red-500 dark:text-cerise-red-600;
+    @apply text-primary;
   }
 
   @variant hover {
-    @apply text-red-400 dark:text-cerise-red-600;
+    @apply text-primary/80;
 
     * {
-      @apply text-red-400 dark:text-cerise-red-600;
+      @apply text-primary/80;
     }
   }
 }

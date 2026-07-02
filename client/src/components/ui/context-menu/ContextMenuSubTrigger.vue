@@ -1,10 +1,10 @@
 <script setup lang="ts">
+
 import type { ContextMenuSubTriggerProps } from "reka-ui"
 import type { HTMLAttributes } from "vue"
 import { reactiveOmit } from "@vueuse/core"
 import {
   ContextMenuSubTrigger,
-
   useForwardProps,
 } from "reka-ui"
 import { cn } from "@/lib/utils"
@@ -22,11 +22,11 @@ const forwardedProps = useForwardProps(delegatedProps)
     :data-inset="inset ? '' : undefined"
     v-bind="forwardedProps"
     :class="cn(
-      `focus:bg-accent focus:text-accent-foreground data-[state=open]:bg-accent data-[state=open]:text-accent-foreground flex cursor-default items-center rounded-sm px-2 py-1.5 text-sm outline-hidden select-none data-[inset]:pl-8 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
+      'focus:bg-accent focus:text-accent-foreground data-open:bg-accent data-open:text-accent-foreground rounded-none px-3 py-2 text-xs font-medium uppercase tracking-wider data-inset:pl-9.5 [&_svg:not([class*=size-])]:size-3.5 flex cursor-default items-center outline-hidden select-none [&_svg]:pointer-events-none [&_svg]:shrink-0',
       props.class,
     )"
   >
     <slot />
-    <icon-caret-right class="ml-auto" />
+    <icon-caret-right class="cn-rtl-flip ml-auto" />
   </ContextMenuSubTrigger>
 </template>

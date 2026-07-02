@@ -12,6 +12,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     Alert: typeof import('./src/components/ui/alert/Alert.vue')['default']
+    AlertAction: typeof import('./src/components/ui/alert/AlertAction.vue')['default']
     AlertDescription: typeof import('./src/components/ui/alert/AlertDescription.vue')['default']
     AlertTitle: typeof import('./src/components/ui/alert/AlertTitle.vue')['default']
     AudioPreview: typeof import('./src/components/directory_view/preview_dialog/file_viewers/AudioPreview.vue')['default']
@@ -163,6 +164,9 @@ declare module 'vue' {
     Popover: typeof import('./src/components/ui/popover/Popover.vue')['default']
     PopoverAnchor: typeof import('./src/components/ui/popover/PopoverAnchor.vue')['default']
     PopoverContent: typeof import('./src/components/ui/popover/PopoverContent.vue')['default']
+    PopoverDescription: typeof import('./src/components/ui/popover/PopoverDescription.vue')['default']
+    PopoverHeader: typeof import('./src/components/ui/popover/PopoverHeader.vue')['default']
+    PopoverTitle: typeof import('./src/components/ui/popover/PopoverTitle.vue')['default']
     PopoverTrigger: typeof import('./src/components/ui/popover/PopoverTrigger.vue')['default']
     PreviewDialog: typeof import('./src/components/directory_view/preview_dialog/PreviewDialog.vue')['default']
     PreviewDialogActions: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogActions.vue')['default']

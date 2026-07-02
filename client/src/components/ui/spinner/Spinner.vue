@@ -1,25 +1,12 @@
-<template>
-  <icon-circle-notch
-    role='status'
-    aria-label='Loading'
-    :class='cn("size-4 animate-spin", props.class)'
-  />
-
-  <!--
-  <icon-spinner-gap
-    role='status'
-    aria-label='Loading'
-    :class='cn("size-4 animate-spin", props.class)'
-  />
-  -->
-</template>
-
-<script setup lang='ts'>
-import { cn } from '@/lib/utils';
-
-import type { HTMLAttributes } from 'vue';
+<script setup lang="ts">
+import type { HTMLAttributes } from "vue"
+import { cn } from "@/lib/utils"
 
 const props = defineProps<{
-  class?: HTMLAttributes['class']
+  class?: HTMLAttributes["class"]
 }>()
 </script>
+
+<template>
+  <icon-circle-notch role="status" aria-label="Loading" :class="cn('size-4 animate-spin', props.class)" />
+</template>

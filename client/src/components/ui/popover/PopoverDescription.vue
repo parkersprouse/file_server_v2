@@ -8,10 +8,10 @@ const props = defineProps<{
 </script>
 
 <template>
-  <span
-    data-slot="menubar-shortcut"
-    :class="cn('text-muted-foreground group-focus/menubar-item:text-accent-foreground text-xs tracking-widest ml-auto', props.class)"
+  <p
+    data-slot="popover-description"
+    :class="cn('text-muted-foreground text-sm leading-relaxed mt-0.5', props.class)"
   >
     <slot />
-  </span>
+  </p>
 </template>
