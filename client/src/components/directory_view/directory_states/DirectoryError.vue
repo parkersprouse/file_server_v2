@@ -2,14 +2,14 @@
   <section class='container pt-4'>
     <Empty>
       <EmptyHeader>
-        <EmptyMedia class='text-primary'>
+        <EmptyMedia class='text-accent-text'>
           <icon-warning class='size-14!' />
         </EmptyMedia>
-        <EmptyTitle class='text-xl font-bold text-primary'>
+        <EmptyTitle class='text-xl font-bold text-accent-text'>
           {{ title }}
         </EmptyTitle>
         <EmptyDescription>
-          <div class='text-primary text-base'>
+          <div class='text-accent-text text-base'>
             {{ message }}
           </div>
         </EmptyDescription>

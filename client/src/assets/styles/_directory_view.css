@@ -18,11 +18,11 @@
   }
 
   @variant hover {
-    @apply text-primary!;
+    @apply text-accent-text!;
 
     & [data-slot='card'],
     & [data-slot='item'] {
-      @apply border-primary!;
+      @apply border-accent-text!;
     }
 
     /* & [data-slot='item'] {
@@ -32,13 +32,13 @@
     & .entry-meta,
     & [data-slot^='card-'],
     & [data-slot^='item-'] {
-      @apply text-primary!;
+      @apply text-accent-text!;
     }
 
     & [data-slot='card-footer'],
     & [data-slot='item-description'] {
       & .entry-meta {
-        @apply border-primary/50!;
+        @apply border-accent-text/50!;
       }
     }
 

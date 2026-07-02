@@ -74,7 +74,7 @@
   }
 
   .ghost-ext {
-    @apply bg-none cursor-pointer px-3!;
+    @apply bg-none border-none cursor-pointer px-3!;
 
     @variant hover {
       @apply bg-foreground text-background dark:bg-accent dark:text-foreground;
@@ -87,17 +87,17 @@
 }
 
 @utility ghost-ext--active {
-  @apply text-primary;
+  @apply text-accent-text;
 
   * {
-    @apply text-primary;
+    @apply text-accent-text;
   }
 
   @variant hover {
-    @apply text-primary/70 dark:text-primary;
+    @apply text-accent-text-hover;
 
     * {
-      @apply text-primary/70 dark:text-primary;
+      @apply text-accent-text-hover;
     }
   }
 }

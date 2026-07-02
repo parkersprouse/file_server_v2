@@ -23,7 +23,7 @@ export const itemVariants = cva(
       },
       size: {
         default: 'gap-2.5 px-3 py-2.5',
-        sm: 'gap-2.5 px-3 py-2.5',
+        sm: 'gap-2.5 px-3 py-2.5 data-[size=sm]:text-sm/relaxed',
         xs: 'gap-2.5 px-2.5 py-2 in-data-[slot=dropdown-menu-content]:p-0',
       },
     },

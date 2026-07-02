@@ -36,6 +36,6 @@ const previous_path = computed<string | undefined>(() => {
 
 .dir-back-btn {
   @apply inline-flex justify-center items-center gap-1 z-500 w-fit
-        hover:text-primary;
+        hover:text-accent-text;
 }
 </style>
