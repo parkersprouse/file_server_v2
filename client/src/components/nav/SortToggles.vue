@@ -1,5 +1,5 @@
 <template>
-  <section class='flex flex-row flex-nowrap justify-center items-center gap-2 w-full'>
+  <section class='flex flex-row flex-nowrap justify-center items-center gap-4 w-full mb-4'>
     <Button
       variant='ghost'
       aria-label='Sort ascending'
@@ -22,7 +22,7 @@
     </Button>
   </section>
 
-  <section class='flex flex-row flex-nowrap justify-center items-center gap-2 w-full'>
+  <section class='flex flex-row flex-nowrap justify-center items-center gap-4 w-full'>
     <Button
       variant='ghost'
       aria-label='Sort by name'

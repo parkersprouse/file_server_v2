@@ -10,8 +10,34 @@
           [home]
         </component>
       </BreadcrumbItem>
+
+      <template v-if='collapsed_crumbs.length > 0'>
+        <BreadcrumbSeparator />
+        <BreadcrumbItem>
+          <DropdownMenu :modal='false'>
+            <DropdownMenuTrigger
+              class='hover:text-foreground transition-colors'
+              aria-label='Show hidden pages'
+            >
+              <BreadcrumbEllipsis />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem
+                v-for='crumb of collapsed_crumbs'
+                :key='crumb.path'
+                as-child
+              >
+                <RouterLink class='ghost-ext' :to='{ path: crumb.path, query: { ...$route.query } }'>
+                  {{ crumb.label }}
+                </RouterLink>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </BreadcrumbItem>
+      </template>
+
       <slot
-        v-for='crumb of $router_store.breadcrumbs'
+        v-for='crumb of visible_crumbs'
         :key='crumb.path'
       >
         <BreadcrumbSeparator />
@@ -35,10 +61,18 @@ import { RouterLink, useRoute } from 'vue-router';
 import { useRouterStore } from 'stores/router.ts';
 import { BreadcrumbPage } from 'ui/breadcrumb/index.ts';
 
+const { hiddenCount = 0 } = defineProps<{
+  // Number of leading crumbs (after the root entry) to fold into the
+  //   overflow menu; computed by `useBreadcrumbCollapse` in NavBar.vue.
+  hiddenCount?: number;
+}>();
+
 const $route = useRoute();
 const $router_store = useRouterStore();
 
 const at_root = computed<boolean>(() => $route.path === '/');
+const collapsed_crumbs = computed(() => $router_store.breadcrumbs.slice(0, hiddenCount));
+const visible_crumbs = computed(() => $router_store.breadcrumbs.slice(hiddenCount));
 </script>
 
 <style>

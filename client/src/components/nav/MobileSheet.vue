@@ -20,7 +20,7 @@
           </DrawerDescription>
         </VisuallyHidden>
       </DrawerHeader>
-      <section class='flex flex-col flex-nowrap justify-evenly items-center h-full px-4 pb-4'>
+      <section class='flex flex-col flex-nowrap justify-evenly items-center h-full px-4 pb-4 navbar--mobile__actions'>
         <p class='flex flex-row flex-nowrap justify-between items-center gap-2 w-full px-0 pt-0 pb-2'>
           <span class='shrink-0 grow-0 text-lg text-muted-foreground font-semibold'>
             Layout
@@ -67,3 +67,13 @@ import type SortToggles from 'components/nav/SortToggles.vue';
 
 const sort_toggle = useTemplateRef<typeof SortToggles>('sort_toggle');
 </script>
+
+<style>
+@reference '../../assets/styles/index.css';
+
+.navbar--mobile__actions {
+  & .ghost-ext {
+    @apply p-2.5;
+  }
+}
+</style>

@@ -44,10 +44,10 @@
   }
 
   .ghost-ext {
-    @apply cursor-pointer px-3! border-0;
+    @apply px-3! border border-transparent;
 
     @variant hover {
-      @apply bg-foreground text-background;
+      @apply bg-foreground text-background border-foreground;
 
       & * {
         @apply text-background;
@@ -57,13 +57,26 @@
 }
 
 @utility ghost-ext--active {
-  @apply bg-foreground text-background;
+  @apply bg-border text-foreground border-foreground!;
 
-  * {
-    @apply text-background;
+  /* !-forced: reka-ui's own focus:bg-accent (set on both keyboard nav and mouse
+     hover for menu items) is generated after this utility, so it wins ties on
+     equal specificity unless forced here. */
+  @variant hover {
+    @apply bg-foreground! text-background!;
   }
 
-  @variant hover {
-    @apply bg-foreground/80;
+  @variant focus {
+    @apply bg-foreground! text-background!;
+  }
+}
+
+.ghost-ext--active:focus * {
+  @apply text-background!;
+}
+
+@media (hover: hover) {
+  .ghost-ext--active:hover * {
+    @apply text-background!;
   }
 }

@@ -5,7 +5,7 @@
            justify-between z-10 fixed top-0 left-0 right-0'
   >
     <section ref='breadcrumbs' class='breadcrumb-wrapper scrollbar-hidden'>
-      <NavBreadcrumbs />
+      <NavBreadcrumbs :hidden-count='hidden_count' />
     </section>
 
     <!-- mobile view sheet trigger -->
@@ -44,6 +44,7 @@
 import { get, useThrottleFn } from '@vueuse/core';
 import { nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
+import { useBreadcrumbCollapse } from 'composables/breadcrumb_collapse.ts';
 import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { useStore } from 'stores/global.ts';
@@ -53,16 +54,19 @@ import type { UnsubscribeFunction } from 'emittery';
 const $is_mobile = useIsMobile();
 const $store = useStore();
 
-const onResize = useThrottleFn((entries) => {
-  const entry = entries[0];
-  const target = entry.target as HTMLElement;
-  $store.toolbar_height = target.offsetHeight;
-}, 100);
-
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $event_bus = useEventBus();
 
 const breadcrumbs = useTemplateRef('breadcrumbs');
+const { hidden_count, recompute: recomputeBreadcrumbCollapse } = useBreadcrumbCollapse(breadcrumbs);
+
+const onResize = useThrottleFn((entries) => {
+  const entry = entries[0];
+  const target = entry.target as HTMLElement;
+  $store.toolbar_height = target.offsetHeight;
+  recomputeBreadcrumbCollapse();
+}, 100);
+
 const observer = new ResizeObserver((entries) => onResize(entries));
 
 function rightAlignBreadcrumbs(): void {
@@ -78,8 +82,12 @@ onMounted(async () => {
   const toolbar = document.getElementById('toolbar');
   if (toolbar) observer.observe(toolbar);
 
+  await recomputeBreadcrumbCollapse();
   await nextTick(rightAlignBreadcrumbs);
-  get(event_unsubs).push($event_bus.on('path_updated', rightAlignBreadcrumbs));
+  get(event_unsubs).push($event_bus.on('path_updated', async () => {
+    await recomputeBreadcrumbCollapse();
+    rightAlignBreadcrumbs();
+  }));
 });
 
 onUnmounted(() => {
