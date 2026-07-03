@@ -1,7 +1,29 @@
 .entry {
-  @apply transition-none!;
+  /*
+   * `block` is required: the entry anchor wraps a block-level `[data-slot='item']`.
+   * As the default `display: inline`, the focus outline paints around the anchor's
+   * (empty) inline fragments, collapsing to a thin strip that `outline-offset` then
+   * pushes into the gap above the row. Blockifying makes the outline wrap the row.
+   *
+   * Do NOT add `content-visibility: auto` here. Containment is inert on inline
+   * boxes but active on block ones, so with `display: block` it clips this element
+   * to its box — which cuts off the item's hover `border-primary` where the row's
+   * `-mb-px` overlaps the next one. The list is already virtualized, so it bought
+   * nothing anyway.
+   */
+  @apply block transition-none!;
 
-  content-visibility: auto !important;
+  /*
+   * Inset the keyboard focus ring. The global `*:focus-visible` rule uses
+   * `outline-offset: 2px`, but these rows are full-bleed, absolutely-positioned and
+   * share one z-index, so an outward ring lands in the inter-row gap and its lower
+   * edge is painted over by the next opaque zebra row. Drawing it inside the row
+   * keeps all four edges visible and self-contained. Needs `!important` to beat the
+   * global rule's own `!important`.
+   */
+  &:focus-visible {
+    outline-offset: -2px !important;
+  }
 
   & .entry-title {
     @apply max-w-full w-full block text-nowrap whitespace-nowrap overflow-y-hidden overflow-x-scroll;

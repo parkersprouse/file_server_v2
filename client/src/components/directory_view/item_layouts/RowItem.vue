@@ -82,7 +82,13 @@ const heic_check = inject<boolean>('heic_check', false);
 
 .entries--row {
   & .entry-wrapper {
-    @apply z-10 hover:z-20;
+    /*
+     * Lift the row above its neighbours on hover AND focus. Rows are absolutely
+     * positioned and share one z-index, so without this the next (opaque, zebra)
+     * row paints over the focused row's bottom border / focus ring in their 1px
+     * overlap — visible only on even rows, whose following row is the muted one.
+     */
+    @apply z-10 hover:z-20 focus-within:z-20;
 
     &[data-odd='true'] {
       @apply bg-muted;
