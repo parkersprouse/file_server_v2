@@ -10,7 +10,7 @@
       }'
       @click='async () => await $event_bus.emit("copy_text")'
     >
-      <icon-check v-if='successful_copy' aria-hidden='true' />
+      <icon-check-bold v-if='successful_copy' aria-hidden='true' />
       <icon-warning v-else-if='failed_copy' aria-hidden='true' />
       <icon-clipboard v-else aria-hidden='true' />
     </Button>
@@ -73,15 +73,15 @@ onUnmounted(() => {
 
 .copy-text-dialog-action {
   &.successful {
-    @apply text-shamrock-green-500! dark:text-shamrock-green-600!;
+    @apply text-emerald-600! dark:text-emerald-400! bg-inherit border-inherit;
 
     & * {
-      @apply text-shamrock-green-500! dark:text-shamrock-green-600!;
+      @apply text-emerald-600! dark:text-emerald-400!;
     }
   }
 
   &.failed {
-    @apply text-red-500! dark:text-red-400!;
+    @apply text-red-500! dark:text-red-400! bg-inherit border-inherit;
 
     & * {
       @apply text-red-500! dark:text-red-400!;
@@ -90,15 +90,33 @@ onUnmounted(() => {
 
   @variant hover {
     &.successful {
-      @apply text-shamrock-green-500! dark:text-shamrock-green-600!;
+      @apply text-emerald-600! dark:text-emerald-400! bg-inherit border-inherit;
 
       & * {
-        @apply text-shamrock-green-500! dark:text-shamrock-green-600!;
+        @apply text-emerald-600! dark:text-emerald-400!;
       }
     }
 
     &.failed {
-      @apply text-red-500! dark:text-red-400!;
+      @apply text-red-500! dark:text-red-400! bg-inherit border-inherit;
+
+      & * {
+        @apply text-red-500! dark:text-red-400!;
+      }
+    }
+  }
+
+  @variant focus {
+    &.successful {
+      @apply text-emerald-600! dark:text-emerald-400! bg-inherit border-inherit;
+
+      & * {
+        @apply text-emerald-600! dark:text-emerald-400!;
+      }
+    }
+
+    &.failed {
+      @apply text-red-500! dark:text-red-400! bg-inherit border-inherit;
 
       & * {
         @apply text-red-500! dark:text-red-400!;

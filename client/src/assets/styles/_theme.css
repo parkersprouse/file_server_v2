@@ -1,16 +1,3 @@
-@theme inline {
-  /* Shamrock Green */
-  --color-shamrock-green-100: hsl(163deg 100% 6%);
-  --color-shamrock-green-200: hsl(164deg 100% 12%);
-  --color-shamrock-green-300: hsl(164deg 100% 18%);
-  --color-shamrock-green-400: hsl(164deg 100% 24%);
-  --color-shamrock-green-500: hsl(164deg 100% 30%);
-  --color-shamrock-green-600: hsl(164deg 100% 44%);
-  --color-shamrock-green-700: hsl(164deg 100% 58%);
-  --color-shamrock-green-800: hsl(164deg 100% 72%);
-  --color-shamrock-green-900: hsl(164deg 100% 86%);
-}
-
 @layer utilities {
   .\[\&_svg\:not\(\[class\*\=\'size-\'\]\)\]\:size-4 {
     & svg:not([class*='size-']) {

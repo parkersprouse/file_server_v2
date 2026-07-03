@@ -102,7 +102,7 @@ declare module 'vue' {
     IconArrowSquareOut: typeof import('~icons/ph/arrow-square-out')['default']
     IconCaretLeft: typeof import('~icons/ph/caret-left')['default']
     IconCaretRight: typeof import('~icons/ph/caret-right')['default']
-    IconCheck: typeof import('~icons/ph/check')['default']
+    IconCheckBold: typeof import('~icons/ph/check-bold')['default']
     IconCheckerboard: typeof import('~icons/ph/checkerboard')['default']
     IconCheckerboardFill: typeof import('~icons/ph/checkerboard-fill')['default']
     IconCircleNotch: typeof import('~icons/ph/circle-notch')['default']

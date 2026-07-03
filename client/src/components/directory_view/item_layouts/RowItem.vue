@@ -32,7 +32,7 @@
           >
             <TooltipTrigger as-child>
               <Badge
-                variant='outline'
+                variant='ghost'
                 class='entry-meta entry-meta__last-modified'
               >
                 <icon-clock-counter-clockwise />
@@ -49,7 +49,7 @@
           </Tooltip>
           <template v-if='Boolean(entry.duration)'>
             <Badge
-              variant='outline'
+              variant='ghost'
               class='entry-meta entry-meta__duration'
             >
               <icon-timer />

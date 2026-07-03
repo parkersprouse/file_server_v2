@@ -1,6 +1,6 @@
 <template>
   <Breadcrumb>
-    <BreadcrumbList class='scrollbar-hidden'>
+    <BreadcrumbList :class='["scrollbar-hidden", $is_mobile ? "" : "text-sm!"]'>
       <BreadcrumbItem>
         <component
           :to='at_root ? undefined : { path: "/", query: { ...$route.query } }'
@@ -58,6 +58,7 @@
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
+import { useIsMobile } from 'composables/is_mobile.ts';
 import { useRouterStore } from 'stores/router.ts';
 import { BreadcrumbPage } from 'ui/breadcrumb/index.ts';
 
@@ -67,6 +68,7 @@ const { hiddenCount = 0 } = defineProps<{
   hiddenCount?: number;
 }>();
 
+const $is_mobile = useIsMobile();
 const $route = useRoute();
 const $router_store = useRouterStore();
 
@@ -95,11 +97,7 @@ const visible_crumbs = computed(() => $router_store.breadcrumbs.slice(hiddenCoun
         }
 
         & a {
-          @apply border-b border-transparent border-dotted;
-
-          @variant hover {
-            @apply border-primary;
-          }
+          @apply border-b border-transparent border-dotted focus:border-primary hover:border-primary;
         }
       }
     }

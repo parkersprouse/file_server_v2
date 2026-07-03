@@ -58,6 +58,10 @@ onUnmounted(() => {
           --media-control-hover-background: #232331;
         }
 
+        @variant focus {
+          --media-control-hover-background: #232331;
+        }
+
         & [slot='media'] {
           @apply max-w-full max-h-full;
         }
