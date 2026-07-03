@@ -18,13 +18,19 @@ import type { MaybeRefOrGetter } from 'vue';
  * Instead we watch the stream ourselves and only take over once we've locked
  * onto a horizontal gesture that didn't begin on an interactive control:
  *
- *   1. `pointerdown`  — record the origin, but grab nothing yet.
- *   2. `pointermove`  — once past a small threshold, decide the dominant axis.
- *                       Vertical → yield (native scroll). Horizontal → capture
- *                       the pointer on the dialog and `preventDefault` so the
- *                       browser can't reinterpret the drag as a scroll/zoom.
- *   3. `pointerup`    — if the horizontal travel cleared the commit threshold,
- *                       fire the navigation callback.
+ *   1. `pointerdown` — record the origin, but grab nothing yet.
+ *   2. `pointermove` — once past a small threshold, decide the dominant axis.
+ *                      Vertical → yield (native scroll). Horizontal → capture
+ *                      the pointer on the dialog and `preventDefault` so the
+ *                      browser can't reinterpret the drag as a scroll/zoom.
+ *                      Every horizontal move also reports its live delta via
+ *                      `onDragUpdate`, so the caller can render a drag-follow
+ *                      slide animation instead of just swapping content.
+ *   3. `pointerup`   — if the horizontal travel cleared the commit threshold,
+ *                      fire the navigation callback. Either way, `onDragEnd`
+ *                      fires last so the caller can settle its animation
+ *                      (snap back if nothing committed, or let the commit
+ *                      animation it already started run to completion).
  *
  * A single `MaybeRefOrGetter` target (the `<dialog>`) makes the entire screen —
  * backdrop included — a swipe surface.
@@ -42,33 +48,54 @@ import type { MaybeRefOrGetter } from 'vue';
 // Note: <media-controller> itself is intentionally absent so the video *surface*
 // stays swipeable — only its chrome is excluded.
 const NO_SWIPE_SELECTOR = [
-  'button',
+  '.preview-dialog__header',
+  '.preview-dialog__nav',
+  '.preview-dialog__overlays',
+  '.preview-dialog__title',
+  '[role="slider"]',
+  '[slot="centered-chrome"]',
   'a[href]',
+  'button',
   'input',
+  'media-control-bar',
   'select',
   'textarea',
-  '[role="slider"]',
-  'media-control-bar',
-  '[slot="centered-chrome"]',
-  '.preview-dialog__nav',
-  '.preview-dialog__header',
-  '.preview-dialog__title',
-  '.preview-dialog__overlays',
 ].join(',');
 
 // Travel (px) before we commit to an axis — small enough that the swipe feels
 // responsive, large enough that a jittery tap doesn't lock us into swiping.
-const AXIS_LOCK_THRESHOLD = 10;
-// Horizontal travel (px) required on release to actually change media.
-const COMMIT_THRESHOLD = 50;
+const AXIS_LOCK_THRESHOLD = 15;
+// Horizontal travel (px) required on release to actually change media, unless
+// the caller overrides it via `options.commitThresholdPx` (the tweakable
+// "dead zone").
+const DEFAULT_COMMIT_THRESHOLD = 100;
 
 // The dominant axis of the in-flight gesture. `undecided` until we clear the
 // lock threshold; `vertical` means we've handed the gesture back to the browser.
 type SwipeAxis = 'undecided' | 'horizontal' | 'vertical';
 
 export interface UsePreviewSwipeOptions {
+  /**
+   * Horizontal travel (px) required on release to commit navigation — the
+   * "dead zone" below which a swipe snaps back instead of advancing.
+   * Defaults to 50px.
+   */
+  commitThresholdPx?: number;
   /** Gate: only begin tracking while the gallery is navigable (open + >1 media). */
   enabled: () => boolean;
+  /**
+   * Fires once per gesture on release/cancel, whether or not it committed —
+   * AFTER onNext/onPrevious, so the caller can tell "this release also
+   * navigated" (a commit flag it set in the onNext/onPrevious handler) from
+   * "this release did nothing" (snap back to the current pane).
+   */
+  onDragEnd?: () => void;
+  /**
+   * Live horizontal travel (px, signed) while a horizontal drag is in progress.
+   * Drive a drag-follow slide animation from this; do not navigate from it —
+   * navigation is decided on release and reported via onNext / onPrevious.
+   */
+  onDragUpdate?: (dx: number) => void;
   /** Committed left swipe (content dragged left → advance to the next media). */
   onNext: () => void;
   /** Committed right swipe (content dragged right → go back to the previous). */
@@ -149,17 +176,21 @@ export function usePreviewSwipe(
     }
 
     // Non-passive listener → stop the browser turning the drag into a scroll.
-    if (axis === 'horizontal') event.preventDefault();
+    if (axis === 'horizontal') {
+      event.preventDefault();
+      options.onDragUpdate?.(dx);
+    }
   }, { passive: false });
 
   useEventListener(target, 'pointerup', (event: PointerEvent) => {
     if (pointer_id !== event.pointerId) return;
     const dx = event.clientX - start_x;
-    if (axis === 'horizontal' && Math.abs(dx) >= COMMIT_THRESHOLD) {
+    if (axis === 'horizontal' && Math.abs(dx) >= (options.commitThresholdPx ?? DEFAULT_COMMIT_THRESHOLD)) {
       if (dx < 0) options.onNext();
       else options.onPrevious();
     }
     endGesture();
+    options.onDragEnd?.();
   });
 
   useEventListener(target, 'pointercancel', (event: PointerEvent) => {
@@ -169,6 +200,7 @@ export function usePreviewSwipe(
     // (pointerup must NOT do this — it needs the flag to survive to the click.)
     did_swipe = false;
     endGesture();
+    options.onDragEnd?.();
   });
 
   // Swallow the click that terminates a mouse drag so a backdrop swipe doesn't

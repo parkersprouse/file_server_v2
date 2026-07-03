@@ -59,7 +59,7 @@ const cursor = computed<string>(() => {
 });
 
 const image_style = computed<CSSProperties>(() => ({
-  cursor: cursor.value,
+  cursor: get(cursor),
   touchAction: view.scale > 1 ? 'none' : 'auto',
   transform: `translate(${view.offset_x}px, ${view.offset_y}px) ` +
     `scale(${view.scale}) rotate(${view.rotation}deg)`,

@@ -3,9 +3,10 @@
     <ContextMenuTrigger as-child>
       <a
         v-if='can_preview'
+        ref='entry_ele'
         href='#'
         class='entry'
-        @click.prevent='async () => await $event_bus.emit("show_dialog", entry)'
+        @click.prevent='onClick'
       >
         <slot name='default' />
       </a>
@@ -41,7 +42,7 @@
 
 <script setup lang='ts'>
 import { get } from '@vueuse/core';
-import { computed, provide } from 'vue';
+import { computed, provide, useTemplateRef } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
 import { checkSupport, features } from 'lib/browser.ts';
@@ -54,6 +55,8 @@ const { entry } = defineProps<{
 
 const $event_bus = useEventBus();
 
+const entry_ele = useTemplateRef('entry_ele');
+
 const can_preview = computed<boolean>(() => Boolean(entry.preview_type) && get(heic_check));
 
 const heic_check = computed<boolean>(() => {
@@ -62,4 +65,13 @@ const heic_check = computed<boolean>(() => {
 });
 
 provide<boolean>('heic_check', get(heic_check));
+
+async function onClick(): Promise<void> {
+  $event_bus.emit('show_dialog', entry);
+  get(entry_ele)?.blur();
+  // get(entry_ele)?.focus({
+  //   focusVisible: false,
+  //   preventScroll: true,
+  // });
+}
 </script>

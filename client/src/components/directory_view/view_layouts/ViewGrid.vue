@@ -53,7 +53,7 @@ const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
 const container_ref = ref<HTMLElement | null>(null);
 const scroll_margin = ref<number>(0);
 
-const { width: scroll_width } = useElementSize(computed(() => scroll_element?.value ?? null));
+const { width: scroll_width } = useElementSize(computed(() => get(scroll_element) ?? null));
 
 const columns = computed<number>(() => {
   const w = get(scroll_width);
@@ -79,7 +79,7 @@ const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
 const virtualizer_options = computed(() => ({
   count: get(rows).length,
   estimateSize: (): number => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
-  getScrollElement: (): HTMLElement | null => scroll_element?.value ?? null,
+  getScrollElement: (): HTMLElement | null => get(scroll_element) ?? null,
   overscan: 3,
   scrollMargin: get(scroll_margin),
 }));
@@ -92,7 +92,7 @@ const virtualizer = useVirtualizer(virtualizer_options);
 // scrolls, and re-computing it on every measurement cycle causes a feedback
 // loop that makes rows jitter when scrolling upward through unmeasured items.
 const stopMarginWatch = watch(
-  [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
+  [container_ref, (): HTMLElement | null | undefined => get(scroll_element)],
   ([container, scroller]) => {
     if (!container || !scroller) return;
     set(

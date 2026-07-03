@@ -62,7 +62,7 @@ const virtual_items = computed(() => get(virtualizer).getVirtualItems());
 const virtualizer_options = computed(() => ({
   count: entries.length,
   estimateSize: (): number => get(estimate_size),
-  getScrollElement: (): HTMLElement | null => scroll_element?.value ?? null,
+  getScrollElement: (): HTMLElement | null => get(scroll_element) ?? null,
   overscan: 3,
   scrollMargin: get(scroll_margin),
 }));
@@ -72,7 +72,7 @@ const virtualizer = useVirtualizer(virtualizer_options);
 // Computed once when both refs are available and never updated again.
 // See ViewGrid.vue for a full explanation of why this must be one-shot.
 const stopMarginWatch = watch(
-  [container_ref, (): HTMLElement | null | undefined => scroll_element?.value],
+  [container_ref, (): HTMLElement | null | undefined => get(scroll_element)],
   ([container, scroller]) => {
     if (!container || !scroller) return;
     set(

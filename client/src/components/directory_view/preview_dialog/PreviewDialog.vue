@@ -7,7 +7,7 @@
       $store.preview_bg_enabled && "preview-dialog--opaque-bg",
       preview_type?.class,
     )'
-    @click='async (event) => await onClickDialog(event)'
+    @click='onClickDialog'
   >
     <template v-if='entry'>
       <div class='preview-dialog__header'>
@@ -16,8 +16,68 @@
 
       <PreviewDialogTitle :entry='entry' />
 
-      <PreviewDialogContent>
+      <PreviewDialogContent :class='{ "preview-dialog__content--gallery": has_multiple_media }'>
+        <!--
+          Gallery mode: a 3-cell filmstrip (previous / current / next), each
+          exactly one viewport wide, translated as a whole. Dragging follows the
+          pointer 1:1 (composables/preview_swipe.ts reports live dx via
+          onDragUpdate); releasing past the dead zone slides the rest of the way
+          across and reindexes, releasing short of it snaps back to center. Only
+          the current cell mounts the real (lazy) preview component — the
+          neighbors get a lightweight static peek so an adjacent video never
+          autoplays/preloads.
+        -->
+        <div
+          v-if='has_multiple_media'
+          ref='slide_viewport'
+          class='preview-dialog__slide-viewport'
+        >
+          <div class='preview-dialog__slide-track' :style='track_style'>
+            <div class='preview-dialog__slide-cell'>
+              <img
+                v-if='previous_media_entry?.preview_type === PreviewType.IMAGE'
+                :src='previous_media_entry.url'
+                :alt='previous_media_entry.name'
+                class='preview-dialog__slide-neighbor-img'
+                draggable='false'
+              >
+              <div
+                v-else-if='previous_media_entry'
+                class='preview-dialog__slide-neighbor-video'
+                aria-hidden='true'
+              >
+                <span class='preview-dialog__slide-neighbor-video-glyph' />
+              </div>
+            </div>
+
+            <div class='preview-dialog__slide-cell'>
+              <component
+                :is='preview_type?.type'
+                :entry='entry'
+              />
+            </div>
+
+            <div class='preview-dialog__slide-cell'>
+              <img
+                v-if='next_media_entry?.preview_type === PreviewType.IMAGE'
+                :src='next_media_entry.url'
+                :alt='next_media_entry.name'
+                class='preview-dialog__slide-neighbor-img'
+                draggable='false'
+              >
+              <div
+                v-else-if='next_media_entry'
+                class='preview-dialog__slide-neighbor-video'
+                aria-hidden='true'
+              >
+                <span class='preview-dialog__slide-neighbor-video-glyph' />
+              </div>
+            </div>
+          </div>
+        </div>
+
         <component
+          v-else
           :is='preview_type?.type'
           :entry='entry'
         />
@@ -87,6 +147,7 @@ import type { UnsubscribeFunction } from 'emittery';
 import type { Entry } from 'types/entry.d.ts';
 import type { PreviewTypeAttrs } from 'types/preview_type_attrs.d.ts';
 import type { PreviewTypeAttrsMapping } from 'types/preview_type_attrs_mapping.d.ts';
+import type { CSSProperties } from 'vue';
 
 // Lazy-load preview components
 const AudioPreview = defineAsyncComponent(() =>
@@ -103,6 +164,12 @@ const VideoPreview = defineAsyncComponent(() =>
 // The preview types that participate in the prev/next media gallery.
 const MEDIA_PREVIEW_TYPES: PreviewType[] = [PreviewType.IMAGE, PreviewType.VIDEO];
 
+// Slide animation tuning. Surfacing these as store-backed user preferences
+// (alongside things like `show_media_tools`) would be a natural follow-up —
+// left as local constants for now since only the dead zone was asked for.
+const SLIDE_MOTION_MS = 320;
+const SLIDE_EASING = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+
 const { entries = [] } = defineProps<{
   entries?: Entry[];
 }>();
@@ -112,8 +179,34 @@ const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $store = useStore();
 
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
+const slide_viewport = useTemplateRef<HTMLDivElement>('slide_viewport');
 const entry = ref<Entry>();
 const is_open = ref<boolean>(false);
+
+// Live slide-transform state. `drag_x` is the signed px offset applied on top
+// of the track's centered position — driven 1:1 by the pointer while dragging,
+// then animated by commit()/snapBack() once the gesture ends.
+const drag_x = ref<number>(0);
+const is_dragging = ref<boolean>(false);
+const is_animating = ref<boolean>(false);
+
+// True only for the single instant reindex-and-reset update at the end of a
+// commit. That update must NOT transition — the new "current" cell shows
+// exactly the pixels the eased slide above just settled on, so animating it
+// again would visibly slide through the pane beyond the target before
+// correcting back.
+const is_resetting = ref<boolean>(false);
+
+// Set inside handleNext/handlePrevious so the paired onDragEnd (which always
+// fires, whether or not this gesture committed) knows not to snap back.
+let committed_this_gesture = false;
+let settle_timeout: ReturnType<typeof setTimeout> | undefined;
+
+const reduced_motion = ref<boolean>(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function motionMs(): number {
+  return get(reduced_motion) ? 0 : SLIDE_MOTION_MS;
+}
 
 // The directory's images/videos, in the order they're currently listed.
 const media_entries = computed<Entry[]>(() =>
@@ -129,14 +222,37 @@ const current_media_index = computed<number>(() => {
 // The precondition for *any* gallery traversal: the open file is media and
 // there's another one to move to. Drives the keyboard/swipe navigation, which
 // stay available even with the on-screen controls hidden.
-const has_multiple_media = computed<boolean>(() =>
-  get(current_media_index) !== -1 && get(media_entries).length > 1);
+const has_multiple_media = computed<boolean>(() => get(current_media_index) !== -1 && get(media_entries).length > 1);
 
 // Whether to show the on-screen prev/next buttons + counter. These are chrome,
 // so they additionally respect the media-tools toggle; swipe deliberately does
 // not, so hiding the chrome for an unobstructed view stays swipeable.
-const has_media_nav = computed<boolean>(() =>
-  get(has_multiple_media) && $store.show_media_tools);
+const has_media_nav = computed<boolean>(() => get(has_multiple_media) && $store.show_media_tools);
+
+// The filmstrip's static, non-interactive peeks either side of the current
+// (real, fully-mounted) preview. Wrap-around, same as showMediaAt below.
+const previous_media_entry = computed<Entry | undefined>(() => {
+  const media = get(media_entries);
+  const index = get(current_media_index);
+  if (media.length < 2 || index === -1) return;
+  return media[(index - 1 + media.length) % media.length];
+});
+
+const next_media_entry = computed<Entry | undefined>(() => {
+  const media = get(media_entries);
+  const index = get(current_media_index);
+  if (media.length < 2 || index === -1) return;
+  return media[(index + 1) % media.length];
+});
+
+const track_style = computed<CSSProperties>(() => ({
+  display: 'flex',
+  height: '100%',
+  transform: `translateX(calc(-33.3333% + ${get(drag_x)}px))`,
+  transition: (get(is_dragging) || get(is_resetting)) ? 'none' : `transform ${motionMs()}ms ${SLIDE_EASING}`,
+  width: '300%',
+  willChange: 'transform',
+}));
 
 const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   const file_entry = get(entry);
@@ -173,7 +289,7 @@ const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   return mapping[file_entry.preview_type];
 });
 
-onKeyStroke('Escape', async () => await close(), { dedupe: true });
+onKeyStroke('Escape', close, { dedupe: true });
 onKeyStroke('ArrowLeft', (event) => onArrowNav(event, showPreviousMedia), { dedupe: true });
 onKeyStroke('ArrowRight', (event) => onArrowNav(event, showNextMedia), { dedupe: true });
 
@@ -215,22 +331,69 @@ function showMediaAt(index: number): void {
   if (target) set(entry, target);
 }
 
+// Slides the filmstrip the rest of the way across (direction: 1 = next, -1 =
+// previous), then reindexes onto the new entry with the transition switched
+// off — see `is_resetting` above for why that step must be transition-free.
+function commit(direction: 1 | -1): void {
+  if (get(is_animating)) return;
+  const viewport_width = get(slide_viewport)?.clientWidth ?? 400;
+  const target = direction === 1 ? -viewport_width : viewport_width;
+
+  clearTimeout(settle_timeout);
+  set(is_animating, true);
+  set(is_resetting, false);
+  requestAnimationFrame(() => {
+    set(drag_x, target);
+    settle_timeout = setTimeout(() => {
+      set(is_resetting, true);
+      showMediaAt(get(current_media_index) + direction);
+      set(drag_x, 0);
+      set(is_animating, false);
+    }, motionMs());
+  });
+}
+
+function snapBack(): void {
+  if (get(is_animating)) return;
+  clearTimeout(settle_timeout);
+  set(is_animating, true);
+  set(is_resetting, false);
+  requestAnimationFrame(() => {
+    set(drag_x, 0);
+    settle_timeout = setTimeout(() => set(is_animating, false), motionMs());
+  });
+}
+
 function showPreviousMedia(): void {
   if (!get(has_multiple_media)) return;
-  showMediaAt(get(current_media_index) - 1);
+  committed_this_gesture = true;
+  commit(-1);
 }
 
 function showNextMedia(): void {
   if (!get(has_multiple_media)) return;
-  showMediaAt(get(current_media_index) + 1);
+  committed_this_gesture = true;
+  commit(1);
 }
 
 // Touch swipe / mouse click-drag across the dialog cycles the gallery, mirroring
 // the prev/next buttons. Enabled whenever the gallery is traversable — even with
 // the on-screen controls hidden — and carefully inert over the video chrome and
-// a zoomed image (see the composable).
+// a zoomed image (see the composable). Live drag position feeds the filmstrip's
+// drag-follow animation; the paired onDragEnd snaps back unless this gesture
+// already committed via onNext/onPrevious.
 usePreviewSwipe(dialog, {
-  enabled: () => get(is_open) && get(has_multiple_media),
+  enabled: () => get(is_open) && get(has_multiple_media) && !get(is_animating),
+  onDragEnd: () => {
+    set(is_dragging, false);
+    if (!committed_this_gesture) snapBack();
+    committed_this_gesture = false;
+  },
+  onDragUpdate: (dx) => {
+    set(is_dragging, true);
+    set(is_resetting, false);
+    set(drag_x, dx);
+  },
   onNext: showNextMedia,
   onPrevious: showPreviousMedia,
 });
@@ -238,7 +401,7 @@ usePreviewSwipe(dialog, {
 function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
   // Like swipe, keyboard traversal stays available with the on-screen controls
   // hidden — it's gated only on there being another media file to move to.
-  if (!get(is_open) || !get(has_multiple_media)) return;
+  if (!get(is_open) || !get(has_multiple_media) || get(is_animating)) return;
   // Leave the arrow keys to a focused video player so they still seek it.
   if (document.activeElement?.closest('media-controller')) return;
   event.preventDefault();
@@ -259,12 +422,13 @@ async function onClickDialog(event: Event): Promise<void> {
 onMounted(() => {
   get(event_unsubs).push(
     $event_bus.on('show_dialog', ({ data: new_entry }) => open(new_entry)),
-    $event_bus.on('hide_dialog', async () => await close()),
+    $event_bus.on('hide_dialog', close),
   );
 });
 
 onUnmounted(() => {
   for (const unsub of get(event_unsubs)) unsub();
+  clearTimeout(settle_timeout);
 });
 </script>
 
@@ -316,6 +480,51 @@ onUnmounted(() => {
 
     & .preview-dialog__content {
       @apply z-1005 relative;
+    }
+
+    /* Gallery mode swaps the content box from "hug the media's intrinsic size"
+       to a fixed viewport, so the three filmstrip cells have a stable frame to
+       slide within. Non-gallery previews (single file, or docs/text/audio,
+       which never join media_entries) are unaffected. */
+    & .preview-dialog__content--gallery {
+      @apply w-[min(92vw,1600px)] h-[min(88vh,1000px)] max-w-full max-h-full;
+    }
+
+    & .preview-dialog__slide-viewport {
+      @apply relative w-full h-full overflow-hidden;
+      cursor: initial;
+    }
+
+    /*
+    & .preview-dialog__slide-track {
+      /* transform + transition are set inline (track_style) — they're live,
+         per-frame values during a drag/commit, not static theme tokens. *\/
+    }
+    */
+
+    & .preview-dialog__slide-cell {
+      @apply flex-none w-1/3 h-full flex items-center justify-center px-4;
+
+      & > * {
+        @apply max-w-full max-h-full;
+      }
+    }
+
+    & .preview-dialog__slide-neighbor-img {
+      @apply max-w-full max-h-full object-contain select-none opacity-90;
+    }
+
+    & .preview-dialog__slide-neighbor-video {
+      @apply flex items-center justify-center size-16 rounded-full bg-black/40;
+    }
+
+    & .preview-dialog__slide-neighbor-video-glyph {
+      @apply block ml-1;
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-left: 16px solid oklch(98.5% 0 0deg / 80%);
     }
 
     & .preview-dialog__nav {
