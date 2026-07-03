@@ -4,7 +4,7 @@
     :aria-label='entry?.name'
     :class='cn(
       "preview-dialog",
-      `${$store.preview_bg_enabled && "preview-dialog--opaque-bg" || ""}`,
+      $store.preview_bg_enabled && "preview-dialog--opaque-bg",
       preview_type?.class,
     )'
     @click='async (event) => await onClickDialog(event)'
