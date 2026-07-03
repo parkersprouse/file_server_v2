@@ -78,6 +78,7 @@ import { get, onKeyStroke, set, useMutationObserver } from '@vueuse/core';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
+import { usePreviewSwipe } from 'composables/preview_swipe.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { cn } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
@@ -125,9 +126,17 @@ const current_media_index = computed<number>(() => {
   return get(media_entries).findIndex((candidate) => candidate.path === current.path);
 });
 
-// Only offer navigation when the open file is media and there's somewhere to go.
+// The precondition for *any* gallery traversal: the open file is media and
+// there's another one to move to. Drives the keyboard/swipe navigation, which
+// stay available even with the on-screen controls hidden.
+const has_multiple_media = computed<boolean>(() =>
+  get(current_media_index) !== -1 && get(media_entries).length > 1);
+
+// Whether to show the on-screen prev/next buttons + counter. These are chrome,
+// so they additionally respect the media-tools toggle; swipe deliberately does
+// not, so hiding the chrome for an unobstructed view stays swipeable.
 const has_media_nav = computed<boolean>(() =>
-  get(current_media_index) !== -1 && get(media_entries).length > 1 && $store.show_media_tools);
+  get(has_multiple_media) && $store.show_media_tools);
 
 const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   const file_entry = get(entry);
@@ -207,17 +216,29 @@ function showMediaAt(index: number): void {
 }
 
 function showPreviousMedia(): void {
-  if (!get(has_media_nav)) return;
+  if (!get(has_multiple_media)) return;
   showMediaAt(get(current_media_index) - 1);
 }
 
 function showNextMedia(): void {
-  if (!get(has_media_nav)) return;
+  if (!get(has_multiple_media)) return;
   showMediaAt(get(current_media_index) + 1);
 }
 
+// Touch swipe / mouse click-drag across the dialog cycles the gallery, mirroring
+// the prev/next buttons. Enabled whenever the gallery is traversable — even with
+// the on-screen controls hidden — and carefully inert over the video chrome and
+// a zoomed image (see the composable).
+usePreviewSwipe(dialog, {
+  enabled: () => get(is_open) && get(has_multiple_media),
+  onNext: showNextMedia,
+  onPrevious: showPreviousMedia,
+});
+
 function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
-  if (!get(is_open) || !get(has_media_nav)) return;
+  // Like swipe, keyboard traversal stays available with the on-screen controls
+  // hidden — it's gated only on there being another media file to move to.
+  if (!get(is_open) || !get(has_multiple_media)) return;
   // Leave the arrow keys to a focused video player so they still seek it.
   if (document.activeElement?.closest('media-controller')) return;
   event.preventDefault();
@@ -256,6 +277,17 @@ onUnmounted(() => {
            m-auto p-0 border-none z-1000 bg-transparent;
 
     cursor: initial;
+
+    /* Only the media previews are swipeable, so only they surrender horizontal
+       gestures to the swipe-to-navigate handler (composables/preview_swipe.ts);
+       the browser still owns vertical panning. Scoping this to the media
+       variants (rather than the whole dialog) leaves text/document previews
+       free to scroll horizontally — `touch-action` intersects down the ancestor
+       chain, so a `pan-y` here could not be re-widened by a child. */
+    &.preview-dialog--image,
+    &.preview-dialog--video {
+      touch-action: pan-y;
+    }
 
     & .preview-dialog__overlays {
       display: contents;
