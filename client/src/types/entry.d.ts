@@ -9,6 +9,7 @@ export type Entry = {
   duration_order: number;
   duration_raw: number;
   entry_type: EntryType;
+  external_url: string | null;
   file_type: FileType;
   full_type: string;
   last_modified_at: string;

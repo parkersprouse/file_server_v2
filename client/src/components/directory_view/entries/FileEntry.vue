@@ -2,7 +2,15 @@
   <ContextMenu>
     <ContextMenuTrigger as-child>
       <a
-        v-if='can_preview'
+        v-if='entry.external_url'
+        :href='entry.external_url'
+        class='entry'
+        target='_blank'
+      >
+        <slot name='default' />
+      </a>
+      <a
+        v-else-if='can_preview'
         ref='entry_ele'
         href='#'
         class='entry'
@@ -69,9 +77,5 @@ provide<boolean>('heic_check', get(heic_check));
 async function onClick(): Promise<void> {
   $event_bus.emit('show_dialog', entry);
   get(entry_ele)?.blur();
-  // get(entry_ele)?.focus({
-  //   focusVisible: false,
-  //   preventScroll: true,
-  // });
 }
 </script>

@@ -17,6 +17,7 @@ futures = "0.3.32"
 ipnet = "2.12.0"
 log = "0.4.27"
 moka = { version = "0.12.15", features = ["future"] }
+quick-xml = "0.41.0"
 regex-lite = "0.1.8"
 serde = { version = "1.0.219", features = ["derive"] }
 tokio = { version = "1", features = ["sync"] }

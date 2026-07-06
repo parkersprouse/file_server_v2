@@ -1,6 +1,9 @@
 use crate::{
   AppState,
-  lib::error::{AppError, AppResult},
+  lib::{
+    error::{AppError, AppResult},
+    parse_url_file::parse,
+  },
   structs::entry_type::EntryType,
 };
 use actix_web::web::{self, Data};
@@ -10,9 +13,7 @@ use log::{error, warn};
 
 use serde::Serialize;
 use std::{
-  fs,
-  ops::Index,
-  path::{Path, PathBuf},
+  ffi::OsStr, fs, ops::Index, path::{Path, PathBuf},
 };
 
 #[derive(Clone, Serialize)]
@@ -23,6 +24,7 @@ pub struct EntryDetails {
   pub duration_order: u8,
   pub duration_raw: u64,
   pub entry_type: String,
+  pub external_url: Option<String>,
   pub file_size: u64,
   pub file_type: String,
   pub full_type: String,
@@ -49,6 +51,7 @@ pub struct RawEntry {
 
 impl EntryDetails {
   pub const INLINE_TYPES: [&str; 6] = ["audio", "document", "image", "spreadsheet", "text", "video"];
+  pub const EXT_URL_EXTS: [&str; 2] = ["url", "webloc"];
 
   /// Enumerate a directory, returning the cheap per-entry data for each valid
   /// child. This performs the blocking `read_dir`, `metadata`, and thumbnail
@@ -105,6 +108,7 @@ impl EntryDetails {
       as_url,
       thumbnail,
     } = raw;
+    let name_lowercase = name.to_lowercase();
 
     let file_format: Option<FileFormat> = if entry_type == EntryType::DIR {
       None
@@ -130,12 +134,13 @@ impl EntryDetails {
       duration_order,
       duration_raw: duration_tuple.0,
       entry_type,
+      external_url: Self::external_url(full_path).await,
       file_size: metadata.len(),
       file_type,
       full_type: Self::full_type(file_format),
       last_modified_at: last_modified_at.1,
       last_modified_at_epoch: last_modified_at.0,
-      name_lowercase: name.to_lowercase(),
+      name_lowercase,
       name,
       path: as_url,
       thumbnail,
@@ -218,6 +223,22 @@ impl EntryDetails {
       },
       Err(_) => (0, "n/a".to_string()),
     }
+  }
+
+  pub async fn external_url(path: PathBuf) -> Option<String> {
+    let file_ext: &OsStr = path.extension().unwrap_or_default();
+    let file_ext_str: &str = file_ext.to_str().unwrap_or_default();
+    if !Self::EXT_URL_EXTS.contains(&file_ext_str) {
+      return None;
+    }
+
+    let path_copy = path.clone();
+    let result = match web::block(move || fs::read_to_string(path_copy)).await {
+      Ok(content) => Some(content.unwrap()),
+      Err(_) => None,
+    };
+
+    Some(parse(file_ext_str, &result.unwrap_or_default()))
   }
 
   pub fn file_type(file_format: Option<FileFormat>) -> String {

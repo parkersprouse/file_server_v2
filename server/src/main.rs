@@ -21,6 +21,7 @@ mod lib {
   pub mod error;
   pub mod gatekeeper;
   pub mod media_cache;
+  pub mod parse_url_file;
 }
 mod services {
   pub mod read_dir;
