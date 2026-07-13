@@ -1,4 +1,3 @@
-import { FlatCompat } from '@eslint/eslintrc';
 import eslint from '@eslint/js';
 import comments from '@eslint-community/eslint-plugin-eslint-comments/configs';
 import stylistic from '@stylistic/eslint-plugin';
@@ -12,7 +11,6 @@ import globals from 'globals';
 import { configs as typescript_configs } from 'typescript-eslint';
 
 const __dirname = import.meta.dirname;
-const compat = new FlatCompat({ baseDirectory: __dirname });
 
 const js_exts = Object.freeze(['.cjs', '.js', '.mjs']);
 const ts_exts = Object.freeze(['.cts', '.ts', '.mts']);
@@ -153,14 +151,14 @@ export default defineConfigWithVueTs(
    * [Extension] For linting import/export syntax (recommended config)
    * https://github.com/un-ts/eslint-plugin-import-x
    */
-  ...compat.config(importX.configs.recommended),
+  importX.configs['flat/recommended'],
 
   /**
    * ------------------------------------------------------------------------------
    * [Extension] For linting import/export syntax (TypeScript config)
    * https://github.com/un-ts/eslint-plugin-import-x#typescript
    */
-  ...compat.config(importX.configs.typescript),
+  importX.configs['flat/typescript'],
 
   /**
    * ------------------------------------------------------------------------------

@@ -21,7 +21,7 @@
       <DialogHeader>
         <DialogTitle>Search</DialogTitle>
         <DialogDescription>
-          Find files and folders by name. Use <code>*</code> as a wildcard, e.g. <code>file*.png</code>
+          Use <code>*</code> as a wildcard
         </DialogDescription>
       </DialogHeader>
 
@@ -85,7 +85,7 @@
           </Select>
         </div>
 
-        <div class='flex flex-row flex-wrap gap-2'>
+        <div class='flex flex-row flex-wrap gap-2 justify-center items-center'>
           <Button
             type='button'
             variant='outline'
@@ -115,6 +115,7 @@
         <DialogFooter class='gap-2'>
           <Button
             v-if='$router_store.searching'
+            class='w-full'
             type='button'
             variant='outline'
             @click='clear'
@@ -122,6 +123,7 @@
             Clear search
           </Button>
           <Button
+            class='w-full'
             type='submit'
             :disabled='query.trim().length === 0'
           >

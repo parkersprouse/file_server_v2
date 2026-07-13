@@ -62,7 +62,6 @@
   },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.7.2",
-    "@eslint/eslintrc": "^3.3.5",
     "@eslint/js": "^10.0.1",
     "@iconify-json/ph": "^1.2.2",
     "@iconify-json/ri": "^1.2.10",
