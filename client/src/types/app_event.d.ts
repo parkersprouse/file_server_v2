@@ -10,6 +10,7 @@ export type AppEvent = {
   path_updating: PathUpdate;
   query_updated: QueryParamValue[];
   resize_preview_actions: DOMRect;
+  search_updated: undefined;
   show_dialog: Entry;
   text_copied: boolean;
   toggle_dialog_content_bg: undefined;

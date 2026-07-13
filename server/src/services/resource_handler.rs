@@ -2,7 +2,7 @@ use crate::{
   AppState,
   enums::disposition_kind::DispositionKind,
   lib::error::{AppError, AppResult},
-  services::{read_dir, read_file},
+  services::{read_dir, read_file, search},
   util,
 };
 use actix_web::{HttpRequest, HttpResponse, ResponseError, web::Data};
@@ -21,6 +21,16 @@ async fn handle_impl(req: HttpRequest, data: Data<AppState>) -> AppResult<HttpRe
 
   // If the path we're requesting points to a directory
   if metadata.is_dir() {
+    // A `?search=` query turns the directory request into a name search rooted
+    // at that directory (or the whole tree, depending on `scope`). The result
+    // has the same shape as a listing. Queries that aren't searches (e.g. the
+    // client's `view`/`key`/`dir` params) fall through to the plain listing.
+    if let Some(params) = search::parse_params(req.uri().query()) {
+      return search::search(&path, params, &data)
+        .await
+        .map(|result| HttpResponse::Ok().json(result));
+    }
+
     return read_dir::read(&path, &data)
       .await
       .map(|result| HttpResponse::Ok().json(result.as_ref()));

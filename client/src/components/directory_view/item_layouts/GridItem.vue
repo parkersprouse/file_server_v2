@@ -20,6 +20,13 @@
       <div class='entry-title scrollbar-hidden'>
         {{ entry.name }}
       </div>
+      <div
+        v-if='$router_store.searching'
+        class='w-full truncate text-xs text-muted-foreground'
+        :title='entryLocation(entry)'
+      >
+        {{ entryLocation(entry) }}
+      </div>
       <div class='flex flex-row flex-nowrap justify-between items-center w-full'>
         <Tooltip
           :delay-duration='500'
@@ -61,7 +68,8 @@
 import { inject } from 'vue';
 
 import { absolute, relative } from 'lib/datetime.ts';
-import { fileTypeToIcon } from 'lib/entry_helpers.ts';
+import { entryLocation, fileTypeToIcon } from 'lib/entry_helpers.ts';
+import { useRouterStore } from 'stores/router.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -69,5 +77,6 @@ defineProps<{
   entry: Entry;
 }>();
 
+const $router_store = useRouterStore();
 const heic_check = inject<boolean>('heic_check', false);
 </script>

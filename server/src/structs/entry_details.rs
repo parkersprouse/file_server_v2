@@ -49,6 +49,28 @@ pub struct RawEntry {
   thumbnail: Option<String>,
 }
 
+impl RawEntry {
+  /// Build the cheap per-entry data for a single directory entry. Performs the
+  /// thumbnail `stat` syscall, so it is intended to run inside `web::block`
+  /// (alongside the enumeration that produced `entry`).
+  pub fn new(entry: &fs::DirEntry, metadata: fs::Metadata, root_dir_path: &str) -> Self {
+    let full_path: PathBuf = entry.path();
+    let as_url: String = EntryDetails::path_to_url(&full_path, root_dir_path);
+    let thumbnail: Option<String> = EntryDetails::get_thumbnail(&as_url, root_dir_path);
+
+    Self {
+      // Filenames on Unix are arbitrary bytes and need not be valid UTF-8;
+      // lossily convert rather than panicking on a non-UTF-8 name.
+      name: entry.file_name().to_string_lossy().into_owned(),
+      entry_type: EntryType::stringify(&metadata.file_type()).into(),
+      metadata,
+      full_path,
+      as_url,
+      thumbnail,
+    }
+  }
+}
+
 impl EntryDetails {
   pub const INLINE_TYPES: [&str; 6] = ["audio", "document", "image", "spreadsheet", "text", "video"];
   pub const EXT_URL_EXTS: [&str; 2] = ["url", "webloc"];
@@ -77,20 +99,7 @@ impl EntryDetails {
         continue;
       }
 
-      let full_path: PathBuf = entry.path();
-      let as_url: String = Self::path_to_url(&full_path, root_dir_path);
-      let thumbnail: Option<String> = Self::get_thumbnail(&as_url, root_dir_path);
-
-      output.push(RawEntry {
-        // Filenames on Unix are arbitrary bytes and need not be valid UTF-8;
-        // lossily convert rather than panicking on a non-UTF-8 name.
-        name: entry.file_name().to_string_lossy().into_owned(),
-        entry_type: EntryType::stringify(&metadata.file_type()).into(),
-        metadata,
-        full_path,
-        as_url,
-        thumbnail,
-      });
+      output.push(RawEntry::new(&entry, metadata, root_dir_path));
     }
 
     Ok(output)

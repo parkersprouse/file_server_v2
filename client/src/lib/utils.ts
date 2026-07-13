@@ -2,6 +2,7 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { stringifyQuery } from 'vue-router';
 
+import { QueryParam } from 'enums/query_param.ts';
 import { http } from 'lib/http.ts';
 
 import type { ClassValue } from 'clsx';
@@ -19,7 +20,8 @@ export function buildPath(
   route: RouteLocationNormalizedLoadedGeneric,
 ): Breadcrumb[] {
   const length = parts.length - 1;
-  const query = formatQuery(route.query);
+  // Navigating a breadcrumb leaves the active search behind.
+  const query = formatQuery(stripSearchParams(route.query));
   return parts.map((part, index) => ({
     label: part,
     path: index < length ? `/${parts.slice(0, index + 1).join('/')}${query}` : undefined,
@@ -38,6 +40,23 @@ export function breadcrumbify(route: RouteLocationNormalizedLoadedGeneric): Brea
 
 export function formatQuery(query: LocationQuery): string {
   return Object.keys(query).length > 0 ? `?${stringifyQuery(query)}` : '';
+}
+
+const SEARCH_QUERY_PARAMS: string[] = [
+  QueryParam.CASE,
+  QueryParam.FUZZY,
+  QueryParam.MATCH,
+  QueryParam.SCOPE,
+  QueryParam.SEARCH,
+];
+
+/**
+ * Drop the search-related params from a route query, so links built while a
+ * search is active (breadcrumbs, folder results, back button) land on the
+ * target directory's plain listing instead of re-running the search there.
+ */
+export function stripSearchParams(query: LocationQuery): LocationQuery {
+  return Object.fromEntries(Object.entries(query).filter(([param]) => !SEARCH_QUERY_PARAMS.includes(param)));
 }
 
 export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string {

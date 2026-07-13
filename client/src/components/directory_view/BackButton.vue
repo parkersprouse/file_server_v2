@@ -3,7 +3,7 @@
     v-if='previous_path'
     :to='{
       path: previous_path,
-      query: { ...$route.query },
+      query: { ...stripSearchParams($route.query) },
     }'
     class='dir-back-btn'
   >
@@ -17,6 +17,7 @@ import { get } from '@vueuse/core';
 import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
+import { stripSearchParams } from 'lib/utils.ts';
 import { useRouterStore } from 'stores/router.ts';
 
 const $route = useRoute();
