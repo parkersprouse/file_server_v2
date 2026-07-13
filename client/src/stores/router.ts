@@ -5,15 +5,19 @@ import { useRoute, useRouter } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
 import { QueryParam } from 'enums/query_param.ts';
+import { SearchMatch } from 'enums/search_match.ts';
+import { SearchScope } from 'enums/search_scope.ts';
 import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { ViewType } from 'enums/view_type.ts';
 import { breadcrumbify } from 'lib/utils.ts';
 
 import type { Breadcrumb } from 'types/breadcrumb.d.ts';
+import type { SearchOptions } from 'types/search_options.d.ts';
 import type { LocationQueryValue, RouteLocationNormalizedGeneric } from 'vue-router';
 
-export type QueryParamValue = SortDir | SortKey | ViewType;
+// `undefined` removes the param from the query string (vue-router drops it).
+export type QueryParamValue = SearchMatch | SearchScope | SortDir | SortKey | ViewType | string | undefined;
 
 export type RouterEventCallback = (
   to: RouteLocationNormalizedGeneric,
@@ -34,6 +38,23 @@ export const useRouterStore = defineStore('router', () => {
   const dir = computed<SortDir>(() => validate($route.query.dir, SortDir, SortDir.ASC));
 
   const key = computed<SortKey>(() => validate($route.query.key, SortKey, SortKey.NAME));
+
+  const search_query = computed<string>(() => {
+    const param = $route.query[QueryParam.SEARCH];
+    return typeof param === 'string' ? param : '';
+  });
+
+  const search_scope = computed<SearchScope>(() =>
+    validate($route.query[QueryParam.SCOPE], SearchScope, SearchScope.RECURSIVE));
+
+  const search_match = computed<SearchMatch>(() =>
+    validate($route.query[QueryParam.MATCH], SearchMatch, SearchMatch.ALL));
+
+  const search_case_sensitive = computed<boolean>(() => $route.query[QueryParam.CASE] === 'true');
+
+  const search_fuzzy = computed<boolean>(() => $route.query[QueryParam.FUZZY] === 'true');
+
+  const searching = computed<boolean>(() => get(search_query).trim().length > 0);
 
   const view = computed({
     get: () => validate($route.query.view, ViewType, ViewType.LIST),
@@ -79,6 +100,30 @@ export const useRouterStore = defineStore('router', () => {
       [QueryParam.DIR]: new_dir,
       [QueryParam.KEY]: new_key,
     });
+  }
+
+  async function updateSearch(options: SearchOptions): Promise<void> {
+    await pushQuery({
+      // Boolean options are only present in the URL when enabled.
+      [QueryParam.CASE]: options.case_sensitive ? 'true' : undefined,
+      [QueryParam.FUZZY]: options.fuzzy ? 'true' : undefined,
+      [QueryParam.MATCH]: options.match,
+      [QueryParam.SCOPE]: options.scope,
+      [QueryParam.SEARCH]: options.query,
+    });
+    await $event_bus.emit('search_updated');
+  }
+
+  async function clearSearch(): Promise<void> {
+    if (!get(searching)) return;
+    await pushQuery({
+      [QueryParam.CASE]: undefined,
+      [QueryParam.FUZZY]: undefined,
+      [QueryParam.MATCH]: undefined,
+      [QueryParam.SCOPE]: undefined,
+      [QueryParam.SEARCH]: undefined,
+    });
+    await $event_bus.emit('search_updated');
   }
 
   function validate<T extends string, TEnumValue extends string>(
@@ -129,13 +174,21 @@ export const useRouterStore = defineStore('router', () => {
     breadcrumbs,
     dir,
     key,
+    search_case_sensitive,
+    search_fuzzy,
+    search_match,
+    search_query,
+    search_scope,
+    searching,
     view,
 
     /*-- Functions --*/
     addAfterCallback,
     addBeforeCallback,
+    clearSearch,
     removeAfterCallback,
     removeBeforeCallback,
+    updateSearch,
     updateSorting,
   };
 });

@@ -24,6 +24,14 @@
       </ItemTitle>
       <ItemDescription>
         <div class='flex flex-row flex-nowrap justify-start items-center w-full gap-2 text-muted-foreground'>
+          <Badge
+            v-if='$router_store.searching'
+            variant='ghost'
+            class='entry-meta entry-meta__location min-w-0'
+          >
+            <icon-folder-simple aria-hidden='true' />
+            <span class='truncate'>{{ entryLocation(entry) }}</span>
+          </Badge>
           <Tooltip
             :delay-duration='500'
             :disable-closing-trigger='true'
@@ -66,7 +74,8 @@
 import { inject } from 'vue';
 
 import { absolute, relative } from 'lib/datetime.ts';
-import { fileTypeToIcon } from 'lib/entry_helpers.ts';
+import { entryLocation, fileTypeToIcon } from 'lib/entry_helpers.ts';
+import { useRouterStore } from 'stores/router.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -74,6 +83,7 @@ defineProps<{
   entry: Entry;
 }>();
 
+const $router_store = useRouterStore();
 const heic_check = inject<boolean>('heic_check', false);
 </script>
 

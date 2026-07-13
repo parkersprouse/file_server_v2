@@ -11,6 +11,10 @@
       top: toolbar_height,
     }'
   >
+    <SearchBanner
+      v-if='$router_store.searching && !error'
+      :count='entries?.length'
+    />
     <DirectoryError v-if='error' />
     <DirectoryLoading v-else-if='!entries' />
     <DirectoryEmpty v-else-if='entries.length === 0' />
@@ -167,10 +171,18 @@ onMounted(async () => {
 
     $event_bus.on('query_updated', ({ data: params }): void => {
       const current_entries = get(entries);
-      if (current_entries && params.some((param) => sort_param_keys.includes(param.toUpperCase()))) {
+      // Search patches may carry `undefined` values (param removal), so only
+      // consider string values when checking for a sort change.
+      const sort_changed = params.some((param) =>
+        typeof param === 'string' && sort_param_keys.includes(param.toUpperCase()));
+      if (current_entries && sort_changed) {
         set(entries, sortEntries(current_entries, $router_store.key, $router_store.dir));
       }
       set(transitioning, false);
+    }),
+
+    $event_bus.on('search_updated', async () => {
+      await getEntries();
     }),
   );
 });

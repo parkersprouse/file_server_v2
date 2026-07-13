@@ -10,6 +10,12 @@
       <ItemTitle class='entry-title scrollbar-hidden'>
         {{ entry.name }}
       </ItemTitle>
+      <ItemDescription
+        v-if='$router_store.searching'
+        class='truncate text-xs!'
+      >
+        {{ entryLocation(entry) }}
+      </ItemDescription>
     </ItemContent>
     <ItemContent
       v-if='Boolean(entry.duration)'
@@ -57,13 +63,16 @@
 
 <script setup lang='ts'>
 import { absolute, relative } from 'lib/datetime.ts';
-import { fileTypeToIcon } from 'lib/entry_helpers.ts';
+import { entryLocation, fileTypeToIcon } from 'lib/entry_helpers.ts';
+import { useRouterStore } from 'stores/router.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
 defineProps<{
   entry: Entry;
 }>();
+
+const $router_store = useRouterStore();
 </script>
 
 <style>

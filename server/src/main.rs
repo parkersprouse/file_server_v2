@@ -27,6 +27,7 @@ mod services {
   pub mod read_dir;
   pub mod read_file;
   pub mod resource_handler;
+  pub mod search;
 }
 mod structs {
   pub mod entry_details;

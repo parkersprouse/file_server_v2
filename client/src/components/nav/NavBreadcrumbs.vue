@@ -3,7 +3,7 @@
     <BreadcrumbList :class='["scrollbar-hidden", $is_mobile ? "" : "text-sm!"]'>
       <BreadcrumbItem>
         <component
-          :to='at_root ? undefined : { path: "/", query: { ...$route.query } }'
+          :to='at_root ? undefined : { path: "/", query: { ...stripSearchParams($route.query) } }'
           :is='at_root ? BreadcrumbPage : RouterLink'
           class='inline-flex justify-center items-center gap-1'
         >
@@ -27,7 +27,7 @@
                 :key='crumb.path'
                 as-child
               >
-                <RouterLink class='ghost-ext' :to='{ path: crumb.path, query: { ...$route.query } }'>
+                <RouterLink class='ghost-ext' :to='{ path: crumb.path, query: { ...stripSearchParams($route.query) } }'>
                   {{ crumb.label }}
                 </RouterLink>
               </DropdownMenuItem>
@@ -43,7 +43,7 @@
         <BreadcrumbSeparator />
         <BreadcrumbItem>
           <component
-            :to='{ path: crumb.path, query: { ...$route.query } }'
+            :to='{ path: crumb.path, query: { ...stripSearchParams($route.query) } }'
             :is='Boolean(crumb.path) ? RouterLink : BreadcrumbPage'
           >
             {{ crumb.label }}
@@ -59,6 +59,7 @@ import { computed } from 'vue';
 import { RouterLink, useRoute } from 'vue-router';
 
 import { useIsMobile } from 'composables/is_mobile.ts';
+import { stripSearchParams } from 'lib/utils.ts';
 import { useRouterStore } from 'stores/router.ts';
 import { BreadcrumbPage } from 'ui/breadcrumb/index.ts';
 

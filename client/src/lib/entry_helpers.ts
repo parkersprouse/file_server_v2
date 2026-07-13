@@ -26,6 +26,7 @@ import Icon3D from '~icons/ph/vector-three';
 
 import { EntryType } from 'enums/entry_type.ts';
 import { FileType } from 'enums/file_type.ts';
+import { stripSearchParams } from 'lib/utils.ts';
 
 // import type { SortDir } from 'enums/sort_dir.ts';
 // import type { SortKey } from 'enums/sort_key.ts';
@@ -69,10 +70,21 @@ export function buildEntryRoute(
 ): RouteLocationNormalizedLoadedGeneric {
   return {
     path: entry.path,
+    // Opening a folder from search results shows that folder's contents rather
+    // than re-running the search inside it.
     query: {
-      ...route.query,
+      ...stripSearchParams(route.query),
     },
   } as RouteLocationNormalizedLoadedGeneric;
+}
+
+/**
+ * The directory an entry lives in, as a display path ('/' for the root).
+ * Used to show where a search result came from.
+ */
+export function entryLocation(entry: Entry): string {
+  const index = entry.path.lastIndexOf('/');
+  return index <= 0 ? '/' : entry.path.slice(0, index);
 }
 
 export function fileTypeToIcon(type: FileType | EntryType): FunctionalComponent {

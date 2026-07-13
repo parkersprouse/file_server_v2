@@ -13,6 +13,7 @@
       v-if='$is_mobile'
       class='flex justify-end items-center h-full'
     >
+      <SearchDialog />
       <MobileSheet />
     </section>
 
@@ -21,6 +22,11 @@
       v-else
       class='config-wrapper'
     >
+      <Separator
+        orientation='vertical'
+        class='h-auto! self-stretch!'
+      />
+      <SearchDialog />
       <Separator
         orientation='vertical'
         class='h-auto! self-stretch!'
