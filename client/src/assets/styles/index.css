@@ -166,8 +166,8 @@
 
   /* Restore focus indicator for keyboard navigation (WCAG 2.4.7) */
   &:focus-visible {
-    outline: 2px solid currentColor !important;
-    outline-offset: 2px !important;
+    /* outline: 2px solid currentColor !important; */
+    /* outline-offset: 2px !important; */
     box-shadow: none !important;
   }
 
@@ -272,10 +272,6 @@
     }
   }
 
-  body {
-    @apply bg-background text-foreground font-sans;
-  }
-
   button:not(:disabled),
   [role='button']:not(:disabled) {
     cursor: pointer;
@@ -296,15 +292,5 @@
 
   &[class$='only-y'] {
     overflow-x: hidden;
-  }
-}
-
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
-  }
-
-  body {
-    @apply bg-background text-foreground;
   }
 }

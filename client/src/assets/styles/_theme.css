@@ -44,7 +44,8 @@
 }
 
 @utility ghost-ext--active {
-  @apply bg-border text-foreground border-foreground!;
+   /* border-foreground! */
+  @apply bg-border text-foreground;
 
   /* !-forced: reka-ui's own focus:bg-accent (set on both keyboard nav and mouse
      hover for menu items) is generated after this utility, so it wins ties on

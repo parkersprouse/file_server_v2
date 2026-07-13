@@ -487,7 +487,8 @@ onUnmounted(() => {
        slide within. Non-gallery previews (single file, or docs/text/audio,
        which never join media_entries) are unaffected. */
     & .preview-dialog__content--gallery {
-      @apply w-[min(92vw,1600px)] h-[min(88vh,1000px)] max-w-full max-h-full;
+      /* w-[min(92vw,1600px)] h-[min(88vh,1000px)] */
+      @apply max-w-full max-h-full;
     }
 
     & .preview-dialog__slide-viewport {

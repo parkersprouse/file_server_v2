@@ -17,7 +17,7 @@
       </Button>
     </DialogTrigger>
 
-    <DialogContent class='sm:max-w-lg'>
+    <DialogContent class='sm:max-w-lg max-h-full overflow-y-auto'>
       <DialogHeader>
         <DialogTitle>Search</DialogTitle>
         <DialogDescription>
@@ -26,25 +26,25 @@
       </DialogHeader>
 
       <form
-        class='flex flex-col gap-4'
+        class='flex flex-col gap-6'
         @submit.prevent='submit'
       >
-        <input
-          ref='query_input'
-          v-model='query'
-          type='text'
-          name='search'
-          placeholder='Search…'
-          autocomplete='off'
-          autocapitalize='off'
-          spellcheck='false'
-          class='flex h-10 w-full rounded-md border border-input bg-transparent px-3 py-2 text-base
-                 placeholder:text-muted-foreground focus-visible:outline-hidden focus-visible:ring-2
-                 focus-visible:ring-ring'
-        >
+        <InputGroup>
+          <InputGroupInput
+            v-model='query'
+            ref='query_input'
+            placeholder='Search…'
+            autocomplete='off'
+            autocapitalize='off'
+            spellcheck='false'
+          />
+          <InputGroupAddon>
+            <icon-magnifying-glass aria-hidden='true' />
+          </InputGroupAddon>
+        </InputGroup>
 
         <div class='grid grid-cols-[auto_1fr] gap-x-4 gap-y-3 items-center'>
-          <label class='text-sm text-muted-foreground' for='search-scope'>
+          <label class='text-sm text-muted-foreground text-right' for='search-scope'>
             Search in
           </label>
           <Select v-model='scope'>
@@ -64,7 +64,7 @@
             </SelectContent>
           </Select>
 
-          <label class='text-sm text-muted-foreground' for='search-match'>
+          <label class='text-sm text-muted-foreground text-right' for='search-match'>
             Match
           </label>
           <Select v-model='match'>
@@ -85,50 +85,42 @@
           </Select>
         </div>
 
-        <div class='flex flex-row flex-wrap gap-2 justify-center items-center'>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            class='ghost-ext'
-            :class='{ "ghost-ext--active": case_sensitive }'
-            :aria-pressed='case_sensitive'
-            @click='case_sensitive = !case_sensitive'
-          >
-            <icon-text-aa aria-hidden='true' />
-            Case sensitive
-          </Button>
-          <Button
-            type='button'
-            variant='outline'
-            size='sm'
-            class='ghost-ext'
-            :class='{ "ghost-ext--active": fuzzy }'
-            :aria-pressed='fuzzy'
-            @click='fuzzy = !fuzzy'
-          >
-            <icon-wave-sine aria-hidden='true' />
-            Fuzzy
-          </Button>
+        <div class='flex flex-row flex-wrap gap-2 justify-evenly items-center'>
+          <div class='flex items-center space-x-2'>
+            <Switch
+              v-model='case_sensitive'
+              id='case-sensitivity'
+            />
+            <Label for='case-sensitivity'>Case Sensitive</Label>
+          </div>
+
+          <div class='flex items-center space-x-2'>
+            <Switch
+              v-model='fuzzy'
+              id='fuzzy-search'
+            />
+            <Label for='fuzzy-search'>Fuzzy Search</Label>
+          </div>
         </div>
 
-        <DialogFooter class='gap-2'>
+        <DialogFooter class='flex-wrap gap-2'>
           <Button
-            v-if='$router_store.searching'
-            class='w-full'
-            type='button'
-            variant='outline'
-            @click='clear'
-          >
-            Clear search
-          </Button>
-          <Button
-            class='w-full'
+            class='w-full text-sm'
             type='submit'
             :disabled='query.trim().length === 0'
           >
             <icon-magnifying-glass aria-hidden='true' />
             Search
+          </Button>
+          <Button
+            v-if='$router_store.searching'
+            class='w-full text-sm'
+            type='button'
+            variant='outline'
+            @click='clear'
+          >
+            <icon-x-circle aria-hidden='true' />
+            Clear search
           </Button>
         </DialogFooter>
       </form>
@@ -137,8 +129,8 @@
 </template>
 
 <script setup lang='ts'>
-import { get, set } from '@vueuse/core';
-import { nextTick, onMounted, onUnmounted, ref, useTemplateRef, watch } from 'vue';
+import { get, onKeyDown, set } from '@vueuse/core';
+import { nextTick, ref, useTemplateRef, watch } from 'vue';
 
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { SearchMatch } from 'enums/search_match.ts';
@@ -157,6 +149,15 @@ const match = ref<SearchMatch>(SearchMatch.ALL);
 const query = ref<string>('');
 const scope = ref<SearchScope>(SearchScope.RECURSIVE);
 
+onKeyDown(
+  (event) => event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey),
+  (event) => {
+    event.preventDefault();
+    set(open, !get(open));
+  },
+  { dedupe: true },
+);
+
 // Seed the form from the active search (or the defaults) each time it opens.
 watch(open, async (is_open) => {
   if (!is_open) return;
@@ -166,11 +167,12 @@ watch(open, async (is_open) => {
   set(query, $router_store.search_query);
   set(scope, $router_store.search_scope);
   await nextTick();
-  get(query_input)?.focus();
+  get(query_input)?.$el.focus();
 });
 
 async function submit(): Promise<void> {
   if (get(query).trim().length === 0) return;
+  set(open, false);
   await $router_store.updateSearch({
     case_sensitive: get(case_sensitive),
     fuzzy: get(fuzzy),
@@ -178,21 +180,10 @@ async function submit(): Promise<void> {
     query: get(query).trim(),
     scope: get(scope),
   });
-  set(open, false);
 }
 
 async function clear(): Promise<void> {
-  await $router_store.clearSearch();
   set(open, false);
+  await $router_store.clearSearch();
 }
-
-function onKeydown(event: KeyboardEvent): void {
-  if (event.key.toLowerCase() === 'k' && (event.metaKey || event.ctrlKey)) {
-    event.preventDefault();
-    set(open, !get(open));
-  }
-}
-
-onMounted(() => window.addEventListener('keydown', onKeydown));
-onUnmounted(() => window.removeEventListener('keydown', onKeydown));
 </script>
