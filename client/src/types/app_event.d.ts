@@ -6,6 +6,7 @@ export type AppEvent = {
   copy_text: undefined;
   dialog_clicked: Event;
   hide_dialog: undefined;
+  link_copied: boolean;
   path_updated: PathUpdate;
   path_updating: PathUpdate;
   query_updated: QueryParamValue[];

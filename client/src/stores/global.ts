@@ -11,6 +11,9 @@ const MAX_SCROLL_OFFSETS = 50;
 export const useStore = defineStore('global', () => {
   /*-- State --*/
   const file_highlight_result = ref<FileHighlightResult>();
+  // Name of a direct-linked entry that failed to resolve; store state (rather
+  // than route state) so the banner survives the redirect back to the root.
+  const linked_entry_error = ref<string | undefined>();
   const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
   const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
   const preview_markdown_rendered = useLocalStorage<boolean>('preview_markdown_rendered', true);
@@ -37,6 +40,14 @@ export const useStore = defineStore('global', () => {
     set(preview_text_wrapped, !get<boolean>(preview_text_wrapped));
   }
 
+  function clearLinkedEntryError(): void {
+    set(linked_entry_error, undefined);
+  }
+
+  function setLinkedEntryError(name: string): void {
+    set(linked_entry_error, name);
+  }
+
   function getScrollOffset(path: string): number | undefined {
     return get(scroll_offset)[path];
   }
@@ -58,6 +69,7 @@ export const useStore = defineStore('global', () => {
   return {
     /*-- State --*/
     file_highlight_result,
+    linked_entry_error,
     preview_bg_enabled,
     preview_inline_colors_disabled,
     preview_markdown_rendered,
@@ -70,8 +82,10 @@ export const useStore = defineStore('global', () => {
     wrap_text_preview,
 
     /*-- Methods --*/
+    clearLinkedEntryError,
     getScrollOffset,
     rememberScrollOffset,
+    setLinkedEntryError,
     toggleInlineColorsPreview,
     toggleMarkdownRendered,
     togglePreviewLineWrap,

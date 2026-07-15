@@ -5,6 +5,7 @@
         v-if='entry.external_url'
         :href='entry.external_url'
         class='entry'
+        :class='{ "entry--linked": is_linked }'
         target='_blank'
       >
         <slot name='default' />
@@ -14,6 +15,7 @@
         ref='entry_ele'
         href='#'
         class='entry'
+        :class='{ "entry--linked": is_linked }'
         @click.prevent='onClick'
       >
         <slot name='default' />
@@ -23,11 +25,13 @@
         :href='`${entry.url}?download`'
         download
         class='entry'
+        :class='{ "entry--linked": is_linked }'
       >
         <slot name='default' />
       </a>
     </ContextMenuTrigger>
     <ContextMenuContent>
+      <EntryContextMenuCopyLink :entry='entry' />
       <ContextMenuItem
         as='a'
         :href='`${entry.url}?inline`'
@@ -53,7 +57,8 @@ import { get } from '@vueuse/core';
 import { computed, provide, useTemplateRef } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
-import { checkSupport, features } from 'lib/browser.ts';
+import { canPreview, heicSupported } from 'lib/entry_helpers.ts';
+import { useRouterStore } from 'stores/router.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -62,19 +67,20 @@ const { entry } = defineProps<{
 }>();
 
 const $event_bus = useEventBus();
+const $router_store = useRouterStore();
 
 const entry_ele = useTemplateRef('entry_ele');
 
-const can_preview = computed<boolean>(() => Boolean(entry.preview_type) && get(heic_check));
+const can_preview = computed<boolean>(() => canPreview(entry));
 
-const heic_check = computed<boolean>(() => {
-  const is_heic = entry.full_type.endsWith('heic');
-  return !is_heic || (is_heic && checkSupport(features.heif));
-});
+const is_linked = computed<boolean>(() =>
+  $router_store.linked !== undefined && $router_store.linked === entry.name);
 
-provide<boolean>('heic_check', get(heic_check));
+provide<boolean>('heic_check', heicSupported(entry));
 
 async function onClick(): Promise<void> {
+  // Opening a different entry's preview dismisses any active direct link.
+  if (!get(is_linked)) await $router_store.clearLinked();
   $event_bus.emit('show_dialog', entry);
   get(entry_ele)?.blur();
 }

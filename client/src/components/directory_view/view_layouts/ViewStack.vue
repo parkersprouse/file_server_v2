@@ -40,9 +40,11 @@ import RowItem from '../item_layouts/RowItem.vue';
 import type { Entry } from 'types/entry.d.ts';
 import type { Ref } from 'vue';
 
-const { entries, mode } = defineProps<{
+const { entries, mode, scrollToIndex = -1 } = defineProps<{
   entries: Entry[];
   mode: 'list' | 'row';
+  // Entry index to bring into view (the direct-linked entry; negative for none).
+  scrollToIndex?: number;
 }>();
 
 const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
@@ -80,6 +82,19 @@ const stopMarginWatch = watch(
       container.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop,
     );
     stopMarginWatch();
+  },
+  { immediate: true },
+);
+
+// Bring the direct-linked entry into view. Also depends on `scroll_margin` so
+// the scroll re-runs once the one-shot margin above resolves (the virtualizer
+// offsets its positions by it), and re-fires if a sort change moves the entry.
+watch(
+  [(): number => scrollToIndex, scroll_margin],
+  async ([index]) => {
+    if (index < 0) return;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    get(virtualizer).scrollToIndex(index, { align: 'center' });
   },
   { immediate: true },
 );

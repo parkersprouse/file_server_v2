@@ -102,4 +102,29 @@
       }
     } */
   }
+
+  /*
+   * The entry a direct link points at. Persistent while the `linked` query
+   * param is active (the preview dialog may initially cover the list, so a
+   * one-shot flash could be missed). The ring is inset for the same reason as
+   * the focus ring above: an outward ring would be painted over by the next
+   * full-bleed zebra row.
+   */
+  &.entry--linked {
+    @apply text-primary! bg-primary/10;
+
+    outline: 2px solid var(--color-primary);
+    outline-offset: -2px;
+
+    & [data-slot='card'],
+    & [data-slot='item'] {
+      @apply border-primary!;
+    }
+
+    & .entry-meta,
+    & [data-slot^='card-'],
+    & [data-slot^='item-'] {
+      @apply text-primary!;
+    }
+  }
 }

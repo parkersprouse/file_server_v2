@@ -26,7 +26,9 @@ import Icon3D from '~icons/ph/vector-three';
 
 import { EntryType } from 'enums/entry_type.ts';
 import { FileType } from 'enums/file_type.ts';
-import { stripSearchParams } from 'lib/utils.ts';
+import { QueryParam } from 'enums/query_param.ts';
+import { checkSupport, features } from 'lib/browser.ts';
+import { stripTransientParams } from 'lib/utils.ts';
 
 // import type { SortDir } from 'enums/sort_dir.ts';
 // import type { SortKey } from 'enums/sort_key.ts';
@@ -73,9 +75,32 @@ export function buildEntryRoute(
     // Opening a folder from search results shows that folder's contents rather
     // than re-running the search inside it.
     query: {
-      ...stripSearchParams(route.query),
+      ...stripTransientParams(route.query),
     },
   } as RouteLocationNormalizedLoadedGeneric;
+}
+
+/**
+ * An absolute, shareable URL that deep-links to an entry: its parent
+ * directory's path with the entry's name in the `linked` query param. The
+ * link survives new siblings and re-sorting, and breaks if the entry is
+ * moved or renamed.
+ */
+export function buildEntryLink(entry: Entry): string {
+  // Encode per segment so the `/` separators are preserved (see `toFileUrl`).
+  const parent = entryLocation(entry)
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  return `${location.origin}${parent}?${QueryParam.LINKED}=${encodeURIComponent(entry.name)}`;
+}
+
+/**
+ * Whether an entry's preview dialog can be opened. Single source of truth for
+ * both clicking a file entry and auto-opening a direct-linked file.
+ */
+export function canPreview(entry: Entry): boolean {
+  return Boolean(entry.preview_type) && heicSupported(entry);
 }
 
 /**
@@ -85,6 +110,12 @@ export function buildEntryRoute(
 export function entryLocation(entry: Entry): string {
   const index = entry.path.lastIndexOf('/');
   return index <= 0 ? '/' : entry.path.slice(0, index);
+}
+
+/** HEIC images are only previewable in browsers that can decode HEIF. */
+export function heicSupported(entry: Entry): boolean {
+  const is_heic = entry.full_type.endsWith('heic');
+  return !is_heic || checkSupport(features.heif);
 }
 
 export function fileTypeToIcon(type: FileType | EntryType): FunctionalComponent {

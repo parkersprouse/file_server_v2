@@ -3,6 +3,7 @@ export enum QueryParam {
   DIR = 'dir',
   FUZZY = 'fuzzy',
   KEY = 'key',
+  LINKED = 'linked',
   MATCH = 'match',
   SCOPE = 'scope',
   SEARCH = 'search',

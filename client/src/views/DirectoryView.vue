@@ -11,6 +11,10 @@
       top: toolbar_height,
     }'
   >
+    <LinkedEntryBanner
+      v-if='$store.linked_entry_error'
+      :name='$store.linked_entry_error'
+    />
     <SearchBanner
       v-if='$router_store.searching && !error'
       :count='entries?.length'
@@ -25,23 +29,36 @@
           active: transitioning,
         }'
       />
-      <DirectoryContent :entries='entries' />
+      <DirectoryContent
+        :entries='entries'
+        :scroll-to-index='linked_index'
+      />
     </template>
   </main>
 
   <PreviewDialog :entries='entries' />
+
+  <div
+    v-if='link_copy_status !== undefined'
+    role='status'
+    class='copy-chip'
+  >
+    {{ link_copy_status ? "Link copied" : "Copy failed" }}
+  </div>
 </template>
 
 <script setup lang='ts'>
 import { get, set } from '@vueuse/core';
+import { isAxiosError } from 'axios';
 import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
 import { FileType } from 'enums/file_type.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
+import { canPreview, isFile } from 'lib/entry_helpers.ts';
 import { http } from 'lib/http.ts';
 import { directory_cache } from 'lib/request_cache.ts';
 import { sortEntries } from 'lib/sort.ts';
@@ -56,6 +73,7 @@ import type { RouteLocationNormalizedGeneric } from 'vue-router';
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $event_bus = useEventBus();
 const $route = useRoute();
+const $router = useRouter();
 const $router_store = useRouterStore();
 const $store = useStore();
 
@@ -69,7 +87,21 @@ const error = ref<boolean>(false);
 const entries = ref<Entry[]>();
 const transitioning = ref<boolean>(false);
 
+// The `linked` value we've already auto-previewed, so refetches can't re-open
+// a preview dialog the user has closed.
+const auto_previewed = ref<string>();
+
+const link_copy_status = ref<boolean>();
+let link_copy_timer: ReturnType<typeof setTimeout> | undefined;
+
 const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
+
+// Index of the direct-linked entry in the (sorted) listing, or -1. Inert
+// during a search so a same-named search result can't be mistaken for it.
+const linked_index = computed<number>(() => {
+  if (!$router_store.linked || $router_store.searching) return -1;
+  return (get(entries) ?? []).findIndex((entry) => entry.name === $router_store.linked);
+});
 
 async function getEntries(): Promise<void> {
   try {
@@ -79,6 +111,7 @@ async function getEntries(): Promise<void> {
     const cached_data = directory_cache.get(path);
     if (cached_data) {
       processEntries(cached_data as Entry[]);
+      await handleLinkedEntry();
       return;
     }
 
@@ -87,6 +120,7 @@ async function getEntries(): Promise<void> {
     if (pending) {
       const cached = await pending;
       processEntries(cached as Entry[]);
+      await handleLinkedEntry();
       return;
     }
 
@@ -100,8 +134,16 @@ async function getEntries(): Promise<void> {
 
     directory_cache.set(path, res.data);
     processEntries(res.data);
-  } catch {
+    await handleLinkedEntry();
+  } catch (err) {
     if (entries_abort_controller.signal.aborted) return;
+    // A dead direct link (its parent directory is gone) redirects home with a
+    // banner; any other failure keeps the normal error state.
+    const linked = $router_store.linked;
+    if (linked && isAxiosError(err) && err.response?.status === 404) {
+      await redirectLinkedNotFound(linked);
+      return;
+    }
     set(error, true);
   }
 }
@@ -128,14 +170,56 @@ function processEntries(data: Entry[]): void {
   set(entries, sortEntries(results, $router_store.key, $router_store.dir));
 }
 
-function handleBeforeNavigate(_to: RouteLocationNormalizedGeneric, _from: RouteLocationNormalizedGeneric): void {
+/**
+ * Resolve an active direct link against the loaded listing: auto-open the
+ * preview when it points at a previewable file, or redirect home with a
+ * banner when it points at nothing. Scroll/highlight are handled reactively
+ * off `linked_index` / the `linked` param.
+ */
+async function handleLinkedEntry(): Promise<void> {
+  const linked = $router_store.linked;
+  if (!linked || $router_store.searching) return;
+
+  const target = get(entries)?.find((entry) => entry.name === linked);
+  if (!target) {
+    await redirectLinkedNotFound(linked);
+    return;
+  }
+
+  if (get(auto_previewed) === linked) return;
+  set(auto_previewed, linked);
+  // Non-previewable and external-URL files get scroll + highlight only; never
+  // auto-download or auto-open an external site.
+  if (isFile(target) && !target.external_url && canPreview(target)) {
+    await $event_bus.emit('show_dialog', target);
+  }
+}
+
+async function redirectLinkedNotFound(name: string): Promise<void> {
+  await $router.replace({
+    path: '/',
+    query: {},
+  });
+  // Set after the redirect so `handleBeforeNavigate` doesn't clear it mid-flight.
+  $store.setLinkedEntryError(name);
+  // When the dead link pointed at the root itself the path doesn't change, so
+  // no `path_updated` fires to reset the transition cover — do it explicitly.
+  set(transitioning, false);
+}
+
+function handleBeforeNavigate(to: RouteLocationNormalizedGeneric, from: RouteLocationNormalizedGeneric): void {
   const content = get(main_content_wrapper);
   if (content) $store.rememberScrollOffset($route.path, content.scrollTop);
+
+  // Leaving the directory dismisses the dead-link banner.
+  if (to.path !== from.path) $store.clearLinkedEntryError();
 
   set(transitioning, true);
 }
 
 async function setScrollPosition(): Promise<void> {
+  // The direct-linked entry owns the scroll position while active.
+  if ($router_store.linked) return;
   // Use requestAnimationFrame for more reliable scroll restoration
   await new Promise((resolve) => requestAnimationFrame(resolve));
   const content = get(main_content_wrapper);
@@ -150,8 +234,9 @@ onMounted(async () => {
 
   const sort_param_keys = [...Object.keys(SortKey), ...Object.keys(SortDir)];
 
-  await getEntries();
-
+  // Subscribe before the initial fetch: a dead direct link redirects to the
+  // root from within `getEntries`, and the resulting `path_updated` must be
+  // heard for the root listing to load.
   get(event_unsubs).push(
     $event_bus.on('path_updating', ({ data: { to } }) => {
       if ($route.path !== to?.path && !entries_abort_controller.signal.aborted) {
@@ -184,11 +269,20 @@ onMounted(async () => {
     $event_bus.on('search_updated', async () => {
       await getEntries();
     }),
+
+    $event_bus.on('link_copied', ({ data: copied }): void => {
+      set(link_copy_status, copied);
+      clearTimeout(link_copy_timer);
+      link_copy_timer = setTimeout(() => set(link_copy_status, undefined), 2000);
+    }),
   );
+
+  await getEntries();
 });
 
 onUnmounted(() => {
   $router_store.removeBeforeCallback(handleBeforeNavigate);
+  clearTimeout(link_copy_timer);
   for (const unsub of get(event_unsubs)) unsub();
 });
 </script>
@@ -206,5 +300,10 @@ main {
       @apply fixed block;
     }
   }
+}
+
+.copy-chip {
+  @apply fixed bottom-6 left-1/2 -translate-x-1/2 z-10001 px-3 py-1.5 text-sm
+         rounded-md border border-border bg-background shadow-md;
 }
 </style>

@@ -20,8 +20,8 @@ export function buildPath(
   route: RouteLocationNormalizedLoadedGeneric,
 ): Breadcrumb[] {
   const length = parts.length - 1;
-  // Navigating a breadcrumb leaves the active search behind.
-  const query = formatQuery(stripSearchParams(route.query));
+  // Navigating a breadcrumb leaves the active search / direct link behind.
+  const query = formatQuery(stripTransientParams(route.query));
   return parts.map((part, index) => ({
     label: part,
     path: index < length ? `/${parts.slice(0, index + 1).join('/')}${query}` : undefined,
@@ -42,25 +42,30 @@ export function formatQuery(query: LocationQuery): string {
   return Object.keys(query).length > 0 ? `?${stringifyQuery(query)}` : '';
 }
 
-const SEARCH_QUERY_PARAMS: string[] = [
+const TRANSIENT_QUERY_PARAMS: string[] = [
   QueryParam.CASE,
   QueryParam.FUZZY,
+  QueryParam.LINKED,
   QueryParam.MATCH,
   QueryParam.SCOPE,
   QueryParam.SEARCH,
 ];
 
 /**
- * Drop the search-related params from a route query, so links built while a
- * search is active (breadcrumbs, folder results, back button) land on the
- * target directory's plain listing instead of re-running the search there.
+ * Drop the transient params (search state, direct-link target) from a route
+ * query, so links built while they're active (breadcrumbs, folder results,
+ * back button) land on the target directory's plain listing instead of
+ * re-running the search / re-activating the direct link there.
  */
-export function stripSearchParams(query: LocationQuery): LocationQuery {
-  return Object.fromEntries(Object.entries(query).filter(([param]) => !SEARCH_QUERY_PARAMS.includes(param)));
+export function stripTransientParams(query: LocationQuery): LocationQuery {
+  return Object.fromEntries(Object.entries(query).filter(([param]) => !TRANSIENT_QUERY_PARAMS.includes(param)));
 }
 
 export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string {
-  return `/${trim(route.path)}${formatQuery(route.query)}`;
+  // The direct-link param is resolved entirely client-side; keep it out of the
+  // server request URL (and thus the directory cache key).
+  const { [QueryParam.LINKED]: _linked, ...query } = route.query;
+  return `/${trim(route.path)}${formatQuery(query)}`;
 }
 
 export function toFileUrl(value: Entry | string): string {
@@ -104,6 +109,39 @@ export function capitalize(str: string, lower_remainder: boolean = true): string
 // duplicate of the tailwind function that merges static CSS classes with dynamic ones
 export function cn(...inputs: ClassValue[]): string {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Copy a string to the clipboard, returning whether it succeeded.
+ * `navigator.clipboard` only exists in secure contexts, and this app is
+ * commonly served over plain-HTTP LAN origins, so the `execCommand` fallback
+ * is load-bearing — it must run synchronously within the user gesture.
+ */
+export async function copyText(text: string): Promise<boolean> {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- absent on insecure (plain-HTTP) origins
+  if (navigator.clipboard) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.append(textarea);
+  textarea.select();
+  let copied: boolean;
+  try {
+    copied = document.execCommand('copy');
+  } catch {
+    copied = false;
+  }
+  textarea.remove();
+  return copied;
 }
 
 export async function sleep(ms: number): Promise<void> {
