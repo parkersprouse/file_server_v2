@@ -39,6 +39,12 @@ export const useRouterStore = defineStore('router', () => {
 
   const key = computed<SortKey>(() => validate($route.query.key, SortKey, SortKey.NAME));
 
+  // The name of the entry a direct link points at, within the routed directory.
+  const linked = computed<string | undefined>(() => {
+    const param = $route.query[QueryParam.LINKED];
+    return typeof param === 'string' && param.length > 0 ? param : undefined;
+  });
+
   const search_query = computed<string>(() => {
     const param = $route.query[QueryParam.SEARCH];
     return typeof param === 'string' ? param : '';
@@ -93,6 +99,29 @@ export const useRouterStore = defineStore('router', () => {
       });
       await $event_bus.emit('query_updated', Object.values(patches));
     } catch { /**/ }
+  }
+
+  // `pushQuery`'s twin for query changes that shouldn't add a history entry.
+  async function replaceQuery(patches: Record<string, QueryParamValue>): Promise<void> {
+    try {
+      await $router.replace({
+        query: {
+          ...$route.query,
+          ...patches,
+        },
+      });
+      await $event_bus.emit('query_updated', Object.values(patches));
+    } catch { /**/ }
+  }
+
+  /**
+   * Drop the active direct-link param, if any. Uses `replaceQuery` so
+   * dismissing the link is not a history entry, while still emitting
+   * `query_updated` (which resets DirectoryView's transition cover).
+   */
+  async function clearLinked(): Promise<void> {
+    if (!get(linked)) return;
+    await replaceQuery({ [QueryParam.LINKED]: undefined });
   }
 
   async function updateSorting(new_dir: SortDir, new_key: SortKey): Promise<void> {
@@ -174,6 +203,7 @@ export const useRouterStore = defineStore('router', () => {
     breadcrumbs,
     dir,
     key,
+    linked,
     search_case_sensitive,
     search_fuzzy,
     search_match,
@@ -185,6 +215,7 @@ export const useRouterStore = defineStore('router', () => {
     /*-- Functions --*/
     addAfterCallback,
     addBeforeCallback,
+    clearLinked,
     clearSearch,
     removeAfterCallback,
     removeBeforeCallback,

@@ -7,7 +7,9 @@
       <icon-magnifying-glass aria-hidden='true' class='shrink-0 size-4 text-muted-foreground' />
       <span class='truncate'>
         <!-- explicit `{{ " " }}` spaces: whitespace between tags is condensed away -->
-        <template v-if='count !== undefined'>{{ count }} {{ count === 1 ? "result" : "results" }} for{{ " " }}</template>
+        <template
+          v-if='count !== undefined'
+        >{{ count }} {{ count === 1 ? "result" : "results" }} for{{ " " }}</template>
         <template v-else>Searching for{{ " " }}</template>
         <strong>&ldquo;{{ $router_store.search_query }}&rdquo;</strong>{{ " " }}{{ scope_label }}
       </span>

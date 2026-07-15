@@ -2,6 +2,11 @@
   <TooltipProvider>
     <a href='#main-content' class='skip-link'>Skip to main content</a>
     <RouterView />
+    <Toaster
+      position='top-right'
+      rich-colors
+      :theme='$is_dark ? "dark" : "light"'
+    />
   </TooltipProvider>
 </template>
 
@@ -11,8 +16,11 @@ import { RouterView } from 'vue-router';
 
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { useDark } from 'composables/theme.ts';
+import { Toaster } from 'ui/sonner/index.ts';
 
-useDark(); // Load the locally saved theme, if there is one
+// Load the locally saved theme, if there is one. The app's theme is a
+// manually toggled class, so the Toaster follows it rather than `system`.
+const $is_dark = useDark();
 
 const $is_mobile = useIsMobile();
 

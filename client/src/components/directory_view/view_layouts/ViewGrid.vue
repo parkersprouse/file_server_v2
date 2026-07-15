@@ -44,8 +44,10 @@ import type { Ref } from 'vue';
 const GAP_PX = 16;
 const GRID_ITEM_ESTIMATE_HEIGHT = 200;
 
-const { entries } = defineProps<{
+const { entries, scrollToIndex = -1 } = defineProps<{
   entries: Entry[];
+  // Entry index to bring into view (the direct-linked entry; negative for none).
+  scrollToIndex?: number;
 }>();
 
 const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
@@ -100,6 +102,20 @@ const stopMarginWatch = watch(
       container.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop,
     );
     stopMarginWatch();
+  },
+  { immediate: true },
+);
+
+// Bring the direct-linked entry's row into view (the virtualizer works in
+// rows here, so the entry index maps to `floor(index / columns)`). Also
+// depends on `scroll_margin` so the scroll re-runs once the one-shot margin
+// above resolves, and re-fires if a sort change moves the entry.
+watch(
+  [(): number => scrollToIndex, scroll_margin],
+  async ([index]) => {
+    if (index < 0) return;
+    await new Promise((resolve) => requestAnimationFrame(resolve));
+    get(virtualizer).scrollToIndex(Math.floor(index / get(columns)), { align: 'center' });
   },
   { immediate: true },
 );
