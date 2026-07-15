@@ -10,7 +10,8 @@
       </RouterLink>
     </ContextMenuTrigger>
     <ContextMenuContent>
-      <EntryContextMenuCopyLink :entry='entry' />
+      <EntryContextMenuItemCopyLink :entry='entry' />
+      <EntryContextMenuItemNewTab :href='entry.path' />
     </ContextMenuContent>
   </ContextMenu>
 </template>
@@ -29,6 +30,5 @@ const { entry } = defineProps<{
 
 const $router_store = useRouterStore();
 
-const is_linked = computed<boolean>(() =>
-  $router_store.linked !== undefined && $router_store.linked === entry.name);
+const is_linked = computed<boolean>(() => $router_store.linked !== undefined && $router_store.linked === entry.name);
 </script>

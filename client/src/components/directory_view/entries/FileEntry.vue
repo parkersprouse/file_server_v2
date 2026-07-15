@@ -31,15 +31,8 @@
       </a>
     </ContextMenuTrigger>
     <ContextMenuContent>
-      <EntryContextMenuCopyLink :entry='entry' />
-      <ContextMenuItem
-        as='a'
-        :href='`${entry.url}?inline`'
-        target='_blank'
-      >
-        <icon-arrow-square-out />
-        Open in New Tab
-      </ContextMenuItem>
+      <EntryContextMenuItemCopyLink :entry='entry' />
+      <EntryContextMenuItemNewTab :href='`${entry.url}?inline`' />
       <ContextMenuItem
         as='a'
         :href='`${entry.url}?download`'
