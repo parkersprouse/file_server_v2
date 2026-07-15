@@ -214,6 +214,7 @@ declare module 'vue' {
     SelectValue: typeof import('./src/components/ui/select/SelectValue.vue')['default']
     Separator: typeof import('./src/components/ui/separator/Separator.vue')['default']
     Skeleton: typeof import('./src/components/ui/skeleton/Skeleton.vue')['default']
+    Sonner: typeof import('./src/components/ui/sonner/Sonner.vue')['default']
     SortSelector: typeof import('./src/components/nav/SortSelector.vue')['default']
     SortToggles: typeof import('./src/components/nav/SortToggles.vue')['default']
     Spinner: typeof import('./src/components/ui/spinner/Spinner.vue')['default']

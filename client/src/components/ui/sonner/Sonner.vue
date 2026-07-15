@@ -1,17 +1,18 @@
 <script lang="ts" setup>
-import {
-  CircleCheckIcon,
-  InfoIcon,
-  TriangleAlertIcon,
-  OctagonXIcon,
-  PhCircleNotch,
-  PhX,
-} from '@phosphor-icons/vue';
-
+// The registry template imports these icons from `@phosphor-icons/vue`; this
+// project sources phosphor icons through unplugin-icons instead.
+import CircleCheckIcon from "~icons/ph/check-circle"
+import PhCircleNotch from "~icons/ph/circle-notch"
+import InfoIcon from "~icons/ph/info"
+import TriangleAlertIcon from "~icons/ph/warning"
+import PhX from "~icons/ph/x"
+import OctagonXIcon from "~icons/ph/x-circle"
 
 import type { ToasterProps } from "vue-sonner"
 import { reactiveOmit } from "@vueuse/core"
 import { Toaster as Sonner } from "vue-sonner"
+// vue-sonner 2.x no longer injects its styles automatically.
+import "vue-sonner/style.css"
 import { cn } from "@/lib/utils"
 
 const props = defineProps<ToasterProps>()

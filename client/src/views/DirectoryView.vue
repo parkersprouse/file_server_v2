@@ -37,14 +37,6 @@
   </main>
 
   <PreviewDialog :entries='entries' />
-
-  <div
-    v-if='link_copy_status !== undefined'
-    role='status'
-    class='copy-chip'
-  >
-    {{ link_copy_status ? "Link copied" : "Copy failed" }}
-  </div>
 </template>
 
 <script setup lang='ts'>
@@ -90,9 +82,6 @@ const transitioning = ref<boolean>(false);
 // The `linked` value we've already auto-previewed, so refetches can't re-open
 // a preview dialog the user has closed.
 const auto_previewed = ref<string>();
-
-const link_copy_status = ref<boolean>();
-let link_copy_timer: ReturnType<typeof setTimeout> | undefined;
 
 const toolbar_height = computed<string>(() => `${$store.toolbar_height ?? 0}px`);
 
@@ -269,12 +258,6 @@ onMounted(async () => {
     $event_bus.on('search_updated', async () => {
       await getEntries();
     }),
-
-    $event_bus.on('link_copied', ({ data: copied }): void => {
-      set(link_copy_status, copied);
-      clearTimeout(link_copy_timer);
-      link_copy_timer = setTimeout(() => set(link_copy_status, undefined), 2000);
-    }),
   );
 
   await getEntries();
@@ -282,7 +265,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   $router_store.removeBeforeCallback(handleBeforeNavigate);
-  clearTimeout(link_copy_timer);
   for (const unsub of get(event_unsubs)) unsub();
 });
 </script>
@@ -300,10 +282,5 @@ main {
       @apply fixed block;
     }
   }
-}
-
-.copy-chip {
-  @apply fixed bottom-6 left-1/2 -translate-x-1/2 z-10001 px-3 py-1.5 text-sm
-         rounded-md border border-border bg-background shadow-md;
 }
 </style>
