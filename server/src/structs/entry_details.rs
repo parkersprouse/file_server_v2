@@ -326,7 +326,21 @@ impl EntryDetails {
     // Strip only the leading root prefix (on path-component boundaries) rather
     // than every occurrence of the root string anywhere in the path.
     let relative = path.strip_prefix(root_dir_path).unwrap_or(path);
-    format!("/{}", relative.to_str().unwrap_or("").trim_matches('/'))
+    // Decode lossily rather than with `to_str()`: a single non-UTF-8 component
+    // (possible on external/removable drives) would otherwise make the whole
+    // path `None` and collapse to "/", mislabeling every entry in the subtree
+    // and breaking their links. `to_string_lossy` degrades just the offending
+    // name (a U+FFFD; its own link may not resolve) while keeping the path
+    // structure intact, and is an exact no-op for valid UTF-8.
+    //
+    // URL paths always use '/'. On Windows the native separator is '\', so
+    // normalize the platform separator to '/' — otherwise a nested entry would
+    // serialize as e.g. `/videos\clip.mp4`, which the client (splitting on '/')
+    // reads as a single root-level segment. This is a no-op on Unix, where '/'
+    // is already the separator and a literal '\' is a valid filename character
+    // that must be left untouched.
+    let relative = relative.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/");
+    format!("/{}", relative.trim_matches('/'))
   }
 }
 
