@@ -130,13 +130,34 @@ export async function copyText(text: string): Promise<boolean> {
 
   const textarea = document.createElement('textarea');
   textarea.value = text;
+  // `readOnly` keeps the on-screen keyboard from popping up on mobile; the
+  // element is still selectable/copyable. Park it off-screen rather than at
+  // `opacity: 0` — some engines refuse to copy from a fully transparent node.
+  textarea.readOnly = true;
+  textarea.contentEditable = 'true';
   textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
+  textarea.style.left = '-9999px';
+  textarea.style.top = '0';
   document.body.append(textarea);
+
+  // iOS WebKit ignores `textarea.select()` on a non-focused element and copies
+  // an *empty* selection — `execCommand` then returns `true`, producing a false
+  // success. Establishing an explicit Range + `setSelectionRange` is what makes
+  // the selection stick there. `select()` first covers the desktop/Android path.
+  textarea.focus();
   textarea.select();
+  const range = document.createRange();
+  range.selectNodeContents(textarea);
+  const selection = window.getSelection();
+  selection?.removeAllRanges();
+  selection?.addRange(range);
+  textarea.setSelectionRange(0, text.length);
+
   let copied: boolean;
   try {
-    copied = document.execCommand('copy');
+    // Guard against the empty-selection false positive above: even if
+    // `execCommand` reports success, treat a collapsed selection as a failure.
+    copied = selection !== null && !selection.isCollapsed && document.execCommand('copy');
   } catch {
     copied = false;
   }
