@@ -2,6 +2,10 @@
 log_level = "info"
 # The port to run the server on
 port = 8100
+# The interface to bind the server to. Defaults to all interfaces ("0.0.0.0").
+# When running behind the repo's TLS-terminating Caddyfile (`pnpm run release`),
+# bind to loopback so the proxy is the only way in from the network:
+# address = "127.0.0.1"
 # The absolute system path to the directory that will be the file browser root directory
 root_dir = "/my/files"
 # Networks (CIDR) or bare IPs whose clients are allowed through the source-IP

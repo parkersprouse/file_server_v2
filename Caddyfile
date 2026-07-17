@@ -1,0 +1,70 @@
+# Production front end for the Web File Browser (`pnpm run release`).
+#
+# Caddy terminates TLS for BOTH halves of the app:
+#
+#   browser ── https://<host>:8080 ──> Caddy ── static files ──> client/dist
+#   browser ── https://<host>:8443 ──> Caddy ── plain HTTP ────> actix on 127.0.0.1:8100
+#
+# Both must be HTTPS together: the client builds its API base URL from
+# `location.protocol` + `location.hostname` + `server_port` (client/src/lib/http.ts),
+# so an HTTPS page calls an HTTPS API on the same hostname. For a release
+# deployment, set `server_port = 8443` in client/src/config.toml before building
+# (dev keeps pointing straight at the actix port).
+#
+# Ports are overridable via environment variables:
+#   WEB_FILE_BROWSER_CLIENT_PORT    HTTPS port for the SPA            (default 8080)
+#   WEB_FILE_BROWSER_API_PORT       HTTPS port for the API            (default 8443)
+#   WEB_FILE_BROWSER_UPSTREAM_PORT  actix's own port (`port` in server/config.toml,
+#                                   default 8100)
+#
+# Note: the actix source-IP gate sees every proxied request as coming from
+# 127.0.0.1, so it no longer filters network clients. Bind actix to loopback
+# (`address = "127.0.0.1"` in server/config.toml) so this proxy is the only way
+# in from the network, and keep these listeners on a trusted LAN.
+
+{
+	# Keep the CA and issued certs in the repo (gitignored) rather than wherever
+	# $XDG_DATA_HOME happens to resolve to, so the CA — and therefore every
+	# device's one-time trust of it — survives regardless of which user/environment
+	# runs `pnpm run release`. Path is relative to Caddy's working directory, which
+	# is the repo root (see the `client:release` script in package.json).
+	storage file_system {
+		root ./.caddy
+	}
+
+	# Issue certificates from Caddy's built-in local CA instead of a public ACME
+	# CA — this is a LAN deployment with no public domain. Each device that
+	# browses the app must trust that CA's root once:
+	#   - on this machine: `caddy trust` (or it is installed automatically when
+	#     Caddy has permission to do so)
+	#   - on other devices: import the root certificate from
+	#     ./.caddy/pki/authorities/local/root.crt
+	local_certs
+}
+
+# ---- Client: the built SPA, replacing `serve` ----
+https://:{$WEB_FILE_BROWSER_CLIENT_PORT:8080} {
+	# Mint a certificate for whatever name the browser used (LAN IP, mDNS name,
+	# localhost, ...) at handshake time, so no hostnames are hardcoded here.
+	tls internal {
+		on_demand
+	}
+
+	root * ./client/dist
+	encode zstd gzip
+
+	# SPA fallback: vue-router owns the path space (equivalent of `serve --single`).
+	try_files {path} /index.html
+	file_server
+}
+
+# ---- API: TLS in front of the Rust server ----
+https://:{$WEB_FILE_BROWSER_API_PORT:8443} {
+	tls internal {
+		on_demand
+	}
+
+	# The original Host header is passed through (Caddy's default), which the
+	# server's Host allowlist / DNS-rebinding guard relies on.
+	reverse_proxy 127.0.0.1:{$WEB_FILE_BROWSER_UPSTREAM_PORT:8100}
+}
