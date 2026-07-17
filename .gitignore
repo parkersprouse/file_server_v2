@@ -34,3 +34,6 @@ coverage
 # Config
 .env
 config.toml
+
+# Caddy's local CA + issued certs (see Caddyfile's `storage` block)
+.caddy

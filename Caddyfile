@@ -23,15 +23,22 @@
 # in from the network, and keep these listeners on a trusted LAN.
 
 {
+	# Keep the CA and issued certs in the repo (gitignored) rather than wherever
+	# $XDG_DATA_HOME happens to resolve to, so the CA — and therefore every
+	# device's one-time trust of it — survives regardless of which user/environment
+	# runs `pnpm run release`. Path is relative to Caddy's working directory, which
+	# is the repo root (see the `client:release` script in package.json).
+	storage file_system {
+		root ./.caddy
+	}
+
 	# Issue certificates from Caddy's built-in local CA instead of a public ACME
 	# CA — this is a LAN deployment with no public domain. Each device that
 	# browses the app must trust that CA's root once:
 	#   - on this machine: `caddy trust` (or it is installed automatically when
 	#     Caddy has permission to do so)
 	#   - on other devices: import the root certificate from
-	#     $XDG_DATA_HOME/caddy/pki/authorities/local/root.crt
-	#     (~/.local/share/caddy/... by default; `caddy environment` prints the
-	#     exact data directory as XDG_DATA_HOME)
+	#     ./.caddy/pki/authorities/local/root.crt
 	local_certs
 }
 
