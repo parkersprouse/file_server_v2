@@ -22,10 +22,12 @@ Run from the repo root unless noted.
 pnpm start              # dev: client (vite --host) + server (cargo run) together
 pnpm run client:dev     # dev: client only
 pnpm run server:dev     # dev: server only (cargo run)
-pnpm run release        # prod: build client + Caddy (HTTPS) + server in release — requires a system `caddy`
+pnpm run release        # prod: build client + Caddy (HTTPS) + server in release — needs bin/caddy-l4-* prebuilt (see below)
 ```
 
 **Production serving is HTTPS via Caddy** (root `Caddyfile`): Caddy serves `client/dist` on :8080 and TLS-terminates the API on :8443, reverse-proxying to actix on 127.0.0.1:8100 (ports overridable via `WEB_FILE_BROWSER_CLIENT_PORT` / `WEB_FILE_BROWSER_API_PORT` / `WEB_FILE_BROWSER_UPSTREAM_PORT`). Certificates come from Caddy's internal CA (`local_certs` + on-demand issuance), so each browsing device must trust that CA's root once. Both halves must be HTTPS together because the client derives its API base URL from `location.protocol` — for a release build set `server_port = 8443` in `client/src/config.toml`; dev (`pnpm start`) bypasses Caddy entirely and keeps `server_port` = the actix port. Behind the proxy the source-IP gate sees only 127.0.0.1, so set `address = "127.0.0.1"` in `server/config.toml` to make the proxy the only network entry point.
+
+**The client port also accepts plain HTTP and redirects to HTTPS**, on the same port number — this needs a **custom Caddy build** (stock `caddy` can't do it: its automatic HTTP->HTTPS upgrade only applies to port 443, and :8080 isn't that). The Caddyfile's `layer4` global option sniffs each connection's first bytes and routes TLS ClientHellos vs. plaintext HTTP requests to two different loopback-only backends. `pnpm run client:release` no longer calls a stock `caddy` on PATH — it runs `bin/run-caddy.mjs`, which picks `bin/caddy-l4-macos` or `bin/caddy-l4-windows.exe` by `process.platform` (a `.mjs` launcher rather than a shell conditional, since `client:release` runs under whatever shell each OS's pnpm uses — bash vs. cmd/PowerShell — and Node is the one thing both share). Those binaries are gitignored build output, not checked in: run `bin/build-caddy.sh {macos|windows|all}` to (re)build them (requires a Go toolchain; installs `xcaddy` on first run; versions are pinned inside the script). The API port (:8443) is unaffected — it keeps the simpler separate-port redirect (:8001 → :8443).
 
 Client (run inside `client/`):
 

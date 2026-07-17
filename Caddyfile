@@ -12,24 +12,57 @@
 # (dev keeps pointing straight at the actix port).
 #
 # Ports are overridable via environment variables:
-#   WEB_FILE_BROWSER_CLIENT_PORT       HTTPS port for the SPA            (default 8080)
+#   WEB_FILE_BROWSER_CLIENT_PORT       HTTPS+HTTP port for the SPA       (default 8080)
 #   WEB_FILE_BROWSER_API_PORT          HTTPS port for the API            (default 8443)
 #   WEB_FILE_BROWSER_UPSTREAM_PORT     actix's own port (`port` in server/config.toml,
 #                                      default 8100)
-#   WEB_FILE_BROWSER_CLIENT_HTTP_PORT  plain-HTTP port that redirects to the client's
-#                                      HTTPS port                        (default 8000)
 #   WEB_FILE_BROWSER_API_HTTP_PORT     plain-HTTP port that redirects to the API's
 #                                      HTTPS port                        (default 8001)
 #
-# Caddy's automatic HTTP->HTTPS upgrade only applies to sites on the default
-# port (443); since both halves here listen on custom ports, the redirects
-# below are explicit `http://` site blocks.
+# ---- Client port (:8080) speaks both HTTP and HTTPS ----
+#
+# This requires a Caddy binary built with the `layer4` plugin
+# (github.com/mholt/caddy-l4) — stock Caddy cannot do it because
+# WEB_FILE_BROWSER_CLIENT_PORT is not port 443, and Caddy's automatic
+# HTTP->HTTPS upgrade only ever applies to the default port. `layer4` instead
+# sniffs the first bytes of each connection *before* Caddy decides what to do
+# with it: a TLS ClientHello is forwarded untouched to the real HTTPS site
+# block below; a plaintext HTTP request is forwarded to a tiny internal site
+# block that just replies with a 301 to the HTTPS URL. Both backends listen
+# on 127.0.0.1-only ports that are never exposed directly — layer4 is the
+# only thing that binds the public port.
+#
+# Build the binaries with `bin/build-caddy.sh {macos|windows|all}` (versions
+# are pinned inside the script; requires a Go toolchain, installs xcaddy on
+# first run). They land at bin/caddy-l4-macos / bin/caddy-l4-windows.exe,
+# gitignored build output rather than committed. `pnpm run client:release`
+# picks the right one automatically via bin/run-caddy.mjs — it no longer
+# calls a stock `caddy` on PATH at all.
+#
+# The API port (:8443) is NOT demuxed the same way: the SPA always calls it
+# over the correct protocol already, so plain HTTP never reaches it in normal
+# use. It keeps the simpler separate-port redirect (:8001 -> :8443) instead.
 #
 # Note: the actix source-IP gate sees every proxied request as coming from
 # 127.0.0.1, so it no longer filters network clients. Bind actix to loopback
 # (`address = "127.0.0.1"` in server/config.toml) so this proxy is the only way
 # in from the network, and keep these listeners on a trusted LAN.
 {
+	# Every HTTPS site below already declares its own `tls` and is fronted by an
+	# explicit HTTP->HTTPS redirect (either the layer4 demux or a dedicated
+	# `http://` block) — without this, Caddy's auto_https also tries to open its
+	# own implicit port-80 redirect listener per site, which needs a privileged
+	# port and duplicates what we already do ourselves.
+	auto_https disable_redirects
+
+	# layer4 only proxies the TCP connection, so HTTP/3 (which runs over UDP/
+	# QUIC) can never reach the client TLS backend through it. Without this,
+	# Caddy would still advertise `alt-svc: h3=":18080"` on responses — leaking
+	# the internal loopback port for a protocol upgrade that would just fail.
+	servers 127.0.0.1:{$WEB_FILE_BROWSER_CLIENT_TLS_BACKEND_PORT:18080} {
+		protocols h1 h2
+	}
+
 	# Keep the CA and issued certs in the repo (gitignored) rather than wherever
 	# $XDG_DATA_HOME happens to resolve to, so the CA — and therefore every
 	# device's one-time trust of it — survives regardless of which user/environment
@@ -47,19 +80,38 @@
 	#   - on other devices: import the root certificate from
 	#     ./.caddy/pki/authorities/local/root.crt
 	local_certs
+
+	# Demux the client port: TLS ClientHellos go to the real HTTPS site block,
+	# plain HTTP requests go to the redirect-only site block. Both destinations
+	# are loopback-only backends, never bound on the public interface directly.
+	layer4 {
+		:{$WEB_FILE_BROWSER_CLIENT_PORT:8080} {
+			@tls tls
+			route @tls {
+				proxy 127.0.0.1:{$WEB_FILE_BROWSER_CLIENT_TLS_BACKEND_PORT:18080}
+			}
+			@http http
+			route @http {
+				proxy 127.0.0.1:{$WEB_FILE_BROWSER_CLIENT_REDIRECT_BACKEND_PORT:18081}
+			}
+		}
+	}
 }
 
-# ---- Redirects: plain HTTP -> HTTPS for both halves ----
-http://:{$WEB_FILE_BROWSER_CLIENT_HTTP_PORT:8000} {
-	redir https://{host}:{$WEB_FILE_BROWSER_CLIENT_PORT:8080}{uri} permanent
-}
-
+# ---- Redirect: plain HTTP -> HTTPS for the API half ----
 http://:{$WEB_FILE_BROWSER_API_HTTP_PORT:8001} {
 	redir https://{host}:{$WEB_FILE_BROWSER_API_PORT:8443}{uri} permanent
 }
 
 # ---- Client: the built SPA, replacing `serve` ----
-https://:{$WEB_FILE_BROWSER_CLIENT_PORT:8080} {
+# Loopback-only: reached exclusively through the layer4 proxy above, never
+# bound on the public interface. `bind` restricts the interface without
+# setting a Host matcher, so LAN clients whose Host is an IP/mDNS name (not
+# literally "127.0.0.1") still match — the layer4 proxy forwards the raw TLS
+# bytes untouched, so SNI/Host reach this block exactly as the browser sent them.
+https://:{$WEB_FILE_BROWSER_CLIENT_TLS_BACKEND_PORT:18080} {
+	bind 127.0.0.1
+
 	# Mint a certificate for whatever name the browser used (LAN IP, mDNS name,
 	# localhost, ...) at handshake time, so no hostnames are hardcoded here.
 	tls internal {
@@ -72,6 +124,13 @@ https://:{$WEB_FILE_BROWSER_CLIENT_PORT:8080} {
 	# SPA fallback: vue-router owns the path space (equivalent of `serve --single`).
 	try_files {path} /index.html
 	file_server
+}
+
+# ---- Client redirect backend: plain HTTP -> HTTPS, same public port ----
+# Loopback-only, fed exclusively by the layer4 @http route above.
+http://:{$WEB_FILE_BROWSER_CLIENT_REDIRECT_BACKEND_PORT:18081} {
+	bind 127.0.0.1
+	redir https://{host}:{$WEB_FILE_BROWSER_CLIENT_PORT:8080}{uri} permanent
 }
 
 # ---- API: TLS in front of the Rust server ----

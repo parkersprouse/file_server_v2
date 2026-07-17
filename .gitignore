@@ -37,3 +37,9 @@ config.toml
 
 # Caddy's local CA + issued certs (see Caddyfile's `storage` block)
 .caddy
+
+# Custom Caddy builds with the layer4 plugin — built locally by bin/build-caddy.sh
+# rather than committed. (The build script and its launcher stay tracked.)
+/bin/*
+!/bin/build-caddy.sh
+!/bin/run-caddy.mjs
