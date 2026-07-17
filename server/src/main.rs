@@ -101,7 +101,7 @@ async fn main() -> io::Result<()> {
           .route("", web::head().to(index_route)),
       )
   })
-  .bind(("0.0.0.0", config.port))?
+  .bind((config.address.as_str(), config.port))?
   .run()
   .await
 }

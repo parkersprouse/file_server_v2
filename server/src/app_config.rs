@@ -17,6 +17,10 @@ pub struct AppConfig {
   /// Exact `Host` header values accepted (DNS-rebinding guard). When empty, only
   /// local hosts (localhost / loopback / private IP) are accepted.
   pub allowed_hosts: Vec<String>,
+  /// Interface the listener binds to. Defaults to all interfaces; set to
+  /// `127.0.0.1` when a TLS-terminating reverse proxy (e.g. the repo's
+  /// Caddyfile) should be the only way in from the network.
+  pub address: String,
   pub log_level: LevelFilter,
   pub nonalpha_pattern: Regex,
   pub port: u16,
@@ -59,6 +63,7 @@ impl AppConfig {
       allowed_cidrs: Self::parse_allowed_cidrs(settings.get::<Vec<String>>("allowed_cidrs").ok()),
       allowed_origins: settings.get::<Vec<String>>("allowed_origins").unwrap_or_default(),
       allowed_hosts: settings.get::<Vec<String>>("allowed_hosts").unwrap_or_default(),
+      address: settings.get_string("address").unwrap_or_else(|_| "0.0.0.0".into()),
       log_level: AppConfig::parse_app_log_level(&settings.get_string("log_level").unwrap_or("info".into())),
       nonalpha_pattern: Regex::new(r"^[^A-Za-z0-9]").unwrap(),
       port: settings.get_int("port").unwrap_or(9000) as u16,

@@ -22,8 +22,10 @@ Run from the repo root unless noted.
 pnpm start              # dev: client (vite --host) + server (cargo run) together
 pnpm run client:dev     # dev: client only
 pnpm run server:dev     # dev: server only (cargo run)
-pnpm run release        # prod: build client + `serve` on :8080, server in release
+pnpm run release        # prod: build client + Caddy (HTTPS) + server in release — requires a system `caddy`
 ```
+
+**Production serving is HTTPS via Caddy** (root `Caddyfile`): Caddy serves `client/dist` on :8080 and TLS-terminates the API on :8443, reverse-proxying to actix on 127.0.0.1:8100 (ports overridable via `WEB_FILE_BROWSER_CLIENT_PORT` / `WEB_FILE_BROWSER_API_PORT` / `WEB_FILE_BROWSER_UPSTREAM_PORT`). Certificates come from Caddy's internal CA (`local_certs` + on-demand issuance), so each browsing device must trust that CA's root once. Both halves must be HTTPS together because the client derives its API base URL from `location.protocol` — for a release build set `server_port = 8443` in `client/src/config.toml`; dev (`pnpm start`) bypasses Caddy entirely and keeps `server_port` = the actix port. Behind the proxy the source-IP gate sees only 127.0.0.1, so set `address = "127.0.0.1"` in `server/config.toml` to make the proxy the only network entry point.
 
 Client (run inside `client/`):
 
