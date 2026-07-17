@@ -12,16 +12,23 @@
 # (dev keeps pointing straight at the actix port).
 #
 # Ports are overridable via environment variables:
-#   WEB_FILE_BROWSER_CLIENT_PORT    HTTPS port for the SPA            (default 8080)
-#   WEB_FILE_BROWSER_API_PORT       HTTPS port for the API            (default 8443)
-#   WEB_FILE_BROWSER_UPSTREAM_PORT  actix's own port (`port` in server/config.toml,
-#                                   default 8100)
+#   WEB_FILE_BROWSER_CLIENT_PORT       HTTPS port for the SPA            (default 8080)
+#   WEB_FILE_BROWSER_API_PORT          HTTPS port for the API            (default 8443)
+#   WEB_FILE_BROWSER_UPSTREAM_PORT     actix's own port (`port` in server/config.toml,
+#                                      default 8100)
+#   WEB_FILE_BROWSER_CLIENT_HTTP_PORT  plain-HTTP port that redirects to the client's
+#                                      HTTPS port                        (default 8000)
+#   WEB_FILE_BROWSER_API_HTTP_PORT     plain-HTTP port that redirects to the API's
+#                                      HTTPS port                        (default 8001)
+#
+# Caddy's automatic HTTP->HTTPS upgrade only applies to sites on the default
+# port (443); since both halves here listen on custom ports, the redirects
+# below are explicit `http://` site blocks.
 #
 # Note: the actix source-IP gate sees every proxied request as coming from
 # 127.0.0.1, so it no longer filters network clients. Bind actix to loopback
 # (`address = "127.0.0.1"` in server/config.toml) so this proxy is the only way
 # in from the network, and keep these listeners on a trusted LAN.
-
 {
 	# Keep the CA and issued certs in the repo (gitignored) rather than wherever
 	# $XDG_DATA_HOME happens to resolve to, so the CA — and therefore every
@@ -40,6 +47,15 @@
 	#   - on other devices: import the root certificate from
 	#     ./.caddy/pki/authorities/local/root.crt
 	local_certs
+}
+
+# ---- Redirects: plain HTTP -> HTTPS for both halves ----
+http://:{$WEB_FILE_BROWSER_CLIENT_HTTP_PORT:8000} {
+	redir https://{host}:{$WEB_FILE_BROWSER_CLIENT_PORT:8080}{uri} permanent
+}
+
+http://:{$WEB_FILE_BROWSER_API_HTTP_PORT:8001} {
+	redir https://{host}:{$WEB_FILE_BROWSER_API_PORT:8443}{uri} permanent
 }
 
 # ---- Client: the built SPA, replacing `serve` ----

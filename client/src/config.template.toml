@@ -2,4 +2,4 @@
 # - dev (`pnpm start`): the server's own port (`port` in server/config.toml)
 # - release (`pnpm run release`): Caddy's HTTPS API port (8443 unless
 #   WEB_FILE_BROWSER_API_PORT overrides it), which proxies to the server
-server_port = 8100
+server_port = 8443

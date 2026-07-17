@@ -1,13 +1,16 @@
 # [Valid options] off / error / warn / info / debug / trace
 log_level = "info"
+
 # The port to run the server on
 port = 8100
+
 # The interface to bind the server to. Defaults to all interfaces ("0.0.0.0").
 # When running behind the repo's TLS-terminating Caddyfile (`pnpm run release`),
 # bind to loopback so the proxy is the only way in from the network:
 # address = "127.0.0.1"
 # The absolute system path to the directory that will be the file browser root directory
 root_dir = "/my/files"
+
 # Networks (CIDR) or bare IPs whose clients are allowed through the source-IP
 # gate. This is a convenience filter, NOT authentication, and the immediate TCP
 # peer is used (X-Forwarded-For is not trusted). When unset, defaults to
@@ -23,3 +26,8 @@ root_dir = "/my/files"
 # local hosts (localhost / loopback / private IP) are accepted. Set this if you
 # reach the server via a custom hostname.
 # allowed_hosts = ["localhost:8100", "192.168.1.10:8100"]
+
+# The actix source-IP gate sees every proxied request as coming from 127.0.0.1,
+# so it no longer filters network clients. Bind actix to loopback by enabling this config value
+# so this proxy is the only way in from the network, and keep these listeners on a trusted LAN.
+# address = "127.0.0.1"
