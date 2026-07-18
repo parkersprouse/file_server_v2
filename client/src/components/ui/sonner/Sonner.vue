@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-// The registry template imports these icons from `@phosphor-icons/vue`; this
-// project sources phosphor icons through unplugin-icons instead.
 import CircleCheckIcon from "~icons/ph/check-circle"
 import PhCircleNotch from "~icons/ph/circle-notch"
 import InfoIcon from "~icons/ph/info"
