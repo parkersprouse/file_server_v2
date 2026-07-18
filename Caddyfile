@@ -55,12 +55,32 @@
 	# port and duplicates what we already do ourselves.
 	auto_https disable_redirects
 
-	# layer4 only proxies the TCP connection, so HTTP/3 (which runs over UDP/
-	# QUIC) can never reach the client TLS backend through it. Without this,
-	# Caddy would still advertise `alt-svc: h3=":18080"` on responses — leaking
-	# the internal loopback port for a protocol upgrade that would just fail.
 	servers 127.0.0.1:{$WEB_FILE_BROWSER_CLIENT_TLS_BACKEND_PORT:18080} {
+		# layer4 only proxies the TCP connection, so HTTP/3 (which runs over UDP/
+		# QUIC) can never reach the client TLS backend through it. Without this,
+		# Caddy would still advertise `alt-svc: h3=":18080"` on responses — leaking
+		# the internal loopback port for a protocol upgrade that would just fail.
 		protocols h1 h2
+
+		# Recover the client's *actual* destination address (e.g. a LAN IP) from
+		# the PROXY protocol header the layer4 route below attaches, instead of
+		# seeing only "127.0.0.1" (layer4's own loopback hop to this backend).
+		# This matters because most TLS clients omit SNI entirely for IP-literal
+		# destinations (SNI is defined for hostnames, not IPs) — when that
+		# happens, Caddy's on-demand issuer falls back to the connection's local
+		# address to decide what name to issue a certificate for. Without PROXY
+		# protocol, that fallback always resolves to "127.0.0.1" here (issuing a
+		# cert with no SAN for the real LAN IP, so no-SNI clients fail out to a
+		# LAN address); with it, the fallback correctly sees the original IP the
+		# browser dialed. `proxy_protocol` must come before `tls` since it reads
+		# plaintext framing at the very start of the connection.
+		listener_wrappers {
+			proxy_protocol {
+				allow 127.0.0.1/32
+				timeout 2s
+			}
+			tls
+		}
 	}
 
 	# Keep the CA and issued certs in the repo (gitignored) rather than wherever
@@ -88,7 +108,10 @@
 		:{$WEB_FILE_BROWSER_CLIENT_PORT:8080} {
 			@tls tls
 			route @tls {
-				proxy 127.0.0.1:{$WEB_FILE_BROWSER_CLIENT_TLS_BACKEND_PORT:18080}
+				proxy {
+					proxy_protocol v2
+					upstream 127.0.0.1:{$WEB_FILE_BROWSER_CLIENT_TLS_BACKEND_PORT:18080}
+				}
 			}
 			@http http
 			route @http {
