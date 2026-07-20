@@ -10,7 +10,7 @@ import { SearchScope } from 'enums/search_scope.ts';
 import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { ViewType } from 'enums/view_type.ts';
-import { breadcrumbify } from 'lib/utils.ts';
+import { SEARCH_QUERY_PARAMS, breadcrumbify } from 'lib/utils.ts';
 
 import type { Breadcrumb } from 'types/breadcrumb.d.ts';
 import type { SearchOptions } from 'types/search_options.d.ts';
@@ -64,7 +64,7 @@ export const useRouterStore = defineStore('router', () => {
 
   const view = computed({
     get: () => validate($route.query.view, ViewType, ViewType.LIST),
-    set: (new_view: ViewType) => { pushQuery({ [QueryParam.VIEW]: new_view }); },
+    set: (new_view: ViewType) => { applyQuery({ [QueryParam.VIEW]: new_view }); },
   });
 
   function addAfterCallback(callback: RouterEventCallback): void {
@@ -89,50 +89,40 @@ export const useRouterStore = defineStore('router', () => {
     if (bc.includes(callback)) set(before_callbacks, bc.filter((cb) => cb !== callback));
   }
 
-  async function pushQuery(patches: Record<string, QueryParamValue>): Promise<void> {
-    try {
-      await $router.push({
-        query: {
-          ...$route.query,
-          ...patches,
-        },
-      });
-      await $event_bus.emit('query_updated', Object.values(patches));
-    } catch { /**/ }
-  }
-
-  // `pushQuery`'s twin for query changes that shouldn't add a history entry.
-  async function replaceQuery(patches: Record<string, QueryParamValue>): Promise<void> {
-    try {
-      await $router.replace({
-        query: {
-          ...$route.query,
-          ...patches,
-        },
-      });
-      await $event_bus.emit('query_updated', Object.values(patches));
-    } catch { /**/ }
-  }
-
   /**
-   * Drop the active direct-link param, if any. Uses `replaceQuery` so
-   * dismissing the link is not a history entry, while still emitting
-   * `query_updated` (which resets DirectoryView's transition cover).
+   * Patch the current route's query. Pushes a history entry by default;
+   * `replace` swaps the current one instead (for changes that shouldn't be a
+   * back-button stop). Either way `query_updated` is emitted (which resets
+   * DirectoryView's transition cover, among other listeners).
    */
+  async function applyQuery(patches: Record<string, QueryParamValue>, replace: boolean = false): Promise<void> {
+    try {
+      const target = {
+        query: {
+          ...$route.query,
+          ...patches,
+        },
+      };
+      await (replace ? $router.replace(target) : $router.push(target));
+      await $event_bus.emit('query_updated', Object.values(patches));
+    } catch { /**/ }
+  }
+
+  /** Drop the active direct-link param, if any, without a history entry. */
   async function clearLinked(): Promise<void> {
     if (!get(linked)) return;
-    await replaceQuery({ [QueryParam.LINKED]: undefined });
+    await applyQuery({ [QueryParam.LINKED]: undefined }, true);
   }
 
   async function updateSorting(new_dir: SortDir, new_key: SortKey): Promise<void> {
-    await pushQuery({
+    await applyQuery({
       [QueryParam.DIR]: new_dir,
       [QueryParam.KEY]: new_key,
     });
   }
 
   async function updateSearch(options: SearchOptions): Promise<void> {
-    await pushQuery({
+    await applyQuery({
       // Boolean options are only present in the URL when enabled.
       [QueryParam.CASE]: options.case_sensitive ? 'true' : undefined,
       [QueryParam.FUZZY]: options.fuzzy ? 'true' : undefined,
@@ -145,13 +135,8 @@ export const useRouterStore = defineStore('router', () => {
 
   async function clearSearch(): Promise<void> {
     if (!get(searching)) return;
-    await pushQuery({
-      [QueryParam.CASE]: undefined,
-      [QueryParam.FUZZY]: undefined,
-      [QueryParam.MATCH]: undefined,
-      [QueryParam.SCOPE]: undefined,
-      [QueryParam.SEARCH]: undefined,
-    });
+    // Derived from the shared list so a new search param can't be forgotten.
+    await applyQuery(Object.fromEntries(SEARCH_QUERY_PARAMS.map((param) => [param, undefined])));
     await $event_bus.emit('search_updated');
   }
 

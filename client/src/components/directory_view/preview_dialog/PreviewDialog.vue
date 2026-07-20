@@ -134,7 +134,7 @@
 </template>
 
 <script setup lang='ts'>
-import { get, onKeyStroke, set, useMutationObserver } from '@vueuse/core';
+import { get, onKeyStroke, set, useMediaQuery, useMutationObserver } from '@vueuse/core';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -202,7 +202,7 @@ const is_resetting = ref<boolean>(false);
 let committed_this_gesture = false;
 let settle_timeout: ReturnType<typeof setTimeout> | undefined;
 
-const reduced_motion = ref<boolean>(window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+const reduced_motion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
 function motionMs(): number {
   return get(reduced_motion) ? 0 : SLIDE_MOTION_MS;
@@ -254,39 +254,46 @@ const track_style = computed<CSSProperties>(() => ({
   willChange: 'transform',
 }));
 
+// Static per preview type — built once, not per computed evaluation. Only the
+// image class varies per file (SVGs get an extra hook), handled below.
+const PREVIEW_TYPE_ATTRS: PreviewTypeAttrsMapping = {
+  [PreviewType.AUDIO]: {
+    class: 'preview-dialog--audio',
+    type: AudioPreview,
+  },
+  [PreviewType.DOCUMENT]: {
+    class: 'preview-dialog--doc',
+    type: DocumentPreview,
+  },
+  [PreviewType.IMAGE]: {
+    class: 'preview-dialog--image',
+    type: ImagePreview,
+  },
+  [PreviewType.SPREADSHEET]: {
+    class: 'preview-dialog--doc',
+    type: DocumentPreview,
+  },
+  [PreviewType.TEXT]: {
+    class: 'preview-dialog--text',
+    type: TextPreview,
+  },
+  [PreviewType.VIDEO]: {
+    class: 'preview-dialog--video',
+    type: VideoPreview,
+  },
+};
+
 const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   const file_entry = get(entry);
   if (!file_entry?.preview_type) return;
-  const mapping: PreviewTypeAttrsMapping = {
-    [PreviewType.AUDIO]: {
-      class: 'preview-dialog--audio',
-      type: AudioPreview,
-    },
-    [PreviewType.DOCUMENT]: {
-      class: 'preview-dialog--doc',
-      type: DocumentPreview,
-    },
-    [PreviewType.IMAGE]: {
-      class: [
-        'preview-dialog--image',
-        file_entry.name.endsWith('.svg') ? 'preview-dialog--svg' : '',
-      ].join(' ').trim(),
-      type: ImagePreview,
-    },
-    [PreviewType.SPREADSHEET]: {
-      class: 'preview-dialog--doc',
-      type: DocumentPreview,
-    },
-    [PreviewType.TEXT]: {
-      class: 'preview-dialog--text',
-      type: TextPreview,
-    },
-    [PreviewType.VIDEO]: {
-      class: 'preview-dialog--video',
-      type: VideoPreview,
-    },
-  };
-  return mapping[file_entry.preview_type];
+  const attrs = PREVIEW_TYPE_ATTRS[file_entry.preview_type];
+  if (file_entry.preview_type === PreviewType.IMAGE && file_entry.name.endsWith('.svg')) {
+    return {
+      ...attrs,
+      class: `${attrs.class} preview-dialog--svg`,
+    };
+  }
+  return attrs;
 });
 
 onKeyStroke('Escape', close, { dedupe: true });

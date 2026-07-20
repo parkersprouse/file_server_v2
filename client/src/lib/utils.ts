@@ -42,14 +42,20 @@ export function formatQuery(query: LocationQuery): string {
   return Object.keys(query).length > 0 ? `?${stringifyQuery(query)}` : '';
 }
 
-const TRANSIENT_QUERY_PARAMS: string[] = [
+/**
+ * The params that make up an active search. `updateSearch` pushes them into
+ * the route and `clearSearch` clears them — both derive from this list, so a
+ * new search param only needs adding here (and mapping in `updateSearch`).
+ */
+export const SEARCH_QUERY_PARAMS: string[] = [
   QueryParam.CASE,
   QueryParam.FUZZY,
-  QueryParam.LINKED,
   QueryParam.MATCH,
   QueryParam.SCOPE,
   QueryParam.SEARCH,
 ];
+
+const TRANSIENT_QUERY_PARAMS: string[] = [...SEARCH_QUERY_PARAMS, QueryParam.LINKED];
 
 /**
  * Drop the transient params (search state, direct-link target) from a route

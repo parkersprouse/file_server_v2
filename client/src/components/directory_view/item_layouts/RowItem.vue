@@ -32,38 +32,14 @@
             <icon-folder-simple aria-hidden='true' />
             <span class='truncate'>{{ entryLocation(entry) }}</span>
           </Badge>
-          <Tooltip
-            :delay-duration='500'
-            :disable-closing-trigger='true'
-            :disable-hoverable-content='true'
-            :skip-delay-duration='300'
-          >
-            <TooltipTrigger as-child>
-              <Badge
-                variant='ghost'
-                class='entry-meta entry-meta__last-modified'
-              >
-                <icon-clock-counter-clockwise />
-                {{ relative(entry.last_modified_at) }}
-              </Badge>
-            </TooltipTrigger>
-            <TooltipContent>
-              <div class='text-center'>
-                Last modified on
-                <br>
-                {{ absolute(entry.last_modified_at) }}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-          <template v-if='Boolean(entry.duration)'>
-            <Badge
-              variant='ghost'
-              class='entry-meta entry-meta__duration'
-            >
-              <icon-timer />
-              {{ entry.duration }}
-            </Badge>
-          </template>
+          <EntryModifiedBadge
+            :entry='entry'
+            variant='ghost'
+          />
+          <EntryDurationBadge
+            :entry='entry'
+            variant='ghost'
+          />
         </div>
       </ItemDescription>
     </ItemContent>
@@ -73,7 +49,6 @@
 <script setup lang='ts'>
 import { inject } from 'vue';
 
-import { absolute, relative } from 'lib/datetime.ts';
 import { entryLocation, fileTypeToIcon } from 'lib/entry_helpers.ts';
 import { useRouterStore } from 'stores/router.ts';
 

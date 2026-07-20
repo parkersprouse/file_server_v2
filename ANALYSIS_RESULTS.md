@@ -318,9 +318,20 @@ or `'a'` (partial support).
 **Recommendation:** `return version_map[range] === 'y';` inside the range
 match, mirroring the exact-match branch.
 
-### 9.10 (Low) `ViewStack` / `ViewGrid` duplicate the virtualizer wiring — 🔲 Open
+### 9.10 (Low) `ViewStack` / `ViewGrid` duplicate the virtualizer wiring — ✅ Resolved
 `client/src/components/directory_view/view_layouts/ViewStack.vue`,
-`ViewGrid.vue`
+`ViewGrid.vue`, `client/src/composables/virtualized_entries.ts` (new)
+
+> **✅ Resolved (2026-07-20):** extracted `useVirtualizedEntries()` — it owns
+> the `@tanstack/vue-virtual` setup against the injected scroll element, the
+> one-shot `scroll_margin` measurement (with its anti-jitter rationale), and
+> the direct-link scroll-into-view watch. Each layout passes its own
+> `useTemplateRef` container plus `count`/`estimateSize` getters; the grid
+> additionally passes `scrollTarget: (index) => floor(index / columns)`.
+> (The container is passed in rather than created by the composable because
+> `vue-tsc` doesn't count a template `ref` attribute as a usage of a
+> destructured binding.) Verified live in all three layouts, including a
+> `?linked=` deep link auto-scrolling/highlighting in grid view.
 
 ~60 lines are duplicated between the two: the one-shot `scroll_margin` watch
 (with its subtle anti-jitter rationale), the virtualizer options object, and
@@ -329,9 +340,16 @@ the `scrollToIndex` watch.
 **Recommendation:** Extract a `useVirtualizedEntries()` composable so the
 hard-won scroll-margin behavior is enforced in exactly one place.
 
-### 9.11 (Low) Item layouts duplicate the "last modified" tooltip badge — 🔲 Open
+### 9.11 (Low) Item layouts duplicate the "last modified" tooltip badge — ✅ Resolved
 `client/src/components/directory_view/item_layouts/ListItem.vue`,
-`RowItem.vue` (and partly `GridItem.vue`)
+`RowItem.vue`, `GridItem.vue`
+
+> **✅ Resolved (2026-07-20):** all three layouts duplicated both badges, so
+> both were extracted — `EntryModifiedBadge.vue` (the tooltip'd
+> relative/absolute badge, tooltip timing included) and
+> `EntryDurationBadge.vue`, each with a `variant` prop (`outline` default,
+> `ghost` for RowItem). ~25 lines and the `lib/datetime` imports dropped per
+> layout. Verified live: badges and tooltips render in list, rows, and grid.
 
 The tooltip'd relative/absolute "last modified" badge — including identical
 tooltip timing config — is repeated per layout.
@@ -339,8 +357,15 @@ tooltip timing config — is repeated per layout.
 **Recommendation:** Extract an `EntryModifiedBadge.vue` (and optionally a
 duration badge) so the markup and tooltip behavior stay consistent.
 
-### 9.12 (Low) `PreviewDialog` rebuilds its type mapping per evaluation; reduced-motion is sampled once — 🔲 Open
+### 9.12 (Low) `PreviewDialog` rebuilds its type mapping per evaluation; reduced-motion is sampled once — ✅ Resolved
 `client/src/components/directory_view/preview_dialog/PreviewDialog.vue`
+
+> **✅ Resolved (2026-07-20):** the mapping is now a static
+> `PREVIEW_TYPE_ATTRS` const; the `preview_type` computed just indexes it and
+> appends `preview-dialog--svg` for SVG images. `reduced_motion` is now
+> VueUse's `useMediaQuery('(prefers-reduced-motion: reduce)')`, so OS-level
+> changes take effect live. Verified: previews open per type and the gallery
+> filmstrip advances with the counter (blue.png → red.png, "2 / 2").
 
 - The `preview_type` computed rebuilds the entire six-entry
   `PreviewType → { class, component }` mapping object on every re-evaluation;
@@ -351,8 +376,16 @@ duration badge) so the markup and tooltip behavior stay consistent.
 **Recommendation:** Hoist the mapping to module scope (compute the SVG suffix
 separately); use VueUse's `useMediaQuery` for a reactive reduced-motion flag.
 
-### 9.13 (Low) `router.ts` — twin query functions and a hand-maintained search-param list — 🔲 Open
+### 9.13 (Low) `router.ts` — twin query functions and a hand-maintained search-param list — ✅ Resolved
 `client/src/stores/router.ts`, `client/src/lib/utils.ts`
+
+> **✅ Resolved (2026-07-20):** `pushQuery`/`replaceQuery` merged into one
+> `applyQuery(patches, replace = false)`. `utils.ts` now exports
+> `SEARCH_QUERY_PARAMS` (with `TRANSIENT_QUERY_PARAMS` derived as that list
+> plus `linked`), and `clearSearch` builds its patch from it — one place to
+> add a future search param. Verified live: layout switching pushes `view`,
+> search pushes its params, and clearing removes exactly the five search
+> params while preserving `view`.
 
 - `pushQuery` / `replaceQuery` are identical except for `$router.push` vs
   `.replace`.
@@ -379,8 +412,15 @@ separately); use VueUse's `useMediaQuery` for a reactive reduced-motion flag.
 **Recommendation:** Delete; rebuild `sort.ts`'s criteria list without the
 dummy element.
 
-### 9.15 (Low) `TextPreview` Prism-hook cleanup is fragile; global DOM queries — 🔲 Open
+### 9.15 (Low) `TextPreview` Prism-hook cleanup is fragile; global DOM queries — ✅ Resolved
 `client/src/components/directory_view/preview_dialog/file_viewers/TextPreview.vue`
+
+> **✅ Resolved (2026-07-20):** the `complete` hook is removed by identity
+> (`indexOf`/`splice`), the handler is renamed `postHighlightHandler`, and
+> the DOM queries are scoped — `refreshTextView` queries within `text_ele`,
+> and the handler derives its toolbar via `env.element.closest('.code-toolbar')`.
+> Verified live: markdown renders, the source toggle Prism-highlights with
+> the language tag, and the line-wrap toggle re-highlights correctly.
 
 - The `complete` hook is removed by comparing `hook.name ===
   postHightlightHandler.name` — function-name string comparison is vulnerable
@@ -403,7 +443,7 @@ queries to the component's own subtree.
 | 3 | Client correctness | Low | Low | 9.8, 9.9 — `useIsMobile` NaN breakpoint; `checkSupport` range flag |
 | 4 | Dead code | Low | Low | 🟡 9.3 ✅ / 9.14 — server dead code deleted; client deletions still open |
 | 5 | Server simplification | Low | Low | ✅ 9.2, 9.4, 9.5 — `read_file` collapse, shared resolve pipeline, minor cleanups |
-| 6 | Client refactors | Low | Med | 9.10–9.13, 9.15 — virtualizer composable, shared badges, dialog/router cleanups |
+| 6 | Client refactors | Low | Med | ✅ 9.10–9.13, 9.15 — virtualizer composable, shared badges, dialog/router cleanups |
 | 7 | Server sec | High | High | 1.1 — real authentication (still deferred by request) |
 | 8 | Server perf | Med | Med | 2.2 — lazy/persistent media metadata |
 | 9 | Payload | Low | Med | 9.6 — drop client-derivable listing fields (optional) |

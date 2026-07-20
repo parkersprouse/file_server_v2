@@ -32,9 +32,10 @@
 </template>
 
 <script setup lang='ts'>
-import { useVirtualizer } from '@tanstack/vue-virtual';
-import { get, set, useElementSize } from '@vueuse/core';
-import { computed, inject, ref, watch } from 'vue';
+import { get, useElementSize } from '@vueuse/core';
+import { computed, inject, useTemplateRef } from 'vue';
+
+import { useVirtualizedEntries } from 'composables/virtualized_entries.ts';
 
 import GridItem from '../item_layouts/GridItem.vue';
 
@@ -51,9 +52,6 @@ const { entries, scrollToIndex = -1 } = defineProps<{
 }>();
 
 const scroll_element = inject<Ref<HTMLElement | null>>('scroll_element');
-
-const container_ref = ref<HTMLElement | null>(null);
-const scroll_margin = ref<number>(0);
 
 const { width: scroll_width } = useElementSize(computed(() => get(scroll_element) ?? null));
 
@@ -76,49 +74,17 @@ const rows = computed<Entry[][]>(() => {
   return result;
 });
 
-const virtual_rows = computed(() => get(virtualizer).getVirtualItems());
+const container_ref = useTemplateRef<HTMLElement>('container_ref');
 
-const virtualizer_options = computed(() => ({
-  count: get(rows).length,
-  estimateSize: (): number => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
-  getScrollElement: (): HTMLElement | null => get(scroll_element) ?? null,
-  overscan: 3,
-  scrollMargin: get(scroll_margin),
-}));
-
-const virtualizer = useVirtualizer(virtualizer_options);
-
-// Computed once when both refs are available and never updated again.
-// scroll_margin is a static layout offset - the distance from the top of the
-// scroll element to the top of this container. It doesn't change as the user
-// scrolls, and re-computing it on every measurement cycle causes a feedback
-// loop that makes rows jitter when scrolling upward through unmeasured items.
-const stopMarginWatch = watch(
-  [container_ref, (): HTMLElement | null | undefined => get(scroll_element)],
-  ([container, scroller]) => {
-    if (!container || !scroller) return;
-    set(
-      scroll_margin,
-      container.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop,
-    );
-    stopMarginWatch();
-  },
-  { immediate: true },
-);
-
-// Bring the direct-linked entry's row into view (the virtualizer works in
-// rows here, so the entry index maps to `floor(index / columns)`). Also
-// depends on `scroll_margin` so the scroll re-runs once the one-shot margin
-// above resolves, and re-fires if a sort change moves the entry.
-watch(
-  [(): number => scrollToIndex, scroll_margin],
-  async ([index]) => {
-    if (index < 0) return;
-    await new Promise((resolve) => requestAnimationFrame(resolve));
-    get(virtualizer).scrollToIndex(Math.floor(index / get(columns)), { align: 'center' });
-  },
-  { immediate: true },
-);
+// The virtualizer works in rows here, so a direct-linked entry's index maps
+// to the row `floor(index / columns)`.
+const { scroll_margin, virtual_items: virtual_rows, virtualizer } = useVirtualizedEntries({
+  container: container_ref,
+  count: () => get(rows).length,
+  estimateSize: () => GRID_ITEM_ESTIMATE_HEIGHT + GAP_PX,
+  scrollTarget: (index) => Math.floor(index / get(columns)),
+  scrollToIndex: () => scrollToIndex,
+});
 </script>
 
 <style>

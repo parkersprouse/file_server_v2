@@ -93,12 +93,14 @@ async function highlightSource(): Promise<void> {
   prism.plugins.fileHighlight.highlight();
 }
 
-function postHightlightHandler(env: Environment): void {
-  if (env.element?.tagName.toLocaleLowerCase() !== 'code') return;
+function postHighlightHandler(env: Environment): void {
+  const element = env.element;
+  if (element?.tagName.toLocaleLowerCase() !== 'code') return;
 
-  const code_toolbar = document.querySelector('.code-toolbar');
-  const code_ele = code_toolbar?.querySelector('pre code');
-  if (code_toolbar && code_ele) {
+  // Scope to the highlighted element's own toolbar (the wrapper Prism's
+  // toolbar plugin adds around the <pre>) instead of querying the document.
+  const code_toolbar = element.closest('.code-toolbar');
+  if (code_toolbar) {
     $store.file_highlight_result = {
       inline_colors_present: code_toolbar.querySelectorAll('.inline-color').length > 0,
       language: env.language || 'none',
@@ -110,7 +112,7 @@ async function refreshTextView(): Promise<void> {
   if (get(show_rendered)) return;
   await nextTick();
   const prism = getPrism();
-  const ele = document.querySelector('pre code');
+  const ele = get(text_ele)?.querySelector('code');
   if (ele && prism) {
     prism.highlightElement(ele);
   }
@@ -127,7 +129,7 @@ onMounted(async () => {
     return;
   }
 
-  prism.hooks.add('complete', postHightlightHandler);
+  prism.hooks.add('complete', postHighlightHandler);
 
   if (get(show_rendered)) {
     await renderMarkdownView();
@@ -137,15 +139,11 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  const prism = getPrism();
-  if (prism) {
-    // prism's doesn't have a `remove` method for its hooks, so we have to do it manually
-    for (const [idx, hook] of (prism.hooks.all.complete?.entries() ?? [])) {
-      if (hook.name === postHightlightHandler.name) {
-        prism.hooks.all.complete?.splice(idx, 1);
-      }
-    }
-  }
+  // Prism has no `remove` for its hooks, so splice ours out manually — by
+  // identity, which survives minification (name comparison wouldn't).
+  const hooks = getPrism()?.hooks.all.complete;
+  const index = hooks?.indexOf(postHighlightHandler) ?? -1;
+  if (index !== -1) hooks?.splice(index, 1);
 
   for (const unsub of get(event_unsubs)) {
     unsub();
