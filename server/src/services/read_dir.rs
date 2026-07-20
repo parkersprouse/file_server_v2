@@ -4,13 +4,7 @@ use crate::{
   structs::entry_details::EntryDetails,
 };
 use actix_web::web::{self, Data};
-use futures::stream::{self, StreamExt};
 use std::{path::Path, sync::Arc};
-
-/// Maximum number of entries whose format/duration are resolved concurrently.
-/// This bounds in-flight `web::block` work (and therefore ffprobe subprocesses)
-/// so a media-heavy directory can't overwhelm the blocking thread pool.
-const ENTRY_CONCURRENCY: usize = 8;
 
 pub async fn read<P>(path: P, data: &Data<AppState>) -> AppResult<Arc<Vec<EntryDetails>>>
 where
@@ -32,14 +26,9 @@ where
     .await
     .map_err(|err| AppError::Internal(format!("Directory scan task failed: {err}")))??;
 
-  // Phase 2: resolve each entry's file format (header sniff) and media duration
-  // (ffprobe) concurrently, bounded to ENTRY_CONCURRENCY in flight, rather than
-  // sequentially blocking a worker thread on each entry in turn.
-  let output: Vec<EntryDetails> = stream::iter(raw_entries)
-    .map(|raw| EntryDetails::from_raw(raw, data))
-    .buffered(ENTRY_CONCURRENCY)
-    .collect()
-    .await;
+  // Phase 2: resolve each entry's file format (header sniff) and media
+  // duration (ffprobe), concurrently and bounded (see `resolve_all`).
+  let output = EntryDetails::resolve_all(raw_entries, data).await;
 
   // Cache the result behind an Arc so future hits are a cheap clone
   let output = Arc::new(output);

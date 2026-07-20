@@ -160,8 +160,19 @@ replace the `unwrap()`/`panic!`/`println!` with graceful `None`s; either
 implement the (trivial, INI-style) `.url` parse or drop `"url"` from
 `EXT_URL_EXTS` until it is implemented.
 
-### 9.2 (Low) `read_file::read` triplicates the open logic and hides a `read_mode_threshold` inconsistency — 🔲 Open
+### 9.2 (Low) `read_file::read` triplicates the open logic and hides a `read_mode_threshold` inconsistency — ✅ Resolved
 `server/src/services/read_file.rs`
+
+> **✅ Resolved (2026-07-20):** the `DispositionType` is now resolved first
+> (including the `Auto` header sniff) and a single open-and-configure path
+> serves all three modes. The `read_mode_threshold` question answered itself:
+> actix-files documents 0 as the **default** ("all files are read
+> asynchronously"), so the two arms setting it were no-ops and the call was
+> dropped rather than propagated. The now-unused `metadata` parameter was also
+> removed (its only use was guarding `determine_file_format` against
+> directories, which `resource_handler` already rules out — see 9.5). Verified
+> live: `Auto` yields `inline` for text and `attachment` for an unknown
+> binary; explicit `?download`/`?inline` still override.
 
 All three `DispositionKind` arms perform the same
 `NamedFile::open_async().use_etag(true).use_last_modified(true).set_content_disposition(...)`
@@ -173,9 +184,14 @@ inconsistency: `Attachment`/`Inline` set `.read_mode_threshold(0)` while
 included), then use a single open-and-configure path — and decide the
 `read_mode_threshold` question once, intentionally.
 
-### 9.3 (Low) Dead server code — 🔲 Open
+### 9.3 (Low) Dead server code — ✅ Resolved
 `server/src/app_config.rs`, `server/src/structs/entry_details.rs`,
 `server/src/lib/error.rs`
+
+> **✅ Resolved (2026-07-20):** all three deleted — `nonalpha_pattern` (plus
+> the now-unneeded `regex_lite` import in `app_config`), the
+> `Index<&str> for EntryDetails` impl, and the `AppError::IoError` variant
+> with its `From<io::Error>` impl.
 
 - `AppConfig.nonalpha_pattern` is compiled at startup and never read.
 - `impl Index<&str> for EntryDetails` (a panicking string-indexed field
@@ -185,8 +201,15 @@ included), then use a single open-and-configure path — and decide the
 
 **Recommendation:** Delete all three.
 
-### 9.4 (Low) Duplicated entry-resolution pipeline in `read_dir` and `search` — 🔲 Open
+### 9.4 (Low) Duplicated entry-resolution pipeline in `read_dir` and `search` — ✅ Resolved
 `server/src/services/read_dir.rs`, `server/src/services/search.rs`
+
+> **✅ Resolved (2026-07-20):** the buffered-stream "phase 2" now lives in one
+> place — `EntryDetails::resolve_all(raw_entries, data)` in
+> `entry_details.rs`, alongside the single `ENTRY_CONCURRENCY` constant and
+> its rationale. Both services call it; their local constants and `futures`
+> imports were removed. Verified live: listings and search both return correct
+> results through the shared pipeline.
 
 Both services contain the identical "phase 2" block —
 `stream::iter(raw_entries).map(from_raw).buffered(ENTRY_CONCURRENCY).collect()`
@@ -197,8 +220,22 @@ comment.
 helper (or a free function in `entry_details.rs`) so the concurrency policy
 lives in one place.
 
-### 9.5 (Low) Minor `entry_details` / `app_config` cleanups — 🔲 Open
+### 9.5 (Low) Minor `entry_details` / `app_config` cleanups — ✅ Resolved
 `server/src/structs/entry_details.rs`, `server/src/app_config.rs`
+
+> **✅ Resolved (2026-07-20):** the duplicate DIR check was removed by
+> dropping `determine_file_format`'s `entry_type` parameter entirely — callers
+> (only `from_raw`'s dir branch and `read_file`'s `Auto`, which never sees a
+> directory) now own that decision, which also let `read_file` stop calling
+> `EntryType::stringify`. `file_type()` returns `&'static str` and the
+> `file_type`/`entry_type` fields (in both `EntryDetails` and `RawEntry`) are
+> now `&'static str`, removing the per-entry allocations *and* the
+> `entry_type.clone()` in `from_raw`. One deliberate exception: `full_type`
+> stays `String` because `FileFormat::media_type` ties its (actually static)
+> literals to `&self`, so the borrow can't legally outlive the local. The
+> per-arm GitHub-link comments collapsed to one. `parse_app_log_level` is now
+> `LevelFilter::from_str(level).unwrap_or(LevelFilter::Info)` (the `log` crate
+> parses the same names case-insensitively); the `HashMap` import went with it.
 
 - `from_raw` checks `entry_type == DIR` and `determine_file_format`
   immediately re-checks the same condition.
@@ -364,8 +401,8 @@ queries to the component's own subtree.
 | 1 | Server robustness | Med | Low | ✅ 9.1 — `.webloc` panic paths, debug `println!`, dead `.url` support |
 | 2 | Client correctness | Med | Low | ✅ 9.7 — failed request poisons the pending cache (add `fetch()` API) |
 | 3 | Client correctness | Low | Low | 9.8, 9.9 — `useIsMobile` NaN breakpoint; `checkSupport` range flag |
-| 4 | Dead code | Low | Low | 9.3, 9.14 — server + client dead-code deletions (zero risk) |
-| 5 | Server simplification | Low | Low | 9.2, 9.4, 9.5 — `read_file` collapse, shared resolve pipeline, minor cleanups |
+| 4 | Dead code | Low | Low | 🟡 9.3 ✅ / 9.14 — server dead code deleted; client deletions still open |
+| 5 | Server simplification | Low | Low | ✅ 9.2, 9.4, 9.5 — `read_file` collapse, shared resolve pipeline, minor cleanups |
 | 6 | Client refactors | Low | Med | 9.10–9.13, 9.15 — virtualizer composable, shared badges, dialog/router cleanups |
 | 7 | Server sec | High | High | 1.1 — real authentication (still deferred by request) |
 | 8 | Server perf | Med | Med | 2.2 — lazy/persistent media metadata |

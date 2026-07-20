@@ -7,14 +7,10 @@ use crate::{
   },
 };
 use actix_web::web::{self, Data, Query};
-use futures::stream::{self, StreamExt};
 use regex_lite::Regex;
 use serde::Deserialize;
 use std::{fs, path::Path, path::PathBuf};
 
-/// Maximum number of entries whose format/duration are resolved concurrently
-/// (same rationale as `read_dir::ENTRY_CONCURRENCY`).
-const ENTRY_CONCURRENCY: usize = 8;
 /// Hard cap on returned matches, so a broad pattern over a large tree can't
 /// produce an unbounded response (or unbounded ffprobe work in phase 2).
 const MAX_RESULTS: usize = 500;
@@ -98,15 +94,9 @@ pub async fn search(path: &Path, params: SearchParams, data: &Data<AppState>) ->
     .await
     .map_err(|err| AppError::Internal(format!("Search task failed: {err}")))??;
 
-  // Phase 2: resolve each match's file format and media duration concurrently,
-  // bounded to ENTRY_CONCURRENCY in flight (mirrors `read_dir::read`).
-  let output: Vec<EntryDetails> = stream::iter(raw_entries)
-    .map(|raw| EntryDetails::from_raw(raw, data))
-    .buffered(ENTRY_CONCURRENCY)
-    .collect()
-    .await;
-
-  Ok(output)
+  // Phase 2: resolve each match's file format and media duration,
+  // concurrently and bounded (see `resolve_all` — shared with `read_dir`).
+  Ok(EntryDetails::resolve_all(raw_entries, data).await)
 }
 
 /// Compile the search pattern into a single regex applied to entry names:

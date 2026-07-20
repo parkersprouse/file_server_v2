@@ -44,7 +44,7 @@ async fn handle_impl(req: HttpRequest, data: Data<AppState>) -> AppResult<HttpRe
       _ => DispositionKind::Auto,
     };
 
-    return read_file::read(&path, disposition, &metadata)
+    return read_file::read(&path, disposition)
       .await
       .map(|result| result.into_response(&req))
       .map_err(|err| AppError::Internal(format!("Failed to read file: {err}")));

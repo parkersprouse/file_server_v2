@@ -9,14 +9,20 @@ use crate::{
 use actix_web::web::{self, Data};
 use chrono::{DateTime, Utc};
 use file_format::{FileFormat, Kind};
+use futures::stream::{self, StreamExt};
 use log::{error, warn};
 
 use serde::Serialize;
 use std::{
   fs,
-  ops::Index,
   path::{Path, PathBuf},
 };
+
+/// Maximum number of entries whose format/duration are resolved concurrently
+/// by [`EntryDetails::resolve_all`]. This bounds in-flight `web::block` work
+/// (and therefore ffprobe subprocesses) so a media-heavy directory can't
+/// overwhelm the blocking thread pool.
+const ENTRY_CONCURRENCY: usize = 8;
 
 #[derive(Clone, Serialize)]
 pub struct EntryDetails {
@@ -25,10 +31,10 @@ pub struct EntryDetails {
   pub duration: String,
   pub duration_order: u8,
   pub duration_raw: u64,
-  pub entry_type: String,
+  pub entry_type: &'static str,
   pub external_url: Option<String>,
   pub file_size: u64,
-  pub file_type: String,
+  pub file_type: &'static str,
   pub full_type: String,
   pub last_modified_at: String,
   pub last_modified_at_epoch: i64,
@@ -46,7 +52,7 @@ pub struct RawEntry {
   full_path: PathBuf,
   metadata: fs::Metadata,
   name: String,
-  entry_type: String,
+  entry_type: &'static str,
   as_url: String,
   thumbnail: Option<String>,
 }
@@ -64,7 +70,7 @@ impl RawEntry {
       // Filenames on Unix are arbitrary bytes and need not be valid UTF-8;
       // lossily convert rather than panicking on a non-UTF-8 name.
       name: entry.file_name().to_string_lossy().into_owned(),
-      entry_type: EntryType::stringify(&metadata.file_type()).into(),
+      entry_type: EntryType::stringify(&metadata.file_type()),
       metadata,
       full_path,
       as_url,
@@ -124,15 +130,14 @@ impl EntryDetails {
     let file_format: Option<FileFormat> = if entry_type == EntryType::DIR {
       None
     } else {
-      let sniff_type = entry_type.clone();
       let sniff_path = full_path.clone();
-      web::block(move || Self::determine_file_format(&sniff_type, &sniff_path))
+      web::block(move || Self::determine_file_format(&sniff_path))
         .await
         .unwrap_or(Some(FileFormat::PlainText))
     };
-    let file_type: String = Self::file_type(file_format);
+    let file_type = Self::file_type(file_format);
 
-    let duration_tuple = Self::determine_duration(&full_path, &file_type, data).await;
+    let duration_tuple = Self::determine_duration(&full_path, file_type, data).await;
     let created_at = Self::determine_created_at(&metadata);
     let last_modified_at = Self::determine_modified_at(&metadata);
 
@@ -156,6 +161,18 @@ impl EntryDetails {
       path: as_url,
       thumbnail,
     }
+  }
+
+  /// Resolve every raw entry's file format (header sniff) and media duration
+  /// (ffprobe) concurrently, bounded to [`ENTRY_CONCURRENCY`] in flight rather
+  /// than sequentially blocking on each entry in turn. Shared by directory
+  /// listings and search results so the concurrency policy lives in one place.
+  pub async fn resolve_all(raw_entries: Vec<RawEntry>, data: &Data<AppState>) -> Vec<Self> {
+    stream::iter(raw_entries)
+      .map(|raw| Self::from_raw(raw, data))
+      .buffered(ENTRY_CONCURRENCY)
+      .collect()
+      .await
   }
 
   pub fn determine_created_at(metadata: &fs::Metadata) -> (i64, String) {
@@ -212,11 +229,9 @@ impl EntryDetails {
     (total_secs, duration_formatted)
   }
 
-  pub fn determine_file_format(entry_type: &str, path: &Path) -> Option<FileFormat> {
-    if entry_type.eq(EntryType::DIR) {
-      return None;
-    }
-
+  /// Sniff a file's format from its header bytes. Callers are expected to
+  /// have ruled out directories (which have no format) themselves.
+  pub fn determine_file_format(path: &Path) -> Option<FileFormat> {
     match FileFormat::from_file(path) {
       Ok(format) => Some(format),
       Err(err) => {
@@ -249,45 +264,45 @@ impl EntryDetails {
     parse(&ext, &content)
   }
 
-  pub fn file_type(file_format: Option<FileFormat>) -> String {
+  // Kind reference: https://github.com/mmalecot/file-format#file-kinds
+  pub fn file_type(file_format: Option<FileFormat>) -> &'static str {
     let Some(format) = file_format else {
-      return "".into();
+      return "";
     };
 
     match format.kind() {
-      Kind::Archive => "archive".into(), // https://github.com/mmalecot/file-format#archive
-      Kind::Audio => "audio".into(),     // https://github.com/mmalecot/file-format#audio
-      Kind::Compressed => "compressed".into(), // https://github.com/mmalecot/file-format#compressed
-      Kind::Database => "database".into(), // https://github.com/mmalecot/file-format#database
-      Kind::Diagram => "diagram".into(), // https://github.com/mmalecot/file-format#diagram
-      Kind::Disk => "vdisk".into(),      // https://github.com/mmalecot/file-format#disk
-      Kind::Document => "document".into(), // https://github.com/mmalecot/file-format#document
-      Kind::Ebook => "ebook".into(),     // https://github.com/mmalecot/file-format#ebook
-      Kind::Executable => "executable".into(), // https://github.com/mmalecot/file-format#executable
-      Kind::Font => "font".into(),       // https://github.com/mmalecot/file-format#font
-      Kind::Formula => "formula".into(), // https://github.com/mmalecot/file-format#formula
-      Kind::Geospatial => "geospatial".into(), // https://github.com/mmalecot/file-format#geospatial
-      Kind::Image => "image".into(),     // https://github.com/mmalecot/file-format#image
-      Kind::Metadata => "metadata".into(), // https://github.com/mmalecot/file-format#metadata
-      Kind::Model => "model".into(),     // https://github.com/mmalecot/file-format#model
-      Kind::Other => {
-        // https://github.com/mmalecot/file-format#other
-        match format.media_type().starts_with("text/") {
-          true => "text".into(),
-          false => "file".into(),
-        }
+      Kind::Archive => "archive",
+      Kind::Audio => "audio",
+      Kind::Compressed => "compressed",
+      Kind::Database => "database",
+      Kind::Diagram => "diagram",
+      Kind::Disk => "vdisk",
+      Kind::Document => "document",
+      Kind::Ebook => "ebook",
+      Kind::Executable => "executable",
+      Kind::Font => "font",
+      Kind::Formula => "formula",
+      Kind::Geospatial => "geospatial",
+      Kind::Image => "image",
+      Kind::Metadata => "metadata",
+      Kind::Model => "model",
+      Kind::Other => match format.media_type().starts_with("text/") {
+        true => "text",
+        false => "file",
       },
-      Kind::Package => "package".into(), // https://github.com/mmalecot/file-format#package
-      Kind::Playlist => "playlist".into(), // https://github.com/mmalecot/file-format#playlist
-      Kind::Presentation => "presentation".into(), // https://github.com/mmalecot/file-format#presentation
-      Kind::Rom => "rom".into(),         // https://github.com/mmalecot/file-format#rom
-      Kind::Spreadsheet => "spreadsheet".into(), // https://github.com/mmalecot/file-format#spreadsheet
-      Kind::Subtitle => "subtitle".into(), // https://github.com/mmalecot/file-format#subtitle
-      Kind::Video => "video".into(),     // https://github.com/mmalecot/file-format#video
-      _ => "unknown".into(),
+      Kind::Package => "package",
+      Kind::Playlist => "playlist",
+      Kind::Presentation => "presentation",
+      Kind::Rom => "rom",
+      Kind::Spreadsheet => "spreadsheet",
+      Kind::Subtitle => "subtitle",
+      Kind::Video => "video",
+      _ => "unknown",
     }
   }
 
+  // `String` rather than `&'static str`: `FileFormat::media_type` ties its
+  // (actually static) literals to `&self`, so the borrow can't outlive `format`.
   pub fn full_type(file_format: Option<FileFormat>) -> String {
     match file_format {
       Some(format) => format.media_type().into(),
@@ -340,22 +355,5 @@ impl EntryDetails {
     // that must be left untouched.
     let relative = relative.to_string_lossy().replace(std::path::MAIN_SEPARATOR, "/");
     format!("/{}", relative.trim_matches('/'))
-  }
-}
-
-impl Index<&'_ str> for EntryDetails {
-  type Output = str;
-  fn index(&self, field: &str) -> &str {
-    match field {
-      "created_at" => &self.created_at,
-      "duration" => &self.duration,
-      "entry_type" => &self.entry_type,
-      "file_type" => &self.file_type,
-      "full_type" => &self.full_type,
-      "last_modified_at" => &self.last_modified_at,
-      "name" => &self.name,
-      "path" => &self.path,
-      _ => panic!("unknown field: {field}"),
-    }
   }
 }

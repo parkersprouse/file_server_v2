@@ -1,10 +1,9 @@
 use config::Config;
 use ipnet::IpNet;
 use log::LevelFilter;
-use regex_lite::Regex;
-use std::collections::HashMap;
 use std::net::IpAddr;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 #[derive(Debug, Clone)]
 pub struct AppConfig {
@@ -22,7 +21,6 @@ pub struct AppConfig {
   /// Caddyfile) should be the only way in from the network.
   pub address: String,
   pub log_level: LevelFilter,
-  pub nonalpha_pattern: Regex,
   pub port: u16,
   pub root_dir_path: String,
   /// The root directory resolved to an absolute, symlink-free path. Requests
@@ -65,7 +63,6 @@ impl AppConfig {
       allowed_hosts: settings.get::<Vec<String>>("allowed_hosts").unwrap_or_default(),
       address: settings.get_string("address").unwrap_or_else(|_| "0.0.0.0".into()),
       log_level: AppConfig::parse_app_log_level(&settings.get_string("log_level").unwrap_or("info".into())),
-      nonalpha_pattern: Regex::new(r"^[^A-Za-z0-9]").unwrap(),
       port: settings.get_int("port").unwrap_or(9000) as u16,
       root_dir_path,
       root_dir_canonical,
@@ -113,17 +110,8 @@ impl AppConfig {
   }
 
   fn parse_app_log_level(level: &str) -> LevelFilter {
-    // Levels ordered least -> most verbose
-    let app_levels: HashMap<&str, LevelFilter> = HashMap::from([
-      ("off", LevelFilter::Off),
-      ("error", LevelFilter::Error),
-      ("warn", LevelFilter::Warn),
-      ("info", LevelFilter::Info),
-      ("debug", LevelFilter::Debug),
-      ("trace", LevelFilter::Trace),
-    ]);
-
-    // Unknown/unset levels fall back to Info.
-    *app_levels.get(level).unwrap_or(&LevelFilter::Info)
+    // The `log` crate parses "off"/"error"/"warn"/"info"/"debug"/"trace"
+    // case-insensitively; unknown/unset levels fall back to Info.
+    LevelFilter::from_str(level).unwrap_or(LevelFilter::Info)
   }
 }
