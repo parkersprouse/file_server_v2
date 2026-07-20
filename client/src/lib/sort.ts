@@ -22,18 +22,16 @@ type Projection<T> = (x: T) => Comparable;
 export function sortEntries(
   entries: Entry[],
   sort_key: SortKey,
+  // Callers pass `routerStore.dir`, which is already validated against the
+  // `SortDir` enum by the store.
   sort_dir: SortDir = SortDir.DESC,
 ): Entry[] {
-  const dir: SortDir = Object.keys(SortDir).includes(sort_dir.toUpperCase()) ? sort_dir : SortDir.ASC;
-
-  const criteria: [projection: Projection<Entry>, direction: SortDir][] = [
-    [prop('entry_type'), SortDir.ASC],
-  ];
+  const criteria: [projection: Projection<Entry>, direction: SortDir][] = [];
 
   switch (sort_key) {
     case SortKey.CREATED: {
       criteria.push(
-        [prop('created_at_epoch'), dir],
+        [prop('created_at_epoch'), sort_dir],
         [prop('name_lowercase'), SortDir.ASC],
       );
       break;
@@ -42,7 +40,7 @@ export function sortEntries(
     case SortKey.DURATION: {
       criteria.push(
         [prop('duration_order'), SortDir.ASC],
-        [prop('duration_raw'), dir],
+        [prop('duration_raw'), sort_dir],
         [prop('name_lowercase'), SortDir.ASC],
       );
       break;
@@ -50,23 +48,24 @@ export function sortEntries(
 
     case SortKey.MODIFIED: {
       criteria.push(
-        [prop('last_modified_at_epoch'), dir],
+        [prop('last_modified_at_epoch'), sort_dir],
         [prop('name_lowercase'), SortDir.ASC],
       );
       break;
     }
 
     default: {
-      criteria.push([prop('name_lowercase'), dir]);
+      criteria.push([prop('name_lowercase'), sort_dir]);
       break;
     }
   }
 
+  // Directories always sort above files; the per-key criteria break ties.
   return pipe(
     entries,
     sortBy(
       [prop('entry_type'), SortDir.ASC],
-      ...(criteria.slice(1)),
+      ...criteria,
     ),
   );
 }

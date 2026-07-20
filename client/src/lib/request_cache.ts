@@ -22,34 +22,6 @@ export class RequestCache<T> {
   }
 
   /**
-   * Get a cached value if it exists and hasn't expired
-   */
-  get(key: string): T | null {
-    const entry = this.cache.get(key);
-    if (!entry) return null;
-
-    // Check if cache has expired
-    if (Date.now() - entry.timestamp > this.ttl) {
-      this.cache.delete(key);
-      return null;
-    }
-
-    // A pending-only entry (created by `setPending` before its data arrives)
-    // has no `data` yet — report it as a miss rather than returning `undefined`.
-    return entry.data ?? null;
-  }
-
-  /**
-   * Set a cached value
-   */
-  set(key: string, data: T): void {
-    this.cache.set(key, {
-      data,
-      timestamp: Date.now(),
-    });
-  }
-
-  /**
    * Resolve `key` through the cache: return fresh cached data, join an
    * in-flight request for the same key, or run `factory` and cache its result.
    *
@@ -65,7 +37,10 @@ export class RequestCache<T> {
     }
 
     const promise = factory().then((data) => {
-      this.set(key, data);
+      this.cache.set(key, {
+        data,
+        timestamp: Date.now(),
+      });
       return data;
     });
     this.cache.set(key, {
@@ -78,52 +53,6 @@ export class RequestCache<T> {
     });
 
     return promise;
-  }
-
-  /**
-   * Clear a specific cache entry
-   */
-  invalidate(key: string): void {
-    this.cache.delete(key);
-  }
-
-  /**
-   * Clear all cache entries
-   */
-  clear(): void {
-    this.cache.clear();
-  }
-
-  /**
-   * Get cache size
-   */
-  size(): number {
-    return this.cache.size;
-  }
-
-  /**
-   * Get cache hit rate (for debugging)
-   */
-  getStats(): {
-    size: number;
-    ttl: number;
-  } {
-    return {
-      size: this.cache.size,
-      ttl: this.ttl,
-    };
-  }
-
-  /**
-   * Clean up expired entries (useful to call periodically)
-   */
-  cleanup(): void {
-    const now = Date.now();
-    for (const [key, entry] of this.cache.entries()) {
-      if (now - entry.timestamp > this.ttl) {
-        this.cache.delete(key);
-      }
-    }
   }
 }
 

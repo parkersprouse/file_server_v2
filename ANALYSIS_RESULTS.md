@@ -396,9 +396,18 @@ separately); use VueUse's `useMediaQuery` for a reactive reduced-motion flag.
 **Recommendation:** One private `applyQuery(patches, { replace })`; derive
 `clearSearch`'s patch object from the transient-param list.
 
-### 9.14 (Low) Dead client code — 🔲 Open
+### 9.14 (Low) Dead client code — ✅ Resolved
 `client/src/lib/utils.ts`, `client/src/lib/entry_helpers.ts`,
 `client/src/lib/request_cache.ts`, `client/src/lib/sort.ts`
+
+> **✅ Resolved (2026-07-20):** `entry_helpers.ts`'s commented-out sort
+> functions and their commented imports are deleted; `request_cache.ts` is
+> down to just `fetch()` (`get`/`set` had also gone dead/internal-only after
+> the 9.7 refactor, so `set` was inlined and `get` — whose doc referenced the
+> removed `setPending` — deleted along with the five listed methods);
+> `sort.ts` builds `criteria` without the dummy first element and trusts the
+> router store's already-validated `sort_dir`. **Exception:** `capitalize`
+> and `sleep` in `utils.ts` are intentionally kept per user request.
 
 - `utils.ts`: `capitalize` and `sleep` have zero callers.
 - `entry_helpers.ts`: the commented-out sort functions
@@ -441,7 +450,7 @@ queries to the component's own subtree.
 | 1 | Server robustness | Med | Low | ✅ 9.1 — `.webloc` panic paths, debug `println!`, dead `.url` support |
 | 2 | Client correctness | Med | Low | ✅ 9.7 — failed request poisons the pending cache (add `fetch()` API) |
 | 3 | Client correctness | Low | Low | 9.8, 9.9 — `useIsMobile` NaN breakpoint; `checkSupport` range flag |
-| 4 | Dead code | Low | Low | 🟡 9.3 ✅ / 9.14 — server dead code deleted; client deletions still open |
+| 4 | Dead code | Low | Low | ✅ 9.3 / 9.14 — server + client dead code deleted (`capitalize`/`sleep` kept by request) |
 | 5 | Server simplification | Low | Low | ✅ 9.2, 9.4, 9.5 — `read_file` collapse, shared resolve pipeline, minor cleanups |
 | 6 | Client refactors | Low | Med | ✅ 9.10–9.13, 9.15 — virtualizer composable, shared badges, dialog/router cleanups |
 | 7 | Server sec | High | High | 1.1 — real authentication (still deferred by request) |

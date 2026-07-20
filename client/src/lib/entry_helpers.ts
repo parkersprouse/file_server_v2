@@ -30,8 +30,6 @@ import { QueryParam } from 'enums/query_param.ts';
 import { checkSupport, features } from 'lib/browser.ts';
 import { stripTransientParams } from 'lib/utils.ts';
 
-// import type { SortDir } from 'enums/sort_dir.ts';
-// import type { SortKey } from 'enums/sort_key.ts';
 import type { Entry } from 'types/entry.d.ts';
 import type { FunctionalComponent } from 'vue';
 import type { RouteLocationNormalizedLoadedGeneric } from 'vue-router';
@@ -129,23 +127,3 @@ export function isDir(entry: Entry): boolean {
 export function isFile(entry: Entry): boolean {
   return entry.entry_type === EntryType.FILE;
 }
-
-// export function sortByDir(entries: Entry[], dir: SortDir): Entry[] {
-//   const sorted = [...entries].sort((a: Entry, b: Entry) => {
-
-//   });
-
-//   return sortDirectoriesTop(sorted);
-// }
-
-// export function sortByKey(entries: Entry[], key: SortKey): Entry[] {
-//   return sortDirectoriesTop(entries);
-// }
-
-// export function sortDirectoriesTop(entries: Entry[]): Entry[] {
-//   return [...entries].sort((a: Entry, b: Entry) => {
-//     if (isDir(a) && isFile(b)) return -1;
-//     if (isFile(a) && isDir(b)) return 1;
-//     return 0;
-//   });
-// }
