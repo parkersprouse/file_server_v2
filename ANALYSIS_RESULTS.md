@@ -1,9 +1,11 @@
 # Web File Browser — Codebase Analysis
 
-A deep review of the **server** (Rust / actix-web) and **client** (Vue 3 / Vite)
+A living review of the **server** (Rust / actix-web) and **client** (Vue 3 / Vite)
 packages, covering security, performance, correctness, and general
 improvements. Findings are ordered by severity within each section, and each
-item lists the relevant file(s) and a concrete recommendation.
+item lists the relevant file(s) and a concrete recommendation. Item numbers are
+stable across revisions; fully-resolved items are collapsed into the history
+table below (their full write-ups remain in git history).
 
 > **Architecture in one paragraph:** the server exposes a single catch-all
 > `GET /{path:.*}` route. A request maps a URL path to a filesystem path under
@@ -16,199 +18,73 @@ item lists the relevant file(s) and a concrete recommendation.
 
 ---
 
-## 1. Server — Security
+## Resolved findings — history
 
-### 1.1 (High) No authentication; access control is a source-IP prefix check — 🟡 Partially addressed
-`server/src/lib/gatekeeper.rs`
+Collapsed summaries of items fully resolved in earlier passes. Full analysis
+text for each is in git history.
 
-> **🟡 Partially addressed (2026-06-25):** the IP gate was hardened (real auth
-> was intentionally left out of scope per request). `gatekeeper::verify` now
-> parses the peer's actual `IpAddr` (via `peer.ip().to_canonical()`, which also
-> normalizes IPv4-mapped IPv6) and tests it against configurable CIDR ranges
-> using the `ipnet` crate — no more brittle `addr.to_string()` prefix matching.
-> The default allowlist now covers **all** RFC1918 ranges plus loopback and
-> IPv6: `127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12` (Docker bridge),
-> `192.168.0.0/16`, `::1/128`, `fc00::/7`. Operators can override it via
-> `allowed_cidrs` in `config.toml` or the `WEB_FILE_BROWSER_ALLOWED_CIDRS`
-> (comma-separated) env var, accepting CIDRs or bare IPs. The immediate TCP peer
-> is still used and **`X-Forwarded-For` is not trusted**. Verified:
-> `10.0.0.0/8` correctly blocks loopback (403), defaults/lists/bare-IPs all match
-> as expected.
->
-> **Still open (by request — no token/basic auth added):** this remains a
-> convenience network filter, not authentication. Behind a reverse proxy every
-> client appears as the proxy's IP, so the **reverse-proxy bypass** is not closed
-> — that needs real auth or a trusted-proxy `X-Forwarded-For` configuration.
-> IPv6 entries only take effect if the server is bound to an IPv6 address (it
-> currently binds `0.0.0.0`).
+| # | Severity | Item | Resolution |
+|---|----------|------|------------|
+| 1.2 | High | Symlinks could escape the root directory | ✅ 2026-06-25 — root canonicalized at startup; `validate_path` canonicalizes and requires `starts_with(root_dir_canonical)` |
+| 1.3 | Medium | Path URL-decoded twice; traversal check was string matching | ✅ 2026-06-25 — raw URI decoded exactly once; canonicalize is the authoritative guard, `/../` check kept as defense in depth |
+| 1.4 | Medium | `allow_any_origin()` CORS enabled DNS-rebinding / drive-by reads | ✅ 2026-06-25 — exact-origin (or local-only) CORS via `cors::build`; `Host`-header allowlist (`cors::host_allowed`) blunts rebinding |
+| 1.5 | Low | Gate failures returned 404; errors logged paths at `error` level | ✅ 2026-06-25 — gate moved into the handler (explicit 403); `InvalidPath`→`warn`, `NotFound`→`debug` |
+| 2.1 | High | Blocking FS & ffprobe work ran on the async executor | ✅ 2026-06-25 — enumeration in `web::block`; per-entry sniff/ffprobe concurrent via `buffered(8)` stream |
+| 2.3 | Medium | Caches unbounded, never proactively evicted | ✅ 2026-06-25 — `moka` caches with `max_capacity` (1024 / 8192) + TTL |
+| 2.4 | Medium | Cache miss took a write lock; hits deep-copied the `Vec` | ✅ 2026-06-25 — `moka` shards locking; listings stored as `Arc<Vec<EntryDetails>>` |
+| 2.5 | Low | Redundant `stat`s / header reads on the file path | ✅ 2026-06-25 — single `fs::metadata` in `validate_path`, threaded through |
+| 3.1 | High | Panics on non-UTF-8 filenames / metadata errors | ✅ 2026-06-25 — `to_string_lossy`, unreadable entries skipped, request-path `unwrap()`s removed |
+| 3.2 | Medium | `str::replace` used for root-prefix stripping | ✅ 2026-06-25 — `Path::strip_prefix` on component boundaries |
+| 3.3 | Low | Dead, non-compiling `read_dir.v2.rs` committed | ✅ 2026-06-25 — deleted |
+| 3.4 | Low | Config file required even for env-only setups; clunky log-level lookup | ✅ 2026-06-25 — file source `.required(false)`; friendlier errors |
+| 3.5 | Low | Makefile double `start`, broken compose, Docker missing ffmpeg | ✅ 2026-06-25 — targets de-duplicated, compose rewritten, ffmpeg installed |
+| 4.1 | Medium | SVG/document previews via `<object>` executed embedded scripts | ✅ 2026-06-25 — `<img>` for images, plain `<iframe>` + server CSP `script-src 'none'` + `nosniff` for documents |
+| 4.2 | Low | Verify text-preview escaping | ✅ 2026-06-25 — Prism tokenizes into the DOM (no raw HTML); `text/plain` + `nosniff` confirmed |
+| 5.1 | Medium | `checkSupport` version-range comparison inverted | ✅ 2026-06-25 — inclusive interval check (a residual gap in the same branch is tracked as **9.9**) |
+| 5.2 | Low | Backslash path fix replaced only the first `%5C` | ✅ 2026-06-25 — global regex |
+| 5.3 | Low | `toFileUrl` percent-encoded path separators | ✅ 2026-06-25 — per-segment encoding |
+| 5.4 | Low | `RequestCache.setPending` cast `undefined` to `T` | ✅ 2026-06-25 — `data?: T`, `get()` returns `null` for pending-only entries |
+| 6.1 | Low | Event bus wrapped a singleton in a `computed` | ✅ 2026-06-25 — returns the singleton directly |
+| 6.2 | Low | `scroll_offset` map grew unbounded | ✅ 2026-06-25 — capped at 50 entries, LRU eviction, encapsulated behind store methods |
+| 6.3 | Low | Vue Devtools plugin always registered | ✅ 2026-06-25 — gated on `command === 'serve'` |
+| 6.5 | Low | `media-chrome` eagerly loaded on every page visit | ✅ 2026-06-28 — import moved into the lazy Audio/Video viewers; first-paint JS −14% (≈301.8 → ≈258.9 KB gzip) |
+| 7.2 | Correctness | `determine_created_at` returned modification time | ✅ 2026-06-29 — `metadata.created()` (btime) with `modified()` fallback for filesystems without btime |
+| 7.3 | Defense-in-depth | Add `frame-ancestors 'none'` to CSP | ✅ 2026-06-28 — CSP now `script-src 'none'; frame-ancestors 'none'` |
 
-```rust
-static VALID_ADDRS: [&str; 2] = ["127.0.0.1", "192.168."];
-match ctx.head().peer_addr { Some(addr) => VALID_ADDRS.iter().any(|e| addr.to_string().starts_with(e)) ... }
-```
-
-The only thing standing between a request and the filesystem is whether the
-TCP peer address string starts with `127.0.0.1` or `192.168.`. Problems:
-
-- **Reverse-proxy bypass.** If the server is fronted by nginx/Caddy/Traefik (a
-  very common deployment), `peer_addr` is the proxy — almost always
-  `127.0.0.1` — so **every** external client is treated as trusted. The whole
-  file tree becomes public.
-- **Incomplete private ranges.** `10.0.0.0/8` and `172.16.0.0/12` (Docker's
-  default bridge networks!) are not covered, so legitimate LAN/container
-  clients are blocked while the model is still not actually a security
-  boundary.
-- **No IPv6.** `::1` (IPv6 localhost) and IPv6 ULAs never match.
-- **String prefix matching is brittle.** Matching on `addr.to_string()`
-  (which includes the port) rather than parsing into `IpAddr` and comparing
-  against real CIDR ranges is fragile.
-
-**Recommendation:** Treat IP filtering as a convenience, not a security
-control. Add real authentication if the server is ever exposed (a shared
-token / basic-auth / reverse-proxy auth). For the IP allowlist itself, parse
-`IpAddr` and test against configurable CIDR ranges (e.g. via the `ipnet`
-crate), include loopback v6 and the other RFC1918 ranges, and **never** trust
-`X-Forwarded-For` unless a trusted-proxy list is configured.
-
-### 1.2 (High) Symlinks can escape the root directory — ✅ Resolved
-`server/src/util.rs` (`validate_path`)
-
-> **✅ Resolved (2026-06-25):** the root is canonicalized once at startup
-> (`AppConfig::root_dir_canonical`), and `validate_path` now `fs::canonicalize`s
-> the requested path and rejects it unless it `starts_with` the canonical root —
-> so a symlink inside the tree that points outside it is blocked. Verified: a
-> `root/escape -> /etc` symlink returns 404 for `/escape` and `/escape/hosts`,
-> while a legitimate in-root symlink still resolves (200). Note: such escaping
-> symlinks are still *listed* (only access is blocked); hiding them from
-> listings would be a further enhancement.
-
-`validate_path` builds `"{root_dir}/{pathname}"` and checks for `../`, but it
-**never canonicalizes** the final path. A symlink anywhere inside `root_dir`
-that points outside it (e.g. `root/link -> /etc`) lets a client read arbitrary
-files via `GET /link/passwd`. `fs::exists`, `fs::metadata`, and `NamedFile`
-all follow symlinks.
-
-**Recommendation:** After building the candidate path, call
-`std::fs::canonicalize` (or `tokio::fs::canonicalize`) and verify the result
-still `starts_with` the canonicalized `root_dir`. Reject otherwise. This also
-hardens the traversal check below.
-
-### 1.3 (Medium) Path is URL-decoded twice; traversal check relies on string matching — ✅ Resolved
-`server/src/util.rs`
-
-> **✅ Resolved (2026-06-25):** `validate_path` now decodes the raw request path
-> (`req.uri().path()`) exactly once and no longer relies on actix's match-info
-> capture. (Empirically, actix's quoter only *partially* decodes — it preserves
-> `%25`/`%2F` — so decoding the raw URI ourselves is the clean single decode and
-> correctly handles filenames containing `%`, verified: `100%done.txt` now
-> returns 200 with its contents.) The canonicalize + `starts_with` check from
-> 1.2 is the authoritative containment guard; the `/../` string check is kept
-> only as defense in depth (runs after the single decode).
-
-actix already percent-decodes path captures, and `validate_path` then calls
-`urlencoding::decode` **again** on the captured `path`. Two issues:
-
-- **Double-decode is an anti-pattern.** While the current `../` check happens
-  *after* both decodes (so basic traversal is still blocked), double-decoding
-  is exactly the class of bug that defeats naive traversal filters. It also
-  corrupts legitimate filenames containing `%` (e.g. `100%done.txt`), which
-  can decode-fail and return a 500.
-- **Substring matching is weak.** `format!("/{pathname}/").contains("/../")`
-  is a denylist. Canonicalization (1.2) is the robust fix; the string check
-  should be a secondary defense, not the primary one.
-
-**Recommendation:** Decode exactly once, rely on `canonicalize` + `starts_with`
-as the authoritative check, and keep the `../` rejection only as defense in
-depth.
-
-### 1.4 (Medium) Permissive CORS + no auth enables DNS-rebinding / drive-by file reads — ✅ Resolved
-`server/src/lib/cors.rs`
-
-> **✅ Resolved (2026-06-25):** `allow_any_origin()` was replaced with
-> `cors::build(allowed_origins)`. When `allowed_origins` is configured, only
-> those exact origins may read responses cross-origin; when unset it defaults to
-> allowing only same-network origins (localhost / loopback / private IP), so a
-> public site a LAN user visits gets **no** `Access-Control-Allow-Origin` and
-> can't read file contents cross-origin (verified: `evil.com` origin → no ACAO;
-> local origins → allowed). For the DNS-rebinding vector, a `Host`-header
-> allowlist (`cors::host_allowed`) was added to the handler: when `allowed_hosts`
-> is unset it requires a local `Host`, otherwise an exact match — so a rebound
-> `Host: evil.com` is rejected with 403 (verified), while custom hostnames can be
-> permitted via config. Both lists are configurable in `config.toml` or via the
-> `WEB_FILE_BROWSER_ALLOWED_ORIGINS` / `WEB_FILE_BROWSER_ALLOWED_HOSTS`
-> (comma-separated) env vars. (The "no auth" half of the title is the separate
-> 1.1 item; per request, no token/basic auth was added.)
-
-```rust
-Cors::default().allow_any_origin().allowed_methods(vec!["GET"])
-```
-
-`allow_any_origin()` means any website a LAN user visits can read JSON
-directory listings and file contents cross-origin (responses are readable
-because there are no credentials and origin is wildcarded). Combined with the
-IP-only gate, a malicious page using **DNS rebinding** can reach the server as
-if it were local and exfiltrate the user's files.
-
-**Recommendation:** Restrict allowed origins to the known client origin(s)
-from config instead of `allow_any_origin()`. Consider a `Host`-header
-allowlist to blunt DNS rebinding.
-
-### 1.5 (Low) Blocked requests return 404 instead of 403, and errors leak paths into logs — ✅ Resolved
-`server/src/main.rs`, `server/src/lib/error.rs`
-
-> **✅ Resolved (2026-06-25):** the source-IP gate moved from a route `guard`
-> into the handler (`gatekeeper::verify(&req)`), so a blocked request now gets an
-> explicit **403** instead of a misleading 404 (verified). In `error.rs`,
-> `InvalidPath` is logged at `warn` and `NotFound` at `debug` (instead of
-> `error`), so high-volume scanning no longer floods the error stream
-> (verified — a 404 produces no default-level log line); the messages remain
-> generic and don't disclose the offending path.
-
-Because the gatekeeper is a route `guard`, a rejected request simply fails to
-match and returns the default 404 — harmless but confusing for debugging.
-Separately, `InvalidPath`/`NotFound` log the full offending path at `error`
-level (`error!("{}", self)`); high-volume scanning could flood logs (log
-amplification) and the messages disclose internal paths.
-
-**Recommendation:** Optionally return an explicit 403 for gate failures; log
-rejected/invalid paths at `warn`/`debug`, not `error`.
+**Still-standing strengths** (from §6.4): virtualized lists
+(`@tanstack/vue-virtual`), client request dedupe + TTL cache, lazy-loaded
+preview components/Prism/`media-chrome` with sensible `manualChunks`,
+`AbortController` on navigation, `NamedFile` (range/ETag/Last-Modified) +
+compression on the server.
 
 ---
 
-## 2. Server — Performance
+## Open items — carried forward
 
-### 2.1 (High) Blocking filesystem & subprocess work runs on the async executor — ✅ Resolved
-`server/src/services/read_dir.rs`, `server/src/structs/entry_details.rs`,
-`server/src/services/read_file.rs`
+### 1.1 (High) No authentication; access control is a source-IP CIDR check — 🟡 Partially addressed
+`server/src/lib/gatekeeper.rs`
 
-> **✅ Resolved (2026-06-25):** `read_dir::read` now enumerates the directory
-> inside `web::block` (the blocking `read_dir`/`metadata`/thumbnail `stat`s),
-> then resolves each entry's header sniff and `ffprobe` concurrently via a
-> `futures` stream bounded with `buffered(8)`. Both `FileFormat::from_file` and
-> `ffprobe::ffprobe` are wrapped in `web::block`, so no blocking filesystem or
-> subprocess work runs on the async executor.
+> **🟡 Partially addressed (2026-06-25):** the IP gate was hardened (real auth
+> was intentionally left out of scope per request). `gatekeeper::verify` parses
+> the peer's actual `IpAddr` (via `peer.ip().to_canonical()`, which also
+> normalizes IPv4-mapped IPv6) and tests it against configurable CIDR ranges
+> using the `ipnet` crate. The default allowlist covers all RFC1918 ranges plus
+> loopback and IPv6 ULA; operators can override it via `allowed_cidrs` /
+> `WEB_FILE_BROWSER_ALLOWED_CIDRS`. The immediate TCP peer is used and
+> **`X-Forwarded-For` is not trusted**.
+>
+> **Still open (by request — no token/basic auth added):** this remains a
+> convenience network filter, not authentication. Behind a reverse proxy every
+> client appears as the proxy's IP, so the **reverse-proxy bypass** is not
+> closed — that needs real auth or a trusted-proxy `X-Forwarded-For`
+> configuration. (The production Caddy proxy setup leans into this
+> deliberately: actix binds `127.0.0.1` so the proxy is the only entry point.)
 
-The request handlers are `async`, but the heavy work is **synchronous and
-blocking**, executed directly on the actix/tokio worker threads:
-
-- `std::fs::read_dir`, `std::fs::metadata`, `fs::exists` (sync I/O).
-- `FileFormat::from_file(path)` — opens and reads the header of **every** file
-  in a directory to sniff its type.
-- `ffprobe::ffprobe(path)` — spawns an external `ffprobe` **subprocess** per
-  audio/video file, synchronously, and waits for it.
-
-A single listing of a media-heavy directory therefore blocks a worker thread
-while it sequentially spawns N ffprobe processes and reads N file headers,
-starving other requests on that thread.
-
-**Recommendation:** Move the per-directory work into
-`actix_web::web::block` / `tokio::task::spawn_blocking`, and run the per-entry
-metadata/format/duration work concurrently (e.g. `futures::stream` with
-bounded concurrency) rather than in a sequential `for` loop. Use an async
-ffprobe wrapper or cap concurrent subprocesses with a semaphore.
+**Recommendation:** Add real authentication (shared token / basic-auth /
+reverse-proxy auth) if the server is ever exposed beyond a trusted network.
 
 ### 2.2 (Medium) Directory listing does O(N) header reads + ffprobe on every cold load — 🟡 Partially addressed
-`server/src/structs/entry_details.rs` (`new`, `determine_file_format`,
+`server/src/structs/entry_details.rs` (`from_raw`, `determine_file_format`,
 `determine_duration`)
 
 > **🟡 Partially addressed (2026-06-25):** the cold-load cost is now paid
@@ -218,470 +94,279 @@ ffprobe wrapper or cap concurrent subprocesses with a semaphore.
 > persisting the media cache across restarts, and a longer/invalidation-based
 > TTL — were **not** implemented and remain open.
 
-Even ignoring the blocking concern, every cold directory load reads each
-file's header and probes each media file's duration. For large directories
-this is slow and I/O-heavy. The media cache helps on *repeat* visits but the
-first load of any directory pays full cost, and the directory cache's 5-minute
-TTL means it is re-paid regularly.
-
 **Recommendation:** Defer expensive metadata (duration, precise type) to a
 lazy/on-demand endpoint or compute it only for the entries actually shown;
-persist the media cache across restarts; consider a longer or invalidation-based TTL.
-
-### 2.3 (Medium) Caches are unbounded and never proactively evicted — ✅ Resolved
-`server/src/lib/cache.rs`, `server/src/lib/media_cache.rs`
-
-> **✅ Resolved (2026-06-25):** both caches were replaced with
-> `moka::future::Cache`, which enforces a bounded `max_capacity` (1024 directory
-> listings / 8192 media entries) with LRU eviction plus TTL. Memory can no
-> longer grow without bound, and the hand-rolled `HashMap`/`RwLock` code was
-> removed.
-
-Both caches are `HashMap`s that only remove an entry when that exact key is
-requested again *after* it expired. Keys that are never revisited live
-forever. Over a long-running process that browses many directories, memory
-grows without bound. There is no max-size or LRU bound and no background
-sweeper (the `cleanup`-style logic exists only on the client).
-
-**Recommendation:** Add a max entry count with LRU/LFU eviction (e.g.
-`moka` or `lru`), or run a periodic sweep task. `moka` would also give you
-async-aware TTL + size bounds and remove most of this hand-rolled code.
-
-### 2.4 (Medium) Cache `get()` takes a write lock on every miss; full `Vec` clones on every hit — ✅ Resolved
-`server/src/lib/cache.rs`, `server/src/lib/media_cache.rs`
-
-> **✅ Resolved (2026-06-25):** the `moka` switch (2.3) shards locking
-> internally, so a miss no longer takes a global write lock to remove a
-> non-existent key. Directory listings are stored as `Arc<Vec<EntryDetails>>`,
-> so a hit returns a cheap `Arc::clone` instead of deep-copying the vector
-> (`read_dir::read` now returns the `Arc`, serialized via `.json(result.as_ref())`).
-
-```rust
-pub async fn get(&self, path: &str) -> Option<Vec<EntryDetails>> {
-  let cache = self.cache.read().await;
-  if let Some(entry) = cache.get(path) && !entry.is_expired() { return Some(entry.data.clone()); }
-  drop(cache);
-  let mut cache = self.cache.write().await;  // taken even for keys that were never cached
-  cache.remove(path);
-  None
-}
-```
-
-- Every **miss** — including brand-new keys that were never present —
-  acquires the write lock to `remove` a non-existent key, serializing
-  concurrent first-time loads.
-- Every **hit** `.clone()`s the entire `Vec<EntryDetails>` (and on `set` the
-  caller clones again). For large directories this is a substantial copy per
-  request.
-
-**Recommendation:** Only take the write lock when an *expired* entry was
-actually found. Store `Arc<Vec<EntryDetails>>` so hits hand back a cheap
-`Arc::clone` instead of a deep copy.
-
-### 2.5 (Low) Redundant `stat` / header reads on the file path — ✅ Resolved
-`server/src/services/resource_handler.rs`, `server/src/services/read_file.rs`
-
-> **✅ Resolved (2026-06-25):** `validate_path` now performs a single
-> `fs::metadata` (replacing its `fs::exists`) and returns the `Metadata`, which
-> the resource handler reuses and threads into `read_file::read` — so a file
-> request is `stat`ed once rather than three times, and per-entry metadata is
-> read once during enumeration (was twice). One residual is left intentionally:
-> the `Auto` file-serve still sniffs the header once rather than reusing the
-> listing's already-computed type, since wiring that to a possibly-cold
-> directory-cache lookup would be fragile for a one-read-per-view cost.
-
-For a file request the path is `stat`ed in `validate_path` (`fs::exists`),
-again in `resource_handler` (`fs::metadata`), and a third time inside
-`read_file::read` for the `Auto` disposition — plus `FileFormat::from_file`
-re-reads the header that was already read during listing.
-
-**Recommendation:** Thread the already-obtained `Metadata` through, and reuse
-the file-type determination rather than recomputing it.
-
----
-
-## 3. Server — Correctness & Robustness
-
-### 3.1 (High) Panics on non-UTF-8 filenames and metadata errors — ✅ Resolved
-`server/src/structs/entry_details.rs` (`EntryDetails::new`)
-
-> **✅ Resolved (2026-06-25):** entry construction was split into
-> `enumerate_dir` + `from_raw` (during the 2.1 refactor); metadata is now read
-> once and entries whose metadata can't be read are skipped instead of
-> `unwrap()`-panicking, and the filename uses `to_string_lossy()` rather than
-> `into_string().unwrap()`. The remaining request-path `unwrap()`s on
-> `file_format` (`file_type`/`full_type`) were rewritten to `match`/`let else`,
-> so they can't panic.
-
-```rust
-let metadata: fs::Metadata = entry.metadata().unwrap();
-...
-let name: String = entry.file_name().into_string().unwrap();
-```
-
-On Linux, filenames are arbitrary bytes and need not be valid UTF-8.
-`into_string().unwrap()` **panics** on any non-UTF-8 name, and
-`entry.metadata().unwrap()` panics on a broken symlink or permission error.
-A single such entry crashes the whole directory request (500), making the
-directory unbrowsable.
-
-**Recommendation:** Use `to_string_lossy()` for the name and handle the
-`metadata`/format errors gracefully (skip the entry or mark it as
-unreadable). Audit all `unwrap()`s in request paths.
-
-### 3.2 (Medium) `str::replace` used for prefix stripping — ✅ Resolved
-`server/src/structs/entry_details.rs` (`path_to_url`), `entry_type.rs`
-(`valid`)
-
-> **✅ Resolved (2026-06-25):** both `path_to_url` and `EntryType::valid` now
-> use `Path::strip_prefix(root_dir_path)`, which removes only the leading root
-> prefix on path-component boundaries instead of substring-replacing every
-> occurrence of the root string. Non-UTF-8 paths fall back to the unmodified
-> path rather than collapsing to `""`.
-
-```rust
-path.to_str().unwrap_or("").replace(&data.config.root_dir_path, "")
-```
-
-`replace` removes **every** occurrence of the root path string, not just the
-leading prefix. If the root path string happens to appear again later in a
-descendant path, the URL is mangled. It also silently drops non-UTF-8 paths to
-`""`.
-
-**Recommendation:** Use `Path::strip_prefix(root_dir)` for correct,
-prefix-only removal.
-
-### 3.3 (Low) Dead / non-compiling code committed — ✅ Resolved
-`server/src/services/read_dir.v2.rs`
-
-> **✅ Resolved (2026-06-25):** the file was deleted. The commented-out
-> server-side-sorting reference implementation remains available in git history.
-
-This file is not declared in `main.rs`'s module tree (so it is not compiled),
-references structs that don't exist in the crate (`query_params`, `sort_dir`,
-`sort_key`), contains an empty `match` with no return value, and ends with a
-large commented-out block. It is confusing dead weight.
-
-**Recommendation:** Either finish and wire up server-side sorting or delete the
-file; keep the commented-out reference implementation in git history, not in
-the tree.
-
-### 3.4 (Low) Config & startup ergonomics — ✅ Resolved
-`server/src/app_config.rs`
-
-> **✅ Resolved (2026-06-25):** the file source is now `.required(false)`, so
-> env-only configuration works without a (possibly empty) `config.toml` present
-> (verified by booting the server from a directory with no config file). The
-> build error message is clearer (`.expect("Failed to load configuration")`),
-> the friendly "must set root_dir" panic is retained, and `parse_app_log_level`
-> is now a single allocation-free `app_levels.get(level)` lookup.
-
-- `.build().unwrap()` panics with an opaque message if `config.toml` is
-  missing; the env-var fallback exists but the file source is not marked
-  `required(false)`, so env-only configuration still requires a (possibly
-  empty) file in some setups.
-- `parse_app_log_level` clones the whole `HashMap` just to list its keys
-  (`app_levels.clone().into_keys()`); a direct `app_levels.get(level)` with a
-  default is simpler and allocation-free.
-
-**Recommendation:** Mark the file source optional, surface a friendly error if
-neither config source yields `root_dir`, and simplify the log-level lookup to a
-single `get`.
-
-### 3.5 (Low) Tooling / repo hygiene — ✅ Resolved
-
-> **✅ Resolved (2026-06-25):** the local Make target was renamed to `serve`
-> (matching its `.PHONY`) so `start` is no longer defined twice, and a stray
-> `--filter name=livestream` in `status` was corrected. `docker-compose.yml` was
-> rewritten to run out of the box: aligned port (`8100`), inline `environment`
-> (replacing the missing `docker/local.env`), a read-only volume mount for the
-> browse root, and the obsolete `version`/external-network removed. The
-> `Dockerfile` now installs `ffmpeg`, and the `README` documents the runtime
-> `ffprobe` dependency. (Note: the compose container is still subject to the
-> source-IP gatekeeper from 1.1 — Docker bridge IPs aren't in its allowlist.)
-
-- `server/Makefile` defines `start` twice (once aliased to `serve`/`cargo run`,
-  once to `docker-compose up`) — the second silently wins.
-- `server/docker-compose.yml` maps port `1234:1234` and references
-  `docker/local.env`, but the app defaults to port `9000`/`8100` and the env
-  file isn't in the repo — the compose setup won't work out of the box.
-- `server/README.md` documents an external `metadata`/ffmpeg dependency but the
-  code uses the `ffprobe` crate; the runtime dependency on a system `ffprobe`
-  binary isn't called out (the Alpine `Dockerfile` doesn't install ffmpeg, so
-  duration probing silently fails in the container).
-
-**Recommendation:** De-duplicate the Make targets, fix/align the compose
-ports + env file, and install `ffmpeg` in the Docker image (or document that
-duration metadata requires it).
-
----
-
-## 4. Client — Security
-
-### 4.1 (Medium) SVG previews execute embedded scripts — ✅ Resolved
-`client/src/components/directory_view/preview_dialog/file_viewers/ImagePreview.vue`,
-`DocumentPreview.vue`
-
-> **✅ Resolved (2026-06-25):** images (including SVGs) now render via `<img>`
-> instead of `<object>` — an `<img>` does not execute `<script>` embedded in an
-> SVG. Documents render in a plain `<iframe>` (instead of `<object>`), and
-> script execution in a framed file (e.g. a malicious HTML/SVG document) is
-> blocked by a server-sent **`Content-Security-Policy: script-src 'none'`** on
-> responses rather than an iframe `sandbox` — a strict sandbox also prevents the
-> browser's PDF viewer from rendering, so the CSP is used instead (the
-> alternative the analysis itself suggested). The server also sends
-> `X-Content-Type-Options: nosniff`. Both headers are added in
-> `server/src/main.rs` and verified present on file responses.
-
-SVGs are rendered with `<object :data='entry.url' type='image/svg+xml'>`, and
-documents/spreadsheets with `<object :data='entry.url'>`. An `<object>` loading
-an SVG (or HTML) **executes embedded `<script>`** in the origin that served the
-file (the server's origin). Because the file server has no auth/cookies the
-blast radius is small today, but it is still arbitrary script execution
-triggered by previewing a file, and it shares an origin with any future
-authenticated functionality.
-
-**Recommendation:** Render images via `<img>` (which does **not** run SVG
-scripts) instead of `<object>`, or serve user files with a restrictive
-`Content-Security-Policy` and `Content-Disposition: attachment` /
-`X-Content-Type-Options: nosniff`. Sandbox document previews in an
-`<iframe sandbox>` rather than `<object>`.
-
-### 4.2 (Low) Text preview is fetched and highlighted client-side — verify escaping — ✅ Resolved
-`client/src/components/.../file_viewers/TextPreview.vue`
-
-> **✅ Resolved (2026-06-25):** verified Prism's `fileHighlight` tokenizes the
-> fetched text into the DOM (it does not inject raw HTML), so the preview path
-> escapes content. As the recommended hardening, text files are served as
-> `text/plain` (already the case) **and** now carry `X-Content-Type-Options:
-> nosniff` (added in `server/src/main.rs`), so a `.txt` containing HTML can't be
-> sniffed into an executable type — verified against a live response.
-
-Prism's `fileHighlight` plugin fetches the raw file (`data-src`) and injects it
-into `<pre><code>`. Prism escapes text content, so this is generally safe, but
-it depends entirely on Prism's escaping and the file being served with a
-non-executable content type. Worth an explicit note/test.
-
-**Recommendation:** Ensure text files are served with `nosniff` and a
-`text/plain` (or otherwise non-renderable) content type so a `.txt` containing
-HTML can never be sniffed into an executable type.
-
----
-
-## 5. Client — Correctness
-
-### 5.1 (Medium) `checkSupport` version-range comparison is inverted — ✅ Resolved
-`client/src/lib/browser.ts`
-
-> **✅ Resolved (2026-06-25):** the ranged-stats check is now the intended
-> inclusive interval `Number(lower) <= details.version && details.version <= Number(higher)`.
-
-```rust
-if (Number(lower) < details.version && details.version > Number(higher)) { return true; }
-```
-
-The second clause should be `details.version < Number(higher)` to mean "within
-`[lower, higher]`". As written it is `version > lower && version > higher`,
-which is just `version > higher` — so the range check never matches the
-intended interval and feature detection for ranged browser stats is broken.
-
-**Recommendation:** `Number(lower) <= details.version && details.version <= Number(higher)`.
-
-### 5.2 (Low) Backslash path fix only replaces the first occurrence — ✅ Resolved
-`client/src/stores/router.ts`
-
-> **✅ Resolved (2026-06-25):** the fix now uses a global regex
-> (`to.path.replace(/%5C/g, '//')`) so every encoded backslash is rewritten, not
-> just the first, with a comment explaining the Windows-path intent. A global
-> regex is used in preference to `replaceAll` to stay within the `since 2018`
-> browserslist / `es2020` build target.
-
-```ts
-const should_update = path.includes('%5C');
-if (should_update) to.path = to.path.replace('%5C', '//');
-```
-
-`String.replace` with a string argument replaces only the **first** match, so a
-path with multiple encoded backslashes is only partially fixed.
-
-**Recommendation:** Use `replaceAll('%5C', '//')` (or a global regex), and add a
-comment explaining the Windows-path intent.
-
-### 5.3 (Low) `toFileUrl` percent-encodes path separators — ✅ Resolved
-`client/src/lib/utils.ts`
-
-> **✅ Resolved (2026-06-25):** the path is now split on `/`, each segment
-> `encodeURIComponent`-encoded, and re-joined with `/`, so separators stay as
-> `/` instead of becoming `%2F`.
-
-```ts
-return `${http.defaults.baseURL!}/${encodeURIComponent(trim(path))}`;
-```
-
-`encodeURIComponent` encodes `/` as `%2F`, so a nested path becomes
-`a%2Fb%2Fc.png`. Many servers (and actix by default) reject or refuse to decode
-`%2F` inside a path segment, which can break previews/downloads of nested
-files. The server's double-decode (3.1/1.3) may currently paper over this, but
-it is fragile.
-
-**Recommendation:** Encode each path **segment** separately and re-join with
-`/`, or use `encodeURI` for the path portion.
-
-### 5.4 (Low) `RequestCache.setPending` stores `undefined` as `T` — ✅ Resolved
-`client/src/lib/request_cache.ts`
-
-> **✅ Resolved (2026-06-25):** `CacheEntry.data` is now optional (`data?: T`),
-> the `as T` cast in `setPending` is gone, and `get()` returns `null` (via
-> `entry.data ?? null`) for a pending-only entry instead of handing back
-> `undefined` typed as a valid `T`.
-
-```ts
-this.cache.set(key, { data: existing?.data as T, promise, timestamp: ... });
-```
-
-When no entry exists yet, `data` is `undefined` cast to `T`, so a concurrent
-`get()` during the in-flight window returns `undefined` typed as a valid
-result. Callers happen to treat it as falsy, but the type lies.
-
-**Recommendation:** Make `CacheEntry.data` optional (`data?: T`) and have
-`get()` return `null` when `data` is absent, so the types reflect reality.
-
----
-
-## 6. Client — Performance & General Improvements
-
-### 6.1 (Low) `event_bus` wraps a module singleton in a `computed` — ✅ Resolved
-`client/src/composables/event_bus.ts`
-
-> **✅ Resolved (2026-06-25):** `useEventBus` now returns the module-level
-> `Emittery` singleton directly; the `computed`/`get` wrapper (and their imports)
-> were removed.
-
-`useEventBus` creates a `computed` that just returns a module-level `Emittery`
-instance and immediately unwraps it. The reactivity wrapper adds nothing.
-
-**Recommendation:** Return the singleton directly.
-
-### 6.2 (Low) `scroll_offset` map grows unbounded — ✅ Resolved
-`client/src/stores/global.ts`, `client/src/views/DirectoryView.vue`
-
-> **✅ Resolved (2026-06-25):** `scroll_offset` is now encapsulated behind
-> `rememberScrollOffset`/`getScrollOffset` store methods (the raw ref is no
-> longer exported). Writes cap the map at `MAX_SCROLL_OFFSETS` (50) entries,
-> evicting the oldest (least-recently-used) keys, so it stays bounded over long
-> sessions. `DirectoryView` calls the methods instead of mutating the map
-> directly.
-
-Scroll positions are stored per path forever. Long browsing sessions
-accumulate entries indefinitely (minor, but trivially bounded).
-
-**Recommendation:** Cap the map size or prune on navigation.
-
-### 6.3 (Low) Vue Devtools plugin is always registered — ✅ Resolved
-`client/vite.config.ts`
-
-> **✅ Resolved (2026-06-25):** the config was converted to the function form
-> and `VueDevtools(...)` is now spread in only when `command === 'serve'`, so it
-> is never registered for production builds.
-
-`VueDevtools({...})` is added unconditionally. The plugin disables itself in
-production builds, but gating it behind `mode === 'development'` makes intent
-explicit and avoids any chance of shipping the inspector hooks.
-
-**Recommendation:** Add the plugin conditionally on the Vite `command`/`mode`.
-
-### 6.4 (Positive) Things already done well
-- **Virtualized lists** via `@tanstack/vue-virtual` in `ViewStack`/`ViewGrid`
-  keep large directories fast to render.
-- **Request deduplication + TTL cache** on the client avoids redundant fetches.
-- **Lazy-loaded preview components and Prism** keep the initial bundle small;
-  `manualChunks` splits vendors sensibly.
-- **`AbortController`** cancels in-flight directory requests on navigation.
-- Server uses `actix-files::NamedFile` (range requests, ETag, Last-Modified)
-  for efficient downloads, and gzip/brotli compression is enabled.
-
-### 6.5 (Low) `media-chrome` was eagerly loaded on every page visit — ✅ Resolved
-`client/src/main.ts`, `client/src/components/directory_view/preview_dialog/file_viewers/AudioPreview.vue`, `VideoPreview.vue`
-
-> **✅ Resolved (2026-06-28):** `import 'media-chrome'` was moved out of
-> `main.ts` and into `AudioPreview.vue` and `VideoPreview.vue`. Both viewers are
-> already lazy-loaded via `defineAsyncComponent`, so the registration now defers
-> to the first media preview. Measured result: `vendor-media` (42.89 KB gzip /
-> 181 KB raw) is no longer listed in `<link rel="modulepreload">` — first-paint
-> eager JS dropped from ≈ 301.8 KB gzip to ≈ 258.9 KB gzip (~14%).
-
-`client/src/main.ts` contained a bare `import 'media-chrome'` that caused
-the bundler to pull the entire `vendor-media` chunk (42.89 KB gzip / 181 KB
-raw) into the eager `modulepreload` set for every page load. The `<media-*>`
-custom elements only ever render inside `AudioPreview.vue` and
-`VideoPreview.vue`, which are already `defineAsyncComponent`-wrapped — so
-every user browsing directories without opening a media file paid the full
-parse-and-execute cost for nothing.
-
-Note: §6.4's claim that "Lazy-loaded preview components and Prism keep the
-initial bundle small" was accurate for Prism but incomplete — `media-chrome`
-had slipped through as an eager top-level import. This finding corrects it.
-
----
-
-## 7. Security Audit — 2026-06-28
-
-A second pass over the server and client, run after the 2026-06-25 hardening round.
-Result: no new significant vulnerabilities found. Three items were identified:
+persist the media cache across restarts; consider a longer or
+invalidation-based TTL.
 
 ### 7.1 (Informational) esbuild@0.27.7 — GHSA-g7r4-m6w7-qqqr — ✅ Accepted/tracked
 `client/pnpm-lock.yaml`
 
 esbuild's dev server (bundled with Vite) can be configured to respond to HTTP
-requests from any host. Severity: **low**. Affects: **Windows only**, dev server
-only, not the production build output, not the Rust server.
+requests from any host. Severity: **low**. Affects: **Windows only**, dev
+server only, not the production build output, not the Rust server.
 
-**Why not fixed now:** vite 8.1.0's peer-dep range (`^0.27.0 || ^0.28.0`) causes
-`pnpm update esbuild` to resolve to `0.27.7` (the newest `0.27.x`), not `0.28.x`
-(the patched range). Forcing it via `pnpm.overrides` is viable but requires a full
-rebuild to verify no breakage — effort not proportional to a dev-only, Windows-only,
-low-severity CVE on a macOS host. The fix will land naturally when vite bumps its
-esbuild dependency in a normal upgrade cycle.
+**Why not fixed now:** vite 8.1.0's peer-dep range (`^0.27.0 || ^0.28.0`)
+causes `pnpm update esbuild` to resolve to `0.27.7` (the newest `0.27.x`), not
+`0.28.x` (the patched range). Forcing it via `pnpm.overrides` is viable but
+requires a full rebuild to verify no breakage — effort not proportional to a
+dev-only, Windows-only, low-severity CVE on a macOS host.
 
-**Triage conclusion:** accepted low-risk, reviewed 2026-06-28; check again on next
-vite major bump.
-
-### 7.2 (Correctness, not security) `determine_created_at` calls `.modified()` — 🟡 Out of scope
-`server/src/structs/entry_details.rs:147`
-
-`determine_created_at` calls `metadata.modified()` instead of
-`metadata.created()`, so `created_at` and `last_modified_at` both return the
-modification time. This is a correctness bug, not a security issue.
-
-The obvious fix (`metadata.created()`) has a portability risk: `btime` is
-unavailable on several Linux filesystems and returns an error, which would regress
-`created_at` to `"n/a"` on the deploy target. Deferred to its own tracked task.
-
-### 7.3 (Defense-in-depth) `frame-ancestors 'none'` added to CSP — ✅ Resolved
-`server/src/main.rs`
-
-> **✅ Resolved (2026-06-28):** `Content-Security-Policy` extended from
-> `script-src 'none'` to `script-src 'none'; frame-ancestors 'none'`. The
-> `frame-ancestors` directive is the CSP Level 2 replacement for
-> `X-Frame-Options: DENY`: it prevents any origin from embedding any server
-> response in a frame, iframe, or object. For a no-auth server this is low real
-> risk (clickjacking buys nothing without state-changing endpoints), but the
-> directive is free to add alongside the existing `script-src 'none'`.
+**Triage conclusion:** accepted low-risk, reviewed 2026-06-28; check again on
+next vite major bump.
 
 ---
 
-## 8. Suggested Priority Order
+## 9. Optimization / Refactor / Simplification Pass — 2026-07-20
+
+A full pass over both packages focused on optimization, refactoring, and
+simplification opportunities. No new security vulnerabilities found; the
+significant items are two correctness bugs on rarely-exercised error paths
+(9.1, 9.7), a set of duplicated-orchestration refactors, and dead code.
+
+### Server
+
+### 9.1 (Medium) `.webloc` parsing can panic per-request; leftover debug output; dead `.url` support — ✅ Resolved
+`server/src/lib/parse_url_file.rs`,
+`server/src/structs/entry_details.rs` (`external_url`)
+
+> **✅ Resolved (2026-07-20):** the parse chain now returns `Option<String>`
+> end-to-end. `external_url` reads the file with `.ok()?` at both levels (no
+> more `unwrap()` — an unreadable or non-UTF-8 shortcut, e.g. a binary-plist
+> `.webloc`, yields `None`), `parse_webloc_file` returns `None` on malformed
+> XML instead of panicking and the per-tag `println!` is gone, and the `.url`
+> INI format (`URL=` line) is now actually parsed. Empty/whitespace results
+> normalize to `None` so the client sees `null` rather than `""`. Verified
+> live against a smoke root: XML `.webloc` → its URL, `.url` → its URL,
+> binary/empty/URL-less `.webloc` → `null` with the listing returning 200,
+> and the entries rendering correctly (external links vs. plain files) in the
+> browser.
+
+Three problems in the external-URL path, which runs for every `.url`/`.webloc`
+file in every uncached listing:
+
+- `external_url` does `Some(content.unwrap())` on the inner
+  `fs::read_to_string` result — a `.webloc` that is unreadable **or not valid
+  UTF-8 panics**. Real macOS `.webloc` files are frequently *binary* plists,
+  so this is a panic on ordinary input, not a corner case.
+- `parse_webloc_file` contains a `panic!` on malformed XML and a leftover
+  `println!` that fires for **every XML start tag** parsed.
+- `parse_url_file` (the `.url` half) is unimplemented and returns `""`, yet
+  `"url"` is listed in `EXT_URL_EXTS` — so every `.url` file is read fully
+  from disk to produce `Some("")`.
+
+**Recommendation:** Make the parse chain return `Option<String>` end-to-end;
+replace the `unwrap()`/`panic!`/`println!` with graceful `None`s; either
+implement the (trivial, INI-style) `.url` parse or drop `"url"` from
+`EXT_URL_EXTS` until it is implemented.
+
+### 9.2 (Low) `read_file::read` triplicates the open logic and hides a `read_mode_threshold` inconsistency — 🔲 Open
+`server/src/services/read_file.rs`
+
+All three `DispositionKind` arms perform the same
+`NamedFile::open_async().use_etag(true).use_last_modified(true).set_content_disposition(...)`
+sequence; only the `DispositionType` differs. The duplication also hides an
+inconsistency: `Attachment`/`Inline` set `.read_mode_threshold(0)` while
+`Auto` does not, though all three serve the same files.
+
+**Recommendation:** Resolve the `DispositionType` first (the `Auto` sniff
+included), then use a single open-and-configure path — and decide the
+`read_mode_threshold` question once, intentionally.
+
+### 9.3 (Low) Dead server code — 🔲 Open
+`server/src/app_config.rs`, `server/src/structs/entry_details.rs`,
+`server/src/lib/error.rs`
+
+- `AppConfig.nonalpha_pattern` is compiled at startup and never read.
+- `impl Index<&str> for EntryDetails` (a panicking string-indexed field
+  accessor) has no callers.
+- `AppError::IoError` and its `From<io::Error>` impl are never constructed —
+  every call site uses `map_err` into `Internal`.
+
+**Recommendation:** Delete all three.
+
+### 9.4 (Low) Duplicated entry-resolution pipeline in `read_dir` and `search` — 🔲 Open
+`server/src/services/read_dir.rs`, `server/src/services/search.rs`
+
+Both services contain the identical "phase 2" block —
+`stream::iter(raw_entries).map(from_raw).buffered(ENTRY_CONCURRENCY).collect()`
+— plus a duplicated `ENTRY_CONCURRENCY` constant with the same rationale
+comment.
+
+**Recommendation:** Extract a shared `EntryDetails::resolve_all(raw, data)`
+helper (or a free function in `entry_details.rs`) so the concurrency policy
+lives in one place.
+
+### 9.5 (Low) Minor `entry_details` / `app_config` cleanups — 🔲 Open
+`server/src/structs/entry_details.rs`, `server/src/app_config.rs`
+
+- `from_raw` checks `entry_type == DIR` and `determine_file_format`
+  immediately re-checks the same condition.
+- `file_type()` / `full_type()` allocate a fresh `String` for what are all
+  static literals; returning `&'static str` (or `Cow`) removes ~20 allocations
+  per directory entry in the hottest struct in the app.
+- `parse_app_log_level` builds a `HashMap` to replicate what
+  `log::LevelFilter::from_str` (case-insensitive) already does in one line.
+
+**Recommendation:** Deduplicate the DIR check, switch the type mappers to
+static strs, and use `LevelFilter::from_str` with an `Info` fallback.
+
+### 9.6 (Optional) Listing payload carries client-derivable fields — 🔲 Open
+`server/src/structs/entry_details.rs`, `client/src/lib/sort.ts`,
+`client/src/types/entry.d.ts`
+
+Each JSON entry ships `name_lowercase`, `duration_order`, and formatted +
+epoch duplicates of both timestamps, purely so the client's `sort.ts` can
+`prop()` them directly. All are derivable client-side in a single pass over
+the listing. Meaningful response weight for large directories, but it is a
+coordinated server + client change.
+
+**Recommendation:** Only worth doing if very large listings are common; if so,
+drop the derived fields from `EntryDetails` and compute them in
+`processEntries` on the client.
+
+### Client
+
+### 9.7 (Medium) A failed directory request poisons the request cache for up to 5 minutes — ✅ Resolved
+`client/src/views/DirectoryView.vue` (`getEntries`),
+`client/src/lib/request_cache.ts`
+
+> **✅ Resolved (2026-07-20):** `RequestCache` gained a single
+> `fetch(key, factory)` method that resolves fresh-cached / in-flight / new
+> request in one place and **removes its pending entry when the promise
+> rejects** (guarded so a newer request's entry is never clobbered; the
+> attached `.catch` also absorbs the would-be unhandled rejection).
+> `getPending`/`setPending` were removed as superseded. `getEntries` collapsed
+> onto the new API, and two companion bugs in it were fixed: the `error` flag
+> is now reset at the start of each fetch (it previously latched `true`
+> forever, keeping the error view over later successful loads), and the 150 ms
+> loading timer is cleared in `finally` (it previously leaked on the error
+> path). Verified live: with the API stopped, navigating shows the error view;
+> after restarting the API, a search from the same SPA session succeeds
+> (error state clears) and clearing the search refetches the exact
+> previously-failed path successfully — no reload, no 5-minute lockout, no
+> console unhandled-rejection warnings.
+
+`getEntries` stores `request_promise.then(...)` via `setPending`, but nothing
+removes the entry when the promise **rejects**, and `getPending` never checks
+the TTL. After one transient network failure, every revisit of that path
+re-awaits the same rejected promise and instantly shows the error state until
+the 5-minute TTL evicts the entry. The stored rejected chain also surfaces as
+an unhandled-rejection console warning.
+
+**Recommendation:** Remove the pending entry when its promise rejects. The
+clean shape is a single `RequestCache.fetch(key, factory)` method that
+encapsulates cached/pending/fresh + failure cleanup — which also collapses
+`getEntries`' three-branch cache dance into one call (see 9.14 for the
+companion dead-method trim).
+
+### 9.8 (Low) `useIsMobile`'s CSS-variable breakpoint read never works — 🔲 Open
+`client/src/composables/is_mobile.ts`
+
+`--breakpoint-md` resolves to `48rem`, and `Number('48rem')` is `NaN`, so the
+observed `useCssVar` is dead weight and the composable always uses the 768
+fallback.
+
+**Recommendation:** Either parse the value properly (`parseFloat` × root
+font-size) or delete the CSS-var plumbing and keep the honest constant.
+
+### 9.9 (Low) `checkSupport`'s version-range branch ignores the range's support flag — 🔲 Open
+`client/src/lib/browser.ts`
+
+Residual gap from **5.1**: the exact-match branch checks
+`version_map[matched_version] === 'y'`, but the range branch returns `true`
+whenever the version falls inside *any* range — including ranges flagged `'n'`
+or `'a'` (partial support).
+
+**Recommendation:** `return version_map[range] === 'y';` inside the range
+match, mirroring the exact-match branch.
+
+### 9.10 (Low) `ViewStack` / `ViewGrid` duplicate the virtualizer wiring — 🔲 Open
+`client/src/components/directory_view/view_layouts/ViewStack.vue`,
+`ViewGrid.vue`
+
+~60 lines are duplicated between the two: the one-shot `scroll_margin` watch
+(with its subtle anti-jitter rationale), the virtualizer options object, and
+the `scrollToIndex` watch.
+
+**Recommendation:** Extract a `useVirtualizedEntries()` composable so the
+hard-won scroll-margin behavior is enforced in exactly one place.
+
+### 9.11 (Low) Item layouts duplicate the "last modified" tooltip badge — 🔲 Open
+`client/src/components/directory_view/item_layouts/ListItem.vue`,
+`RowItem.vue` (and partly `GridItem.vue`)
+
+The tooltip'd relative/absolute "last modified" badge — including identical
+tooltip timing config — is repeated per layout.
+
+**Recommendation:** Extract an `EntryModifiedBadge.vue` (and optionally a
+duration badge) so the markup and tooltip behavior stay consistent.
+
+### 9.12 (Low) `PreviewDialog` rebuilds its type mapping per evaluation; reduced-motion is sampled once — 🔲 Open
+`client/src/components/directory_view/preview_dialog/PreviewDialog.vue`
+
+- The `preview_type` computed rebuilds the entire six-entry
+  `PreviewType → { class, component }` mapping object on every re-evaluation;
+  only the SVG class suffix is actually dynamic.
+- `reduced_motion` samples `matchMedia('(prefers-reduced-motion: reduce)')`
+  once at setup and never updates.
+
+**Recommendation:** Hoist the mapping to module scope (compute the SVG suffix
+separately); use VueUse's `useMediaQuery` for a reactive reduced-motion flag.
+
+### 9.13 (Low) `router.ts` — twin query functions and a hand-maintained search-param list — 🔲 Open
+`client/src/stores/router.ts`, `client/src/lib/utils.ts`
+
+- `pushQuery` / `replaceQuery` are identical except for `$router.push` vs
+  `.replace`.
+- `clearSearch` hand-lists the five search params that
+  `TRANSIENT_QUERY_PARAMS` (minus `linked`) already enumerates — a new search
+  param must currently be added in two places.
+
+**Recommendation:** One private `applyQuery(patches, { replace })`; derive
+`clearSearch`'s patch object from the transient-param list.
+
+### 9.14 (Low) Dead client code — 🔲 Open
+`client/src/lib/utils.ts`, `client/src/lib/entry_helpers.ts`,
+`client/src/lib/request_cache.ts`, `client/src/lib/sort.ts`
+
+- `utils.ts`: `capitalize` and `sleep` have zero callers.
+- `entry_helpers.ts`: the commented-out sort functions
+  (`sortByDir`/`sortByKey`/`sortDirectoriesTop`) and their commented imports.
+- `request_cache.ts`: `invalidate`, `clear`, `size`, `getStats`, `cleanup`
+  are all unused (~45 lines). Pairs naturally with the 9.7 `fetch()` refactor.
+- `sort.ts`: `criteria`'s first element is immediately discarded by the
+  `criteria.slice(1)` below it, and `sort_dir` is re-validated despite the
+  router store's `validate` already guaranteeing it.
+
+**Recommendation:** Delete; rebuild `sort.ts`'s criteria list without the
+dummy element.
+
+### 9.15 (Low) `TextPreview` Prism-hook cleanup is fragile; global DOM queries — 🔲 Open
+`client/src/components/directory_view/preview_dialog/file_viewers/TextPreview.vue`
+
+- The `complete` hook is removed by comparing `hook.name ===
+  postHightlightHandler.name` — function-name string comparison is vulnerable
+  to minifier name collisions; comparing function identity is simpler and
+  exact. (The handler name also has a typo: `Hightlight`.)
+- `refreshTextView` / `postHightlightHandler` query `document` globally
+  (`document.querySelector('pre code')`) instead of scoping to `text_ele`.
+
+**Recommendation:** Remove the hook by identity, fix the typo, scope the DOM
+queries to the component's own subtree.
+
+---
+
+## 10. Suggested Priority Order (open items)
 
 | # | Area | Severity | Effort | Item |
 |---|------|----------|--------|------|
-| 1 | Server sec | High | Med | ✅ Canonicalize paths to block symlink escape (1.2) |
-| 2 | Server sec | High | Med | 🟡 Real auth; fix IP gate semantics & proxy bypass (1.1) — IP gate hardened (CIDR/IPv6); auth + proxy bypass still open |
-| 3 | Server robustness | High | Low | ✅ Remove panicking `unwrap()`s on filenames/metadata (3.1) |
-| 4 | Server perf | High | Med | ✅ Move blocking FS/ffprobe off the async executor (2.1) |
-| 5 | Server sec | Med | Low | ✅ Lock down CORS to known origins (1.4) |
-| 6 | Server perf | Med | Med | ✅ Bound/evict caches; `Arc` the cached vec; fix miss-locking (2.3, 2.4) |
-| 7 | Client sec | Med | Low | ✅ Render images via `<img>`; sandbox/CSP document previews (4.1) |
-| 8 | Client correctness | Med | Low | ✅ Fix inverted version-range check (5.1) |
-| 9 | Server hygiene | Low | Low | ✅ Delete/finish `read_dir.v2.rs`; fix Make/compose/Docker ffmpeg (3.3, 3.5) |
-| 10 | Client correctness | Low | Low | ✅ `replaceAll` backslash, per-segment URL encoding (5.2, 5.3) |
-| 11 | Client perf | Low | Low | ✅ Defer `media-chrome` registration to first media preview (6.5) |
+| 1 | Server robustness | Med | Low | ✅ 9.1 — `.webloc` panic paths, debug `println!`, dead `.url` support |
+| 2 | Client correctness | Med | Low | ✅ 9.7 — failed request poisons the pending cache (add `fetch()` API) |
+| 3 | Client correctness | Low | Low | 9.8, 9.9 — `useIsMobile` NaN breakpoint; `checkSupport` range flag |
+| 4 | Dead code | Low | Low | 9.3, 9.14 — server + client dead-code deletions (zero risk) |
+| 5 | Server simplification | Low | Low | 9.2, 9.4, 9.5 — `read_file` collapse, shared resolve pipeline, minor cleanups |
+| 6 | Client refactors | Low | Med | 9.10–9.13, 9.15 — virtualizer composable, shared badges, dialog/router cleanups |
+| 7 | Server sec | High | High | 1.1 — real authentication (still deferred by request) |
+| 8 | Server perf | Med | Med | 2.2 — lazy/persistent media metadata |
+| 9 | Payload | Low | Med | 9.6 — drop client-derivable listing fields (optional) |

@@ -13,7 +13,9 @@ use log::{error, warn};
 
 use serde::Serialize;
 use std::{
-  ffi::OsStr, fs, ops::Index, path::{Path, PathBuf},
+  fs,
+  ops::Index,
+  path::{Path, PathBuf},
 };
 
 #[derive(Clone, Serialize)]
@@ -235,19 +237,16 @@ impl EntryDetails {
   }
 
   pub async fn external_url(path: PathBuf) -> Option<String> {
-    let file_ext: &OsStr = path.extension().unwrap_or_default();
-    let file_ext_str: &str = file_ext.to_str().unwrap_or_default();
-    if !Self::EXT_URL_EXTS.contains(&file_ext_str) {
+    let ext = path.extension()?.to_str()?.to_lowercase();
+    if !Self::EXT_URL_EXTS.contains(&ext.as_str()) {
       return None;
     }
 
-    let path_copy = path.clone();
-    let result = match web::block(move || fs::read_to_string(path_copy)).await {
-      Ok(content) => Some(content.unwrap()),
-      Err(_) => None,
-    };
-
-    Some(parse(file_ext_str, &result.unwrap_or_default()))
+    // Read off the executor. A shortcut that can't be read — or isn't valid
+    // UTF-8, like a binary-plist `.webloc` — simply has no external URL; it
+    // must never fail (or panic) the listing that's being built.
+    let content = web::block(move || fs::read_to_string(path)).await.ok()?.ok()?;
+    parse(&ext, &content)
   }
 
   pub fn file_type(file_format: Option<FileFormat>) -> String {

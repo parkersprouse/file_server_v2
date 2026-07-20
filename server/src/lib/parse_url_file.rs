@@ -1,68 +1,73 @@
 use quick_xml::events::Event;
 use quick_xml::reader::Reader;
 
-pub fn parse(ext: &str, content: &str) -> String {
-  match ext {
+/// Extract the target URL from a browser-shortcut file (`.url` / `.webloc`).
+///
+/// Best-effort by design: shortcut parsing runs while building directory
+/// listings, so malformed or unexpected content must yield `None` — never an
+/// error or a panic that could fail the whole listing.
+pub fn parse(ext: &str, content: &str) -> Option<String> {
+  let url = match ext {
     "url" => parse_url_file(content),
     "webloc" => parse_webloc_file(content),
-    _ => "".to_string()
-  }
+    _ => None,
+  }?;
+
+  if url.is_empty() { None } else { Some(url) }
 }
 
-pub fn parse_url_file(_content: &str) -> String {
-  "".to_string()
+/// Windows internet shortcuts are INI files with a `URL=` key (conventionally
+/// under an `[InternetShortcut]` section, but the key line alone is enough).
+fn parse_url_file(content: &str) -> Option<String> {
+  content
+    .lines()
+    .filter_map(|line| line.trim().strip_prefix("URL="))
+    .map(|url| url.trim().to_string())
+    .next()
 }
 
-pub fn parse_webloc_file(content: &str) -> String {
+/// macOS `.webloc` files (when XML rather than binary plist) are a plist
+/// `<dict>` pairing `<key>URL</key>` with a `<string>` holding the target.
+/// Binary plists never reach here — they fail the UTF-8 read upstream.
+fn parse_webloc_file(content: &str) -> Option<String> {
   let mut reader: Reader<&[u8]> = Reader::from_str(content);
   reader.config_mut().trim_text(true);
 
-  // let mut txt = Vec::new();
   let mut buf = Vec::new();
-  let mut previous_key = "";
-  let mut current_key = "";
-  let mut previous_value: String = "".to_string();
-  let mut url = Vec::new();
+  let mut in_key = false;
+  let mut in_string = false;
+  let mut last_key_was_url = false;
 
-  // The `Reader` does not implement `Iterator` because it outputs borrowed data (`Cow`s)
   loop {
-    // NOTE: this is the generic case when we don't know about the input BufRead.
-    // when the input is a &str or a &[u8], we don't actually need to use another
-    // buffer, we could directly call `reader.read_event()`
     match reader.read_event_into(&mut buf) {
-      Err(e) => panic!("Error at position {}: {:?}", reader.error_position(), e),
-      // exits the loop when reaching end of file
-      Ok(Event::Eof) => break,
+      // Malformed XML yields no URL rather than an error.
+      Err(_) => return None,
+      Ok(Event::Eof) => return None,
 
-      Ok(Event::Start(e)) => {
-        println!("{:?}", String::from_utf8(e.name().as_ref().to_vec()));
-        match e.name().as_ref() {
-          b"key" => {
-            previous_key = "";
-            current_key = "key";
-          },
-          b"string" => {
-            previous_key = "key";
-            current_key = "string";
-          },
-          _ => (),
-        }
-      }
+      Ok(Event::Start(e)) => match e.name().as_ref() {
+        b"key" => {
+          in_key = true;
+          last_key_was_url = false;
+        },
+        b"string" => in_string = true,
+        _ => (),
+      },
+      Ok(Event::End(e)) => match e.name().as_ref() {
+        b"key" => in_key = false,
+        b"string" => in_string = false,
+        _ => (),
+      },
       Ok(Event::Text(e)) => {
-        if current_key == "key" {
-          previous_value = e.decode().unwrap().into_owned();
-        }
-        else if previous_key == "key" && previous_value == "URL" && current_key == "string" {
-          url.push(e.decode().unwrap().into_owned());
+        let Ok(text) = e.decode() else { return None };
+        if in_key {
+          last_key_was_url = text.as_ref() == "URL";
+        } else if in_string && last_key_was_url {
+          return Some(text.into_owned());
         }
       },
 
-      // There are several other `Event`s we do not consider here
-      _ => (),
+      Ok(_) => (),
     }
-    // if we don't keep a borrow elsewhere, we can clear the buffer to keep memory usage low
     buf.clear();
   }
-
-  url.concat()
 }

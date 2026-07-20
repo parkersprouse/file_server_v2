@@ -93,36 +93,22 @@ const linked_index = computed<number>(() => {
 });
 
 async function getEntries(): Promise<void> {
+  const path = pathToRoute($route);
+  // A previous failure shouldn't leave the error view up once a later fetch
+  // succeeds (it takes template precedence over the entries).
+  set(error, false);
+  // Delay the loading state so cache hits and fast responses never flash it.
+  const timer_id = setTimeout(() => set(entries, undefined), 150);
+
   try {
-    const path = pathToRoute($route);
+    // The cache resolves this to fresh cached data, an in-flight request for
+    // the same path, or a new (deduplicated) request. Failures aren't cached.
+    const data = await directory_cache.fetch(path, async () => {
+      const res = await http.get(path, { signal: entries_abort_controller.signal });
+      return res.data;
+    });
 
-    // Check if we have a cached result
-    const cached_data = directory_cache.get(path);
-    if (cached_data) {
-      processEntries(cached_data as Entry[]);
-      await handleLinkedEntry();
-      return;
-    }
-
-    // Check if there's a pending request for the same path
-    const pending = directory_cache.getPending(path);
-    if (pending) {
-      const cached = await pending;
-      processEntries(cached as Entry[]);
-      await handleLinkedEntry();
-      return;
-    }
-
-    // Make the request and cache the promise for deduplication
-    const timer_id = setTimeout(() => set(entries, undefined), 150);
-    const request_promise = http.get(path, { signal: entries_abort_controller.signal });
-    directory_cache.setPending(path, request_promise.then((res) => res.data));
-
-    const res = await request_promise;
-    clearTimeout(timer_id);
-
-    directory_cache.set(path, res.data);
-    processEntries(res.data);
+    processEntries(data as Entry[]);
     await handleLinkedEntry();
   } catch (err) {
     if (entries_abort_controller.signal.aborted) return;
@@ -134,6 +120,8 @@ async function getEntries(): Promise<void> {
       return;
     }
     set(error, true);
+  } finally {
+    clearTimeout(timer_id);
   }
 }
 
