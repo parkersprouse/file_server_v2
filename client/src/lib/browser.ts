@@ -63,7 +63,7 @@ export function checkSupport(packed_feature?: PackedFeature): boolean {
       const [lower, higher] = range.split('-');
       // Inclusive range check: the version must fall within [lower, higher].
       if (Number(lower) <= details.version && details.version <= Number(higher)) {
-        return true;
+        return version_map[range] === 'y';
       }
     }
   }

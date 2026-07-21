@@ -1,16 +1,17 @@
-import { get, useCssVar, useWindowSize, useMediaQuery } from '@vueuse/core';
+import { get, useCssVar, useMediaQuery } from '@vueuse/core';
 import { computed } from 'vue';
 
 import type { ComputedRef } from 'vue';
 
 /*
-  --breakpoint-sm: 40rem;
-  --breakpoint-md: 48rem;
-  --breakpoint-lg: 64rem;
-  --breakpoint-xl: 80rem;
-  --breakpoint-2xl: 96rem;
-*/
-const DEFAULT_BREAKPOINT = 768;
+ * Default breakpoint values:
+ *   --breakpoint-sm: 40rem;
+ *   --breakpoint-md: 48rem;
+ *   --breakpoint-lg: 64rem;
+ *   --breakpoint-xl: 80rem;
+ *   --breakpoint-2xl: 96rem;
+ */
+const DEFAULT_BREAKPOINT = '768px';
 
 /**
  * @example
@@ -25,10 +26,13 @@ const DEFAULT_BREAKPOINT = 768;
 export function useIsMobile(): ComputedRef<boolean> {
   const cannot_hover = useMediaQuery('not (hover: hover)');
   const breakpoint_var = useCssVar('--breakpoint-md', null, { observe: true });
-  const { width } = useWindowSize();
-  const is_mobile = computed(() => {
-    const breakpoint = Number(get(breakpoint_var)) || DEFAULT_BREAKPOINT;
-    return (get(width) < breakpoint) || get(cannot_hover);
-  });
-  return is_mobile;
+
+  // The rem threshold is evaluated by the browser as a media query, which is
+  // exactly how Tailwind's `md:` breakpoint resolves it — so this can't
+  // drift from where the CSS actually breaks.
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- an absent CSS var reads as ''
+  const breakpoint_query = computed(() => `(width < ${get(breakpoint_var) || DEFAULT_BREAKPOINT})`);
+  const below_breakpoint = useMediaQuery(breakpoint_query);
+
+  return computed(() => get(cannot_hover) || get(below_breakpoint));
 }

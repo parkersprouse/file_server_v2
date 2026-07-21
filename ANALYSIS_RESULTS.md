@@ -297,7 +297,17 @@ encapsulates cached/pending/fresh + failure cleanup — which also collapses
 `getEntries`' three-branch cache dance into one call (see 9.14 for the
 companion dead-method trim).
 
-### 9.8 (Low) `useIsMobile`'s CSS-variable breakpoint read never works — 🔲 Open
+### 9.8 (Low) `useIsMobile`'s CSS-variable breakpoint read never works — ✅ Resolved
+> **✅ Resolved (2026-07-20):** the `--breakpoint-md` value is now handed
+> straight to the browser as a reactive media query —
+> `useMediaQuery('(width < 48rem)')` built from the observed CSS var — instead
+> of being parsed/multiplied in JS. This matches Tailwind's `md:` semantics by
+> construction (media-query `rem` resolves against the browser's initial font
+> size, ignoring author CSS on `html`, exactly as Tailwind's breakpoints do)
+> and stays reactive to both viewport resizes and runtime changes to the var.
+> `||` (not `??`) guards the fallback because an absent CSS var reads as `''`.
+> Verified live: desktop viewport renders the full navbar toolbar; a 375px
+> viewport collapses it to the mobile search + sheet trigger.
 `client/src/composables/is_mobile.ts`
 
 `--breakpoint-md` resolves to `48rem`, and `Number('48rem')` is `NaN`, so the
@@ -307,7 +317,12 @@ fallback.
 **Recommendation:** Either parse the value properly (`parseFloat` × root
 font-size) or delete the CSS-var plumbing and keep the honest constant.
 
-### 9.9 (Low) `checkSupport`'s version-range branch ignores the range's support flag — 🔲 Open
+### 9.9 (Low) `checkSupport`'s version-range branch ignores the range's support flag — ✅ Resolved
+> **✅ Resolved (2026-07-20):** the range branch now returns
+> `version_map[range] === 'y'`, mirroring the exact-match branch. This is not
+> theoretical: caniuse-lite's `heif` data has 30 version ranges flagged
+> non-`'y'` (e.g. `safari 15.2-15.3: 'n #1'`), which previously counted as
+> supported and would have offered broken HEIC previews.
 `client/src/lib/browser.ts`
 
 Residual gap from **5.1**: the exact-match branch checks
@@ -449,7 +464,7 @@ queries to the component's own subtree.
 |---|------|----------|--------|------|
 | 1 | Server robustness | Med | Low | ✅ 9.1 — `.webloc` panic paths, debug `println!`, dead `.url` support |
 | 2 | Client correctness | Med | Low | ✅ 9.7 — failed request poisons the pending cache (add `fetch()` API) |
-| 3 | Client correctness | Low | Low | 9.8, 9.9 — `useIsMobile` NaN breakpoint; `checkSupport` range flag |
+| 3 | Client correctness | Low | Low | ✅ 9.8 / 9.9 — `useIsMobile` reactive media query; `checkSupport` range flag honored |
 | 4 | Dead code | Low | Low | ✅ 9.3 / 9.14 — server + client dead code deleted (`capitalize`/`sleep` kept by request) |
 | 5 | Server simplification | Low | Low | ✅ 9.2, 9.4, 9.5 — `read_file` collapse, shared resolve pipeline, minor cleanups |
 | 6 | Client refactors | Low | Med | ✅ 9.10–9.13, 9.15 — virtualizer composable, shared badges, dialog/router cleanups |
