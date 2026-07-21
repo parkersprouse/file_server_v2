@@ -420,7 +420,11 @@ async function onClickDialog(event: Event): Promise<void> {
   if (!target) return;
   if ([
     'preview-dialog',
+    'preview-dialog__header',
     'preview-dialog__content',
+    'preview-dialog__slide-cell',
+    'preview-dialog__slide-track',
+    'preview-dialog__slide-viewport',
   ].some((klass) => target.classList.contains(klass))) {
     await close();
   }
