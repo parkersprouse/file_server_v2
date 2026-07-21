@@ -1,5 +1,5 @@
 use crate::{
-  lib::{cache, cors, gatekeeper, media_cache},
+  lib::{cache, cors, gatekeeper, metadata_cache},
   services::resource_handler,
 };
 use actix_web::{
@@ -20,7 +20,7 @@ mod lib {
   pub mod cors;
   pub mod error;
   pub mod gatekeeper;
-  pub mod media_cache;
+  pub mod metadata_cache;
   pub mod parse_url_file;
 }
 mod services {
@@ -38,7 +38,7 @@ mod util;
 pub struct AppState {
   pub config: AppConfig,
   pub directory_cache: cache::DirectoryCache,
-  pub media_cache: media_cache::MediaMetadataCache,
+  pub metadata_cache: metadata_cache::EntryMetadataCache,
 }
 
 async fn index_route(req: HttpRequest, data: Data<AppState>) -> HttpResponse {
@@ -69,7 +69,11 @@ async fn main() -> io::Result<()> {
   let app_state: Data<AppState> = Data::new(AppState {
     config: config.clone(),
     directory_cache: cache::DirectoryCache::new(300), // 5 minute TTL
-    media_cache: media_cache::MediaMetadataCache::new(3600), // 1 hour TTL for media metadata
+    // 24 hour TTL: entries are validated against each file's (mtime, size)
+    // stamp, so a long-lived entry can only be served while the file it
+    // describes is unchanged. The TTL is a memory bound, not the correctness
+    // mechanism.
+    metadata_cache: metadata_cache::EntryMetadataCache::new(86_400),
   });
 
   env_logger::Builder::new()

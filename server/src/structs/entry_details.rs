@@ -2,6 +2,7 @@ use crate::{
   AppState,
   lib::{
     error::{AppError, AppResult},
+    metadata_cache::ContentStamp,
     parse_url_file::parse,
   },
   structs::entry_type::EntryType,
@@ -127,17 +128,52 @@ impl EntryDetails {
     } = raw;
     let name_lowercase = name.to_lowercase();
 
-    let file_format: Option<FileFormat> = if entry_type == EntryType::DIR {
-      None
-    } else {
-      let sniff_path = full_path.clone();
-      web::block(move || Self::determine_file_format(&sniff_path))
-        .await
-        .unwrap_or(Some(FileFormat::PlainText))
+    // Directories have nothing to sniff or probe, so they skip the metadata
+    // cache entirely; a file is cacheable only if its content stamp could be
+    // read (see `ContentStamp::of`).
+    let stamp = match entry_type == EntryType::DIR {
+      true => None,
+      false => ContentStamp::of(&metadata),
+    };
+    let cache_key = full_path.to_string_lossy().into_owned();
+    let cached = match stamp {
+      Some(stamp) => data.metadata_cache.get(&cache_key, stamp).await,
+      None => None,
+    };
+
+    // Both of the expensive operations below are skipped on a cache hit. They
+    // are tracked separately because a duration can be missing from an
+    // otherwise-valid entry (a probe that failed is deliberately not cached).
+    let file_format: Option<FileFormat> = match &cached {
+      Some(entry) => entry.file_format,
+      None if entry_type == EntryType::DIR => None,
+      None => {
+        let sniff_path = full_path.clone();
+        web::block(move || Self::determine_file_format(&sniff_path))
+          .await
+          .unwrap_or(Some(FileFormat::PlainText))
+      },
     };
     let file_type = Self::file_type(file_format);
 
-    let duration_tuple = Self::determine_duration(&full_path, file_type, data).await;
+    let cached_duration = cached.as_ref().and_then(|entry| entry.duration.clone());
+    let duration = match &cached_duration {
+      Some(duration) => Some(duration.clone()),
+      None => Self::determine_duration(&full_path, file_type).await,
+    };
+
+    // Write back only when something was actually computed, so a full cache hit
+    // stays a pure read.
+    if let Some(stamp) = stamp
+      && (cached.is_none() || (cached_duration.is_none() && duration.is_some()))
+    {
+      data
+        .metadata_cache
+        .set(cache_key, stamp, file_format, duration.clone())
+        .await;
+    }
+
+    let duration_tuple = duration.unwrap_or_else(|| (0, String::new()));
     let created_at = Self::determine_created_at(&metadata);
     let last_modified_at = Self::determine_modified_at(&metadata);
 
@@ -188,45 +224,37 @@ impl EntryDetails {
     }
   }
 
-  pub async fn determine_duration(path: &Path, file_type: &str, data: &Data<AppState>) -> (u64, String) {
+  /// Probe a file's media duration. Caching is the caller's responsibility (see
+  /// [`Self::from_raw`]), which is why the two "no duration" cases are
+  /// distinguished: `Some((0, ""))` is a definitive answer worth caching, while
+  /// `None` means the probe gave no usable result and should be retried later.
+  pub async fn determine_duration(path: &Path, file_type: &str) -> Option<(u64, String)> {
     if !["audio", "video"].contains(&file_type) {
-      return (0, "".into());
-    }
-
-    let path_str = path.to_string_lossy().into_owned();
-
-    // Check cache first
-    if let Some((duration_raw, duration_formatted)) = data.media_cache.get(&path_str).await {
-      return (duration_raw, duration_formatted);
+      return Some((0, String::new()));
     }
 
     // ffprobe spawns and waits on an external subprocess, so run it off the
     // async executor.
     let probe_path = path.to_path_buf();
     let total_secs = match web::block(move || ffprobe::ffprobe(&probe_path)).await {
+      // A probe that succeeded but reported no duration is still a definitive
+      // answer (the container simply doesn't carry one), so it caches as zero
+      // rather than being retried on every listing.
       Ok(Ok(info)) => match info.format.get_duration() {
         Some(value) => value.as_secs(),
-        None => return (0, "".into()),
+        None => return Some((0, String::new())),
       },
       Ok(Err(err)) => {
         error!("{}", err);
-        return (0, "".into());
+        return None;
       },
       Err(err) => {
         error!("ffprobe task failed: {err}");
-        return (0, "".into());
+        return None;
       },
     };
 
-    let duration_formatted = Self::parse_ffmpeg_duration(total_secs);
-
-    // Cache the result
-    data
-      .media_cache
-      .set(path_str, total_secs, duration_formatted.clone())
-      .await;
-
-    (total_secs, duration_formatted)
+    Some((total_secs, Self::parse_ffmpeg_duration(total_secs)))
   }
 
   /// Sniff a file's format from its header bytes. Callers are expected to

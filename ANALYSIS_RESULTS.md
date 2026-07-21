@@ -83,9 +83,9 @@ compression on the server.
 **Recommendation:** Add real authentication (shared token / basic-auth /
 reverse-proxy auth) if the server is ever exposed beyond a trusted network.
 
-### 2.2 (Medium) Directory listing does O(N) header reads + ffprobe on every cold load — 🟡 Partially addressed
+### 2.2 (Medium) Directory listing does O(N) header reads + ffprobe on every cold load — 🟡 Mostly addressed
 `server/src/structs/entry_details.rs` (`from_raw`, `determine_file_format`,
-`determine_duration`)
+`determine_duration`), `server/src/lib/metadata_cache.rs`
 
 > **🟡 Partially addressed (2026-06-25):** the cold-load cost is now paid
 > concurrently (≤8 entries in flight) rather than sequentially, and listings are
@@ -93,11 +93,60 @@ reverse-proxy auth) if the server is ever exposed beyond a trusted network.
 > recommendations — deferring expensive metadata to a lazy/on-demand endpoint,
 > persisting the media cache across restarts, and a longer/invalidation-based
 > TTL — were **not** implemented and remain open.
+>
+> **🟡 Mostly addressed (2026-07-21):** the invalidation-based TTL was
+> implemented, and the **header sniff is now cached at all** — previously only
+> ffprobe had a cache, so `determine_file_format` re-read every file's header
+> bytes on every cold load (the "O(N) header reads" of this item's own title).
+> `MediaMetadataCache` was replaced by `EntryMetadataCache`
+> (`lib/metadata_cache.rs`), a single per-file entry holding **both** the
+> sniffed `FileFormat` and the probed duration, so `from_raw` does one lookup
+> instead of two and `determine_duration` is now a pure probe with no cache
+> knowledge.
+>
+> Entries are **content-validated, not just time-expired**: each is stored
+> against a `ContentStamp` of the file's `(mtime, size)`, taken from metadata
+> already read during enumeration (no extra syscall). A changed file
+> self-invalidates, which both fixes a latent staleness bug — the old cache was
+> keyed by path alone, so a replaced file served a stale duration for up to an
+> hour — and makes the longer 24 h TTL safe. The TTL is now a memory bound
+> rather than the correctness mechanism. The `DirectoryCache` TTL was
+> deliberately left at 5 min: a directory's mtime doesn't capture nested
+> changes, so listings can't be content-validated the same way.
+>
+> A failed probe caches as `None` and is retried; a *successful* probe that
+> reports no duration caches as zero. This is why the duration is an `Option`
+> rather than a bare `(0, "")` sentinel.
+>
+> **What actually improved, stated precisely:** the header sniff went from
+> *never cached* to cached, so it is no longer recomputed for every file on
+> every listing and every (uncached) search. ffprobe was already cached before
+> this change — the gains there are correctness (path-only keying served stale
+> durations for up to an hour) and a TTL that no longer expires good data every
+> hour, not raw probe throughput.
+>
+> Measured against a 42-entry temp root (12 media files): a `?search=` request,
+> which bypasses the directory cache entirely, runs **0.16 s cold → 0.01 s
+> warm** on the new cache. That is cold-vs-warm on this implementation, *not* a
+> before/after against the old code — the old path-keyed media cache would also
+> have absorbed the probe cost on a repeat within its 1 h TTL. Invalidation was
+> verified two ways: replacing a clip (mtime **and** size change) updates its
+> reported duration, and overwriting a file with different content of an
+> **identical** size (mtime-only change) still refreshes its sniffed type.
+>
+> **Still open (deferred by request):** persisting the cache across restarts.
+> It only helps the first cold load after a restart, and would introduce the
+> first write path into a server that is otherwise read-only by design, plus a
+> config knob for a writable location outside `root_dir` and load-time
+> version/corruption handling — effort and architectural cost out of proportion
+> to the payoff. The lazy/on-demand-endpoint rewrite was also **not** done and
+> is not planned: `file_type` drives icons, sorting, and preview selection
+> throughout the client, so deferring it would ripple across the whole SPA for
+> a cost the caching above already removes.
 
-**Recommendation:** Defer expensive metadata (duration, precise type) to a
-lazy/on-demand endpoint or compute it only for the entries actually shown;
-persist the media cache across restarts; consider a longer or
-invalidation-based TTL.
+**Recommendation:** Remaining optional work — persist the metadata cache across
+restarts if server restarts prove frequent enough for the first-load cost to
+matter.
 
 ### 7.1 (Informational) esbuild@0.27.7 — GHSA-g7r4-m6w7-qqqr — ✅ Accepted/tracked
 `client/pnpm-lock.yaml`
@@ -469,5 +518,5 @@ queries to the component's own subtree.
 | 5 | Server simplification | Low | Low | ✅ 9.2, 9.4, 9.5 — `read_file` collapse, shared resolve pipeline, minor cleanups |
 | 6 | Client refactors | Low | Med | ✅ 9.10–9.13, 9.15 — virtualizer composable, shared badges, dialog/router cleanups |
 | 7 | Server sec | High | High | 1.1 — real authentication (still deferred by request) |
-| 8 | Server perf | Med | Med | 2.2 — lazy/persistent media metadata |
+| 8 | Server perf | Med | Med | 🟡 2.2 — content-keyed format+duration cache done; persistence deferred |
 | 9 | Payload | Low | Med | 9.6 — drop client-derivable listing fields (optional) |
