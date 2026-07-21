@@ -15,10 +15,16 @@
     -->
     <video
       ref='video_ele'
-      slot='media'
-      preload='metadata'
-      :src='entry.url'
       muted
+      preload='metadata'
+      slot='media'
+      :src='entry.url'
+    />
+
+    <media-poster-image
+      v-if='entry.thumbnail'
+      slot='poster'
+      :src='entry.thumbnail'
     />
 
     <media-loading-indicator slot='centered-chrome' />
@@ -50,13 +56,13 @@
     </div>
 
     <media-control-bar>
-      <media-play-button class='preview-video-player__control'>
+      <media-play-button class='preview-video-player__control mobile-hidden'>
         <ricon-play-fill slot='play' />
         <ricon-pause-fill slot='pause' />
       </media-play-button>
       <media-seek-backward-button
         seekoffset='5'
-        class='preview-video-player__control'
+        class='preview-video-player__control mobile-hidden'
       >
         <span slot='tooltip-content'>Back 5s</span>
         <ricon-replay-5-fill slot='icon' />
@@ -69,7 +75,7 @@
       </media-time-range>
       <media-seek-forward-button
         seekoffset='5'
-        class='preview-video-player__control'
+        class='preview-video-player__control mobile-hidden'
       >
         <span slot='tooltip-content'>Forward 5s</span>
         <ricon-forward-5-fill slot='icon' />
@@ -96,13 +102,12 @@
 </template>
 
 <script setup lang='ts'>
-import { get } from '@vueuse/core';
+import { get, useEventListener } from '@vueuse/core';
 import 'media-chrome';
-import { onMounted, onUnmounted, useTemplateRef } from 'vue';
+import { useTemplateRef } from 'vue';
 
-import './video_preview/media_loop_button.ts';
+import MediaLoopToggleButton from './video_preview/media_loop_button.ts';
 
-import type MediaLoopToggleButton from './video_preview/media_loop_button.ts';
 import type { MediaController } from 'media-chrome';
 import type { Entry } from 'types/entry.d.ts';
 
@@ -120,13 +125,7 @@ function toggleVideoLoop(event: Event): void {
   video.loop = toggle_button.mediaLooping;
 }
 
-onMounted(() => {
-  get(media_controller)?.addEventListener('mediatogglelooprequest', toggleVideoLoop);
-});
-
-onUnmounted(() => {
-  get(media_controller)?.removeEventListener('mediatogglelooprequest', toggleVideoLoop);
-});
+useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideoLoop);
 </script>
 
 <style>
@@ -160,9 +159,7 @@ onUnmounted(() => {
   }
 
   media-control-bar {
-    media-seek-backward-button,
-    media-play-button,
-    media-seek-forward-button {
+    & .mobile-hidden {
       @apply hidden;
     }
   }
@@ -171,8 +168,10 @@ onUnmounted(() => {
 @layer app {
   .preview-dialog--video {
     & .preview-dialog__content {
+      @apply h-full;
+
       & media-controller {
-        @apply w-auto h-auto mobile-video-player md:desktop-video-player;
+        @apply w-fit h-full mobile-video-player md:desktop-video-player;
 
         &[mediaisfullscreen] {
           & [slot='media'] {
@@ -181,7 +180,7 @@ onUnmounted(() => {
         }
 
         & [slot='media'] {
-          @apply object-contain aspect-auto;
+          @apply object-contain object-center aspect-auto h-full w-full;
         }
 
         & media-loading-indicator[slot='centered-chrome'] {

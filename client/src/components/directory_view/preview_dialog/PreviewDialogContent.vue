@@ -70,7 +70,7 @@ onUnmounted(() => {
         & [slot='centered-chrome'] {
           @apply w-full;
 
-          & [class$='-player__control'] {
+          & [class*='-player__control'] {
             /* figure out how to not have tailwind override media chrome's styles */
             padding: 0.5rem;
 

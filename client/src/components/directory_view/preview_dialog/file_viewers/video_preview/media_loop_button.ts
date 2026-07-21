@@ -1,7 +1,5 @@
 import { MediaChromeButton } from 'media-chrome';
 
-const ATTR_NAME = 'medialooping';
-
 const on_icon = `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" viewBox="0 0 24 24">
   <path d="M6 4H21C21.5523 4 22 4.44772 22 5V12H20V6H6V9L1 5L6 1V4ZM18 20H3C2.44772 20 2 19.5523 2 19V12H4V18H18V15L23 19L18 23V20Z"/>
 </svg>`;
@@ -14,17 +12,17 @@ const off_icon = `<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" xml
 function getSlotTemplateHTML(_attrs: Record<string, string>): string {
   return /* html*/ `
     <style>
-      :host([${ATTR_NAME}]) slot[name=icon] slot[name=off] {
+      :host([${MediaLoopToggleButton.ATTR_NAME}]) slot[name=icon] slot[name=off] {
         display: none !important;
       }
 
       ${/* Double negative, but safer if display doesn't equal 'block' */ ''}
-      :host(:not([${ATTR_NAME}])) slot[name=icon] slot[name=on] {
+      :host(:not([${MediaLoopToggleButton.ATTR_NAME}])) slot[name=icon] slot[name=on] {
         display: none !important;
       }
 
-      :host([${ATTR_NAME}]) slot[name=tooltip-enable],
-      :host(:not([${ATTR_NAME}])) slot[name=tooltip-disable] {
+      :host([${MediaLoopToggleButton.ATTR_NAME}]) slot[name=tooltip-enable],
+      :host(:not([${MediaLoopToggleButton.ATTR_NAME}])) slot[name=tooltip-disable] {
         display: none;
       }
     </style>
@@ -62,11 +60,14 @@ function updateAriaLabel(el: MediaLoopToggleButton): void {
  * @cssproperty [--media-loop-toggle-button-display = inline-flex] - `display` property of button.
  */
 class MediaLoopToggleButton extends MediaChromeButton {
+  static ATTR_NAME: string = 'medialooping';
+  static EVENT_NAME: string = 'mediatogglelooprequest';
+
   static getSlotTemplateHTML = getSlotTemplateHTML;
   static getTooltipContentHTML = getTooltipContentHTML;
 
   static get observedAttributes(): string[] {
-    return [...super.observedAttributes, ATTR_NAME];
+    return [...super.observedAttributes, MediaLoopToggleButton.ATTR_NAME];
   }
 
   connectedCallback(): void {
@@ -83,7 +84,7 @@ class MediaLoopToggleButton extends MediaChromeButton {
   ): void {
     super.attributeChangedCallback(attrName, oldValue, newValue);
 
-    if (attrName === ATTR_NAME) {
+    if (attrName === MediaLoopToggleButton.ATTR_NAME) {
       updateAriaChecked(this);
       updateAriaLabel(this);
     }
@@ -102,7 +103,7 @@ class MediaLoopToggleButton extends MediaChromeButton {
 
   handleClick(): void {
     this.mediaLooping = !this.mediaLooping;
-    this.dispatchEvent(new globalThis.CustomEvent('mediatogglelooprequest', {
+    this.dispatchEvent(new globalThis.CustomEvent(MediaLoopToggleButton.EVENT_NAME, {
       bubbles: true,
       composed: true,
     }));

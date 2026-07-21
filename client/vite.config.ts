@@ -80,7 +80,7 @@ export default defineConfig(({ command }) => ({
     Vue({
       template: {
         compilerOptions: {
-          isCustomElement: (tag) => tag.startsWith('media-'),
+          isCustomElement: (tag) => tag.toLowerCase().startsWith('media-'),
         },
       },
     }),
