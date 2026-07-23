@@ -78,6 +78,8 @@
       </template>
     </PreviewDialogTooltip>
 
+    <PreviewDialogCopyLinkAction :entry='entry' />
+
     <PreviewDialogTooltip>
       <a
         aria-label='Download file'

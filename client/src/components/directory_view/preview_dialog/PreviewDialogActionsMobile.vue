@@ -68,6 +68,8 @@
 
         <DropdownMenuSeparator />
 
+        <PreviewDialogCopyLinkAction :entry='entry' />
+
         <DropdownMenuItem as-child>
           <a
             :href='`${entry.url}?download`'

@@ -179,6 +179,7 @@ declare module 'vue' {
     PreviewDialogActionsDesktop: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogActionsDesktop.vue')['default']
     PreviewDialogActionsMobile: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogActionsMobile.vue')['default']
     PreviewDialogContent: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogContent.vue')['default']
+    PreviewDialogCopyLinkAction: typeof import('./src/components/directory_view/preview_dialog/actions/PreviewDialogCopyLinkAction.vue')['default']
     PreviewDialogCopyTextAction: typeof import('./src/components/directory_view/preview_dialog/actions/PreviewDialogCopyTextAction.vue')['default']
     PreviewDialogImageActions: typeof import('./src/components/directory_view/preview_dialog/actions/PreviewDialogImageActions.vue')['default']
     PreviewDialogTitle: typeof import('./src/components/directory_view/preview_dialog/PreviewDialogTitle.vue')['default']
