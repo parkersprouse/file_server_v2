@@ -181,7 +181,6 @@ const $store = useStore();
 const dialog = useTemplateRef<HTMLDialogElement>('dialog');
 const slide_viewport = useTemplateRef<HTMLDivElement>('slide_viewport');
 const entry = ref<Entry>();
-const is_open = ref<boolean>(false);
 
 // Live slide-transform state. `drag_x` is the signed px offset applied on top
 // of the track's centered position — driven 1:1 by the pointer while dragging,
@@ -304,14 +303,17 @@ useMutationObserver(dialog, (changes) => {
   const change = changes[0];
   if (!change) return;
   const dialog_ele = change.target as HTMLDialogElement;
-  set(is_open, dialog_ele.hasAttribute('open'));
+  // The single writer of the open flag — every close path (Esc, backdrop
+  // click, the close button) goes through the `open` attribute, so observing
+  // it is the only way to track them all.
+  $store.preview_open = dialog_ele.hasAttribute('open');
 }, {
   attributeFilter: ['open'],
   subtree: false,
 });
 
 function open(new_entry: Entry): void {
-  if (get(is_open)) return;
+  if ($store.preview_open) return;
   const dialog_ele = get(dialog);
   if (!dialog_ele) return;
   document.body.classList.add('overflow-hidden!');
@@ -320,7 +322,7 @@ function open(new_entry: Entry): void {
 }
 
 async function close(): Promise<void> {
-  if (!get(is_open)) return;
+  if (!$store.preview_open) return;
   const dialog_ele = get(dialog);
   if (!dialog_ele) return;
   document.body.classList.remove('overflow-hidden!');
@@ -390,7 +392,7 @@ function showNextMedia(): void {
 // drag-follow animation; the paired onDragEnd snaps back unless this gesture
 // already committed via onNext/onPrevious.
 usePreviewSwipe(dialog, {
-  enabled: () => get(is_open) && get(has_multiple_media) && !get(is_animating),
+  enabled: () => $store.preview_open && get(has_multiple_media) && !get(is_animating),
   onDragEnd: () => {
     set(is_dragging, false);
     if (!committed_this_gesture) snapBack();
@@ -408,7 +410,7 @@ usePreviewSwipe(dialog, {
 function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
   // Like swipe, keyboard traversal stays available with the on-screen controls
   // hidden — it's gated only on there being another media file to move to.
-  if (!get(is_open) || !get(has_multiple_media) || get(is_animating)) return;
+  if (!$store.preview_open || !get(has_multiple_media) || get(is_animating)) return;
   // Leave the arrow keys to a focused video player so they still seek it.
   if (document.activeElement?.closest('media-controller')) return;
   event.preventDefault();
@@ -440,6 +442,10 @@ onMounted(() => {
 onUnmounted(() => {
   for (const unsub of get(event_unsubs)) unsub();
   clearTimeout(settle_timeout);
+  // The dialog (and with it the overlay host anything teleports into) is going
+  // away, so the flag must not survive it — a stale `true` would leave App.vue
+  // aiming its Toaster teleport at a target that no longer exists.
+  $store.preview_open = false;
 });
 </script>
 

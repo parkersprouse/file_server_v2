@@ -17,6 +17,13 @@ export const useStore = defineStore('global', () => {
   const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
   const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
   const preview_markdown_rendered = useLocalStorage<boolean>('preview_markdown_rendered', true);
+  // Whether the preview `<dialog>` is currently showing modally. Store state
+  // rather than PreviewDialog-local state because `App.vue` needs it too: a
+  // modal dialog makes everything outside its subtree inert, so the toaster has
+  // to teleport *into* the dialog while it's open. Written only by
+  // PreviewDialog's `open` attribute observer, so it tracks every close path
+  // (Esc, backdrop click, the close button) and not just the ones we initiate.
+  const preview_open = ref<boolean>(false);
   const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
   const scroll_offset = ref<{ [key: string]: number; }>({});
   const show_media_tools = useLocalStorage<boolean>('show_media_tooling', true);
@@ -73,6 +80,7 @@ export const useStore = defineStore('global', () => {
     preview_bg_enabled,
     preview_inline_colors_disabled,
     preview_markdown_rendered,
+    preview_open,
     preview_text_wrapped,
     show_media_tools,
     toolbar_height,
