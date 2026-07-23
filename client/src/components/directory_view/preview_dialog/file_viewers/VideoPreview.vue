@@ -29,6 +29,7 @@
 
     <media-loading-indicator slot='centered-chrome' />
     <div
+      v-if='$is_mobile'
       slot='centered-chrome'
       class='mobile-controls'
     >
@@ -55,14 +56,48 @@
       </media-seek-forward-button>
     </div>
 
-    <media-control-bar>
-      <media-play-button class='preview-video-player__control mobile-hidden'>
+    <media-control-bar
+      v-if='$is_mobile'
+      class='preview-video-player__control__bar--mobile'
+    >
+      <div class='preview-video-player__control__bar--mobile__top-bar'>
+        <media-time-range class='w-full'>
+          <div
+            slot='current'
+            part='arrow'
+          />
+        </media-time-range>
+      </div>
+
+      <div class='preview-video-player__control__bar--mobile__bottom-bar'>
+        <media-mute-button class='preview-video-player__control'>
+          <ricon-volume-up-fill slot='high' />
+          <ricon-volume-up-fill slot='medium' />
+          <ricon-volume-down-fill slot='low' />
+          <ricon-volume-mute-fill slot='off' />
+        </media-mute-button>
+        <media-loop-toggle-button class='preview-video-player__control' />
+        <media-time-display
+          showduration
+          class='preview-video-player__control'
+        />
+        <media-fullscreen-button class='preview-video-player__control'>
+          <span slot='tooltip-enter'>Fullscreen</span>
+          <span slot='tooltip-exit'>Leave Fullscreen</span>
+          <ricon-fullscreen-fill slot='enter' />
+          <ricon-fullscreen-exit-fill slot='exit' />
+        </media-fullscreen-button>
+      </div>
+    </media-control-bar>
+
+    <media-control-bar v-else>
+      <media-play-button class='preview-video-player__control'>
         <ricon-play-fill slot='play' />
         <ricon-pause-fill slot='pause' />
       </media-play-button>
       <media-seek-backward-button
         seekoffset='5'
-        class='preview-video-player__control mobile-hidden'
+        class='preview-video-player__control'
       >
         <span slot='tooltip-content'>Back 5s</span>
         <ricon-replay-5-fill slot='icon' />
@@ -75,7 +110,7 @@
       </media-time-range>
       <media-seek-forward-button
         seekoffset='5'
-        class='preview-video-player__control mobile-hidden'
+        class='preview-video-player__control'
       >
         <span slot='tooltip-content'>Forward 5s</span>
         <ricon-forward-5-fill slot='icon' />
@@ -106,6 +141,8 @@ import { get, useEventListener } from '@vueuse/core';
 import 'media-chrome';
 import { useTemplateRef } from 'vue';
 
+import { useIsMobile } from 'composables/is_mobile.ts';
+
 import MediaLoopToggleButton from './video_preview/media_loop_button.ts';
 
 import type { MediaController } from 'media-chrome';
@@ -114,6 +151,8 @@ import type { Entry } from 'types/entry.d.ts';
 const { entry } = defineProps<{
   entry: Entry;
 }>();
+
+const $is_mobile = useIsMobile();
 
 const media_controller = useTemplateRef<MediaController>('media_controller');
 const video_ele = useTemplateRef<HTMLVideoElement>('video_ele');
@@ -132,10 +171,6 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
 @reference '../../../../assets/styles/index.css';
 
 @utility desktop-video-player {
-  .mobile-controls[slot='centered-chrome'] {
-    @apply hidden;
-  }
-
   media-control-bar {
     & .preview-video-player__control {
       display: var(--media-control-display, inline-flex);
@@ -157,12 +192,6 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
       }
     }
   }
-
-  media-control-bar {
-    & .mobile-hidden {
-      @apply hidden;
-    }
-  }
 }
 
 @layer app {
@@ -171,7 +200,9 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
       @apply h-full;
 
       & media-controller {
-        @apply w-fit h-full mobile-video-player md:desktop-video-player;
+        @apply w-[inherit] min-w-fit max-w-full h-full mobile-video-player md:desktop-video-player;
+
+        --media-control-background: rgb(20 20 30 / 70%);
 
         &[mediaisfullscreen] {
           & [slot='media'] {
@@ -198,6 +229,34 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
 
           & .mobile-controls[slot='centered-chrome'] {
             @apply hidden;
+          }
+        }
+
+        & .preview-video-player__control__bar--mobile {
+          @apply flex flex-col flex-nowrap content-center justify-center;
+
+          & .preview-video-player__control__bar--mobile__top-bar {
+            @apply flex flex-row flex-nowrap content-center justify-stretch w-full p-0;
+            background-color: var(--media-text-background,
+              var(--media-control-background,
+              var(--media-secondary-color, rgb(20 20 30 / 70%))));
+          }
+
+          & .preview-video-player__control__bar--mobile__bottom-bar {
+            @apply flex flex-row flex-nowrap content-center justify-between w-full p-0;
+            background-color: var(--media-text-background,
+              var(--media-control-background,
+              var(--media-secondary-color, rgb(20 20 30 / 70%))));
+
+            & [class*='-player__control'] {
+              flex: 1;
+            }
+          }
+
+          & .preview-video-player__control {
+            & :deep(svg) {
+              @apply size-7!;
+            }
           }
         }
       }
