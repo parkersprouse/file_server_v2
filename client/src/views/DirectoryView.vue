@@ -40,7 +40,7 @@
 </template>
 
 <script setup lang='ts'>
-import { get, set } from '@vueuse/core';
+import { get, set, useTitle } from '@vueuse/core';
 import { isAxiosError } from 'axios';
 import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -91,6 +91,18 @@ const linked_index = computed<number>(() => {
   if (!$router_store.linked || $router_store.searching) return -1;
   return (get(entries) ?? []).findIndex((entry) => entry.name === $router_store.linked);
 });
+
+const page_title = computed<string>(() => {
+  const { breadcrumbs } = $router_store;
+  const last_index = breadcrumbs.length - 1;
+  const last_entry = breadcrumbs[last_index];
+  if (!last_entry) return 'File Browser';
+  const current_dir = decodeURI(last_entry.label);
+  if (breadcrumbs.length <= 1) return `${current_dir}`;
+  const dirpath = breadcrumbs.slice(0, last_index);
+  return `${current_dir} • [home]/${decodeURI(dirpath.map((path) => path.label).join('/'))}/`;
+});
+useTitle(page_title);
 
 async function getEntries(): Promise<void> {
   const path = pathToRoute($route);

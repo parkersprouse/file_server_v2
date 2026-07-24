@@ -28,7 +28,7 @@ import { EntryType } from 'enums/entry_type.ts';
 import { FileType } from 'enums/file_type.ts';
 import { QueryParam } from 'enums/query_param.ts';
 import { checkSupport, features } from 'lib/browser.ts';
-import { stripTransientParams } from 'lib/utils.ts';
+import { formatQuery, queryToObject, stripTransientParams } from 'lib/utils.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 import type { FunctionalComponent } from 'vue';
@@ -90,7 +90,11 @@ export function buildEntryLink(entry: Entry): string {
     .split('/')
     .map((segment) => encodeURIComponent(segment))
     .join('/');
-  return `${location.origin}${parent}?${QueryParam.LINKED}=${encodeURIComponent(entry.name)}`;
+  const query = {
+    ...queryToObject(location.search),
+    [QueryParam.LINKED]: encodeURIComponent(entry.name),
+  };
+  return `${location.origin}${parent}${formatQuery(query)}`;
 }
 
 /**

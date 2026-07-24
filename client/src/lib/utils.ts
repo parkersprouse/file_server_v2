@@ -42,6 +42,13 @@ export function formatQuery(query: LocationQuery): string {
   return Object.keys(query).length > 0 ? `?${stringifyQuery(query)}` : '';
 }
 
+export function queryToObject(query: string): Record<string, string> {
+  const qs: string = query.startsWith('?') ? query.substring(1) : query;
+  const params: string[] = qs.split('&');
+  const kv_pairs: string[][] = params.map((param) => param.split('='));
+  return Object.fromEntries(kv_pairs);
+}
+
 /**
  * The params that make up an active search. `updateSearch` pushes them into
  * the route and `clearSearch` clears them — both derive from this list, so a
