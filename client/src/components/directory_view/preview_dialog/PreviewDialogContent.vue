@@ -50,7 +50,11 @@ onUnmounted(() => {
       }
 
       & media-controller {
-        --media-control-background: var(--media-secondary-color, #0e0e15);
+        --media-control-background: rgb(20 20 30 / 70%);
+
+        &[audio] {
+          --media-control-background: var(--media-secondary-color, #0e0e15);
+        }
 
         @apply max-w-full max-h-full overflow-hidden;
 

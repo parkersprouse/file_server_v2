@@ -3,13 +3,18 @@
     <icon-magnifying-glass aria-hidden='true' />
     <AlertTitle class='truncate'>
       <!-- explicit `{{ " " }}` spaces: whitespace between tags is condensed away -->
-      <template
-        v-if='count !== undefined'
-      >{{ count }} {{ count === 1 ? "result" : "results" }} for{{ " " }}</template>
-      <template v-else>Searching for{{ " " }}</template>
+      <template v-if='count !== undefined'>
+        {{ count }} {{ count === 1 ? "result" : "results" }} for{{ " " }}
+      </template>
+      <template v-else>
+        Searching for{{ " " }}
+      </template>
       <strong>&ldquo;{{ $router_store.search_query }}&rdquo;</strong>{{ " " }}{{ scope_label }}
     </AlertTitle>
-    <AlertDescription v-if='has_badges' class='flex flex-row flex-wrap gap-x-2 gap-y-1'>
+    <AlertDescription
+      v-if='has_badges'
+      class='flex flex-row flex-wrap gap-x-2 gap-y-1'
+    >
       <Badge
         v-if='$router_store.search_match !== SearchMatch.ALL'
         variant='secondary'
@@ -43,7 +48,10 @@
         class='p-1! h-auto ghost-ext'
         @click='$router_store.clearSearch()'
       >
-        <icon-x aria-hidden='true' class='size-4!' />
+        <icon-x
+          aria-hidden='true'
+          class='size-4!'
+        />
       </Button>
     </AlertAction>
   </Alert>

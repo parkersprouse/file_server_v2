@@ -79,11 +79,6 @@ export default defineConfigWithVueTs(
           js: '@typescript-eslint/parser',
           ts: '@typescript-eslint/parser',
         },
-        // project: [
-        //   './tsconfig.json',
-        //   './tsconfig.app.json',
-        //   './tsconfig.node.json',
-        // ],
         sourceType: 'module',
         tsconfigRootDir: __dirname,
       },

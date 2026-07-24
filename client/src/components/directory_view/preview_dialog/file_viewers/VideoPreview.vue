@@ -95,26 +95,12 @@
         <ricon-play-fill slot='play' />
         <ricon-pause-fill slot='pause' />
       </media-play-button>
-      <media-seek-backward-button
-        seekoffset='5'
-        class='preview-video-player__control'
-      >
-        <span slot='tooltip-content'>Back 5s</span>
-        <ricon-replay-5-fill slot='icon' />
-      </media-seek-backward-button>
       <media-time-range>
         <div
           slot='current'
           part='arrow'
         />
       </media-time-range>
-      <media-seek-forward-button
-        seekoffset='5'
-        class='preview-video-player__control'
-      >
-        <span slot='tooltip-content'>Forward 5s</span>
-        <ricon-forward-5-fill slot='icon' />
-      </media-seek-forward-button>
       <media-mute-button class='preview-video-player__control'>
         <ricon-volume-up-fill slot='high' />
         <ricon-volume-up-fill slot='medium' />
@@ -133,6 +119,7 @@
         <ricon-fullscreen-exit-fill slot='exit' />
       </media-fullscreen-button>
     </media-control-bar>
+
   </media-controller>
 </template>
 
@@ -157,14 +144,14 @@ const $is_mobile = useIsMobile();
 const media_controller = useTemplateRef<MediaController>('media_controller');
 const video_ele = useTemplateRef<HTMLVideoElement>('video_ele');
 
-function toggleVideoLoop(event: Event): void {
-  const video = get(video_ele);
-  if (!video) return;
+function toggleLooping(event: Event): void {
+  const ele = get(video_ele);
+  if (!ele) return;
   const toggle_button = event.target as MediaLoopToggleButton;
-  video.loop = toggle_button.mediaLooping;
+  ele.loop = toggle_button.mediaLooping;
 }
 
-useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideoLoop);
+useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleLooping);
 </script>
 
 <style>
@@ -185,11 +172,10 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
     background-color: transparent;
 
     & .preview-video-player__control {
-      @apply bg-transparent;
+      --media-button-icon-width: 3rem;
+      --media-button-icon-height: 3rem;
 
-      & svg {
-        @apply size-12!;
-      }
+      @apply bg-transparent;
     }
   }
 }
@@ -201,8 +187,6 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
 
       & media-controller {
         @apply w-[inherit] min-w-fit max-w-full h-full mobile-video-player md:desktop-video-player;
-
-        --media-control-background: rgb(20 20 30 / 70%);
 
         &[mediaisfullscreen] {
           & [slot='media'] {
@@ -237,16 +221,10 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
 
           & .preview-video-player__control__bar--mobile__top-bar {
             @apply flex flex-row flex-nowrap content-center justify-stretch w-full p-0;
-            background-color: var(--media-text-background,
-              var(--media-control-background,
-              var(--media-secondary-color, rgb(20 20 30 / 70%))));
           }
 
           & .preview-video-player__control__bar--mobile__bottom-bar {
             @apply flex flex-row flex-nowrap content-center justify-between w-full p-0;
-            background-color: var(--media-text-background,
-              var(--media-control-background,
-              var(--media-secondary-color, rgb(20 20 30 / 70%))));
 
             & [class*='-player__control'] {
               flex: 1;
@@ -254,9 +232,8 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleVideo
           }
 
           & .preview-video-player__control {
-            & :deep(svg) {
-              @apply size-7!;
-            }
+            --media-button-icon-width: 1.75rem;
+            --media-button-icon-height: 1.75rem;
           }
         }
       }

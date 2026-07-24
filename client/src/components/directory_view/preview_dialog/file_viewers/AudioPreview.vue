@@ -1,22 +1,24 @@
 <template>
   <media-controller
-    breakpoints='sm:640 md:768 lg:1024 xl:1280'
+    ref='media_controller'
+    audio
     keyboardbackwardseekoffset='5'
     keyboardforwardseekoffset='5'
-    audio
   >
     <audio
+      ref='audio_ele'
       slot='media'
       :src='entry.url'
     />
+
     <div slot='centered-chrome'>
       <media-seek-backward-button
         seekoffset='5'
         class='preview-audio-player__control'
       >
-        <span slot='tooltip-content'>Back 5s</span>
         <ricon-replay-5-fill slot='icon' />
       </media-seek-backward-button>
+      <media-loop-toggle-button class='preview-audio-player__control ' />
       <media-play-button class='preview-audio-player__control'>
         <ricon-play-fill slot='play' />
         <ricon-pause-fill slot='pause' />
@@ -31,22 +33,15 @@
         seekoffset='5'
         class='preview-audio-player__control'
       >
-        <span slot='tooltip-content'>Forward 5s</span>
         <ricon-forward-5-fill slot='icon' />
       </media-seek-forward-button>
     </div>
+
     <media-control-bar>
       <media-play-button class='preview-audio-player__control'>
         <ricon-play-fill slot='play' />
         <ricon-pause-fill slot='pause' />
       </media-play-button>
-      <media-seek-backward-button
-        seekoffset='5'
-        class='preview-audio-player__control'
-      >
-        <span slot='tooltip-content'>Back 5s</span>
-        <ricon-replay-5-fill slot='icon' />
-      </media-seek-backward-button>
       <media-time-range>
         <div
           slot='current'
@@ -57,13 +52,7 @@
         showduration
         class='preview-audio-player__control'
       />
-      <media-seek-forward-button
-        seekoffset='5'
-        class='preview-audio-player__control'
-      >
-        <span slot='tooltip-content'>Forward 5s</span>
-        <ricon-forward-5-fill slot='icon' />
-      </media-seek-forward-button>
+      <media-loop-toggle-button class='preview-audio-player__control' />
       <media-mute-button class='preview-audio-player__control'>
         <ricon-volume-up-fill slot='high' />
         <ricon-volume-up-fill slot='medium' />
@@ -72,17 +61,35 @@
       </media-mute-button>
       <media-volume-range class='preview-audio-player__control' />
     </media-control-bar>
+
   </media-controller>
 </template>
 
 <script setup lang='ts'>
+import { get, useEventListener } from '@vueuse/core';
 import 'media-chrome';
+import { useTemplateRef } from 'vue';
 
+import MediaLoopToggleButton from './video_preview/media_loop_button.ts';
+
+import type { MediaController } from 'media-chrome';
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
+
+const audio_ele = useTemplateRef<HTMLAudioElement>('audio_ele');
+const media_controller = useTemplateRef<MediaController>('media_controller');
+
+function toggleLooping(event: Event): void {
+  const ele = get(audio_ele);
+  if (!ele) return;
+  const toggle_button = event.target as MediaLoopToggleButton;
+  ele.loop = toggle_button.mediaLooping;
+}
+
+useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleLooping);
 </script>
 
 <style>
@@ -103,15 +110,19 @@ const { entry } = defineProps<{
 
 @utility mobile-audio-player {
   [slot='centered-chrome'] {
-    @apply flex flex-row flex-nowrap justify-evenly items-center w-full;
+    --media-button-icon-width: 2.5rem;
+    --media-button-icon-height: 2.5rem;
+
+    @apply flex flex-row flex-nowrap justify-evenly items-stretch w-full;
     background-color: var(--media-control-background);
 
     & .preview-audio-player__control {
       @apply not-hover:bg-transparent flex-1;
+    }
 
-      & svg {
-        @apply size-10!;
-      }
+    & media-loop-toggle-button {
+      --media-button-icon-width: 2rem;
+      --media-button-icon-height: 2rem;
     }
   }
 
@@ -120,7 +131,8 @@ const { entry } = defineProps<{
     media-play-button,
     media-seek-forward-button,
     media-mute-button,
-    media-volume-range {
+    media-volume-range,
+    media-loop-toggle-button {
       @apply hidden;
     }
   }
