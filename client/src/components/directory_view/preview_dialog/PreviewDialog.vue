@@ -10,112 +10,118 @@
     @click='onClickDialog'
   >
     <template v-if='entry'>
-      <div class='preview-dialog__header'>
-        <PreviewDialogActions :entry='entry' />
-      </div>
+      <!--
+        Close-drag wrapper: translates down and scales slightly during a swipe
+        from the top edge, fading out as the drag progresses toward dismiss.
+      -->
+      <div class='preview-dialog__close-drag' :style='close_overlay_style'>
+        <div class='preview-dialog__header'>
+          <PreviewDialogActions :entry='entry' />
+        </div>
 
-      <PreviewDialogTitle :entry='entry' />
+        <PreviewDialogTitle :entry='entry' />
 
-      <PreviewDialogContent :class='{ "preview-dialog__content--gallery": has_multiple_media }'>
-        <!--
-          Gallery mode: a 3-cell filmstrip (previous / current / next), each
-          exactly one viewport wide, translated as a whole. Dragging follows the
-          pointer 1:1 (composables/preview_swipe.ts reports live dx via
-          onDragUpdate); releasing past the dead zone slides the rest of the way
-          across and reindexes, releasing short of it snaps back to center. Only
-          the current cell mounts the real (lazy) preview component — the
-          neighbors get a lightweight static peek so an adjacent video never
-          autoplays/preloads.
-        -->
-        <div
-          v-if='has_multiple_media'
-          ref='slide_viewport'
-          class='preview-dialog__slide-viewport'
-        >
-          <div class='preview-dialog__slide-track' :style='track_style'>
-            <div class='preview-dialog__slide-cell'>
-              <img
-                v-if='previous_media_entry?.preview_type === PreviewType.IMAGE'
-                :src='previous_media_entry.url'
-                :alt='previous_media_entry.name'
-                class='preview-dialog__slide-neighbor-img'
-                draggable='false'
-              >
-              <div
-                v-else-if='previous_media_entry'
-                class='preview-dialog__slide-neighbor-video'
-                aria-hidden='true'
-              >
-                <span class='preview-dialog__slide-neighbor-video-glyph' />
+        <PreviewDialogContent :class='{ "preview-dialog__content--gallery": has_multiple_media }'>
+          <!--
+            Gallery mode: a 3-cell filmstrip (previous / current / next), each
+            exactly one viewport wide, translated as a whole. Dragging follows the
+            pointer 1:1 (composables/preview_swipe.ts reports live dx via
+            onDragUpdate); releasing past the dead zone slides the rest of the way
+            across and reindexes, releasing short of it snaps back to center. Only
+            the current cell mounts the real (lazy) preview component — the
+            neighbors get a lightweight static peek so an adjacent video never
+            autoplays/preloads.
+          -->
+          <div
+            v-if='has_multiple_media'
+            ref='slide_viewport'
+            class='preview-dialog__slide-viewport'
+          >
+            <div class='preview-dialog__slide-track' :style='track_style'>
+              <div class='preview-dialog__slide-cell'>
+                <img
+                  v-if='previous_media_entry?.preview_type === PreviewType.IMAGE'
+                  :src='previous_media_entry.url'
+                  :alt='previous_media_entry.name'
+                  class='preview-dialog__slide-neighbor-img'
+                  draggable='false'
+                >
+                <div
+                  v-else-if='previous_media_entry'
+                  class='preview-dialog__slide-neighbor-video'
+                  aria-hidden='true'
+                >
+                  <span class='preview-dialog__slide-neighbor-video-glyph' />
+                </div>
               </div>
-            </div>
 
-            <div class='preview-dialog__slide-cell'>
-              <component
-                :is='preview_type?.type'
-                :entry='entry'
-              />
-            </div>
+              <div class='preview-dialog__slide-cell'>
+                <component
+                  :is='preview_type?.type'
+                  :entry='entry'
+                />
+              </div>
 
-            <div class='preview-dialog__slide-cell'>
-              <img
-                v-if='next_media_entry?.preview_type === PreviewType.IMAGE'
-                :src='next_media_entry.url'
-                :alt='next_media_entry.name'
-                class='preview-dialog__slide-neighbor-img'
-                draggable='false'
-              >
-              <div
-                v-else-if='next_media_entry'
-                class='preview-dialog__slide-neighbor-video'
-                aria-hidden='true'
-              >
-                <span class='preview-dialog__slide-neighbor-video-glyph' />
+              <div class='preview-dialog__slide-cell'>
+                <img
+                  v-if='next_media_entry?.preview_type === PreviewType.IMAGE'
+                  :src='next_media_entry.url'
+                  :alt='next_media_entry.name'
+                  class='preview-dialog__slide-neighbor-img'
+                  draggable='false'
+                >
+                <div
+                  v-else-if='next_media_entry'
+                  class='preview-dialog__slide-neighbor-video'
+                  aria-hidden='true'
+                >
+                  <span class='preview-dialog__slide-neighbor-video-glyph' />
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <component
-          v-else
-          :is='preview_type?.type'
-          :entry='entry'
-        />
-      </PreviewDialogContent>
+          <component
+            v-else
+            :is='preview_type?.type'
+            :entry='entry'
+          />
+        </PreviewDialogContent>
 
-      <!--
-        Gallery navigation: cycle through the images/videos of the current
-        directory, in the order they're currently listed. Only shown when the
-        open file is itself media and there is more than one to move between.
-      -->
-      <template v-if='has_media_nav'>
-        <button
-          type='button'
-          class='preview-dialog__nav preview-dialog__nav--prev'
-          aria-label='Previous media'
-          @click.stop='showPreviousMedia'
-        >
-          <icon-caret-left aria-hidden='true' />
-        </button>
+        <!--
+          Gallery navigation: cycle through the images/videos of the current
+          directory, in the order they're currently listed. Only shown when the
+          open file is itself media and there is more than one to move between.
+        -->
+        <template v-if='has_media_nav'>
+          <button
+            type='button'
+            class='preview-dialog__nav preview-dialog__nav--prev'
+            aria-label='Previous media'
+            @click.stop='showPreviousMedia'
+          >
+            <icon-caret-left aria-hidden='true' />
+          </button>
 
-        <button
-          type='button'
-          class='preview-dialog__nav preview-dialog__nav--next'
-          aria-label='Next media'
-          @click.stop='showNextMedia'
-        >
-          <icon-caret-right aria-hidden='true' />
-        </button>
+          <button
+            type='button'
+            class='preview-dialog__nav preview-dialog__nav--next'
+            aria-label='Next media'
+            @click.stop='showNextMedia'
+          >
+            <icon-caret-right aria-hidden='true' />
+          </button>
 
-        <div
-          v-if='$store.show_media_tools'
-          aria-live='polite'
-          aria-atomic='true'
-          class='preview-dialog__counter'
-        >
-          {{ current_media_index + 1 }} / {{ media_entries.length }}
-        </div>
-      </template>
+          <div
+            v-if='$store.show_media_tools'
+            aria-live='polite'
+            aria-atomic='true'
+            class='preview-dialog__counter'
+          >
+            {{ current_media_index + 1 }} / {{ media_entries.length }}
+          </div>
+        </template>
+      </div>
     </template>
 
     <!--
@@ -201,6 +207,14 @@ const is_resetting = ref<boolean>(false);
 let committed_this_gesture = false;
 let settle_timeout: ReturnType<typeof setTimeout> | undefined;
 
+// Swipe-down-to-close state. `close_drag_y` tracks live downward travel from
+// the top edge; the dialog scales down and fades proportionally. Releasing past
+// the threshold commits the dismiss with an exit animation; releasing short of
+// it snaps back.
+const close_drag_y = ref<number>(0);
+const is_closing = ref<boolean>(false);
+const is_close_snapping = ref<boolean>(false);
+
 const reduced_motion = useMediaQuery('(prefers-reduced-motion: reduce)');
 
 function motionMs(): number {
@@ -252,6 +266,21 @@ const track_style = computed<CSSProperties>(() => ({
   width: '300%',
   willChange: 'transform',
 }));
+
+// Close-drag overlay: dims and shifts the entire dialog content downward as
+// the user drags from the top edge. No transition while actively dragging;
+// eased transition during snap-back or commit animation.
+const CLOSE_COMMIT_DISTANCE = 80;
+const close_overlay_style = computed<CSSProperties>(() => {
+  const dy = Math.max(0, get(close_drag_y));
+  const progress = Math.min(dy / CLOSE_COMMIT_DISTANCE, 1);
+  const transitioning = get(is_closing) || get(is_close_snapping);
+  return {
+    opacity: 1 - progress * 0.6,
+    transform: `translateY(${dy}px) scale(${1 - progress * 0.04})`,
+    transition: transitioning ? `all ${motionMs()}ms ${SLIDE_EASING}` : 'none',
+  };
+});
 
 // Static per preview type — built once, not per computed evaluation. Only the
 // image class varies per file (SVGs get an extra hook), handled below.
@@ -373,6 +402,31 @@ function snapBack(): void {
   });
 }
 
+// Swipe-down-to-close animation helpers. The dialog translates down and scales
+// slightly as the finger drags; releasing past threshold animates it off-screen;
+// releasing short of threshold snaps back to resting position.
+function closeSnapBackAnimation(): void {
+  if (get(is_closing)) return;
+  set(is_close_snapping, true);
+  set(close_drag_y, 0);
+  const ms = motionMs();
+  setTimeout(() => {
+    set(is_close_snapping, false);
+  }, ms);
+}
+
+async function closeCommitAnimation(): Promise<void> {
+  if (get(is_closing)) return;
+  set(is_closing, true);
+  // Animate the rest of the way down and fade out completely.
+  const viewport_height = window.innerHeight;
+  set(close_drag_y, viewport_height);
+  await new Promise((resolve) => setTimeout(resolve, motionMs()));
+  await close();
+  set(is_closing, false);
+  set(close_drag_y, 0);
+}
+
 function showPreviousMedia(): void {
   if (!get(has_multiple_media)) return;
   committed_this_gesture = true;
@@ -392,7 +446,13 @@ function showNextMedia(): void {
 // drag-follow animation; the paired onDragEnd snaps back unless this gesture
 // already committed via onNext/onPrevious.
 usePreviewSwipe(dialog, {
-  enabled: () => $store.preview_open && get(has_multiple_media) && !get(is_animating),
+  enabled: () => $store.preview_open && get(has_multiple_media) && !get(is_animating) &&
+    !get(is_closing) && !get(is_close_snapping),
+  onCloseCommit: closeCommitAnimation,
+  onCloseDragUpdate: (dy) => {
+    set(close_drag_y, dy);
+  },
+  onCloseSnapBack: closeSnapBackAnimation,
   onDragEnd: () => {
     set(is_dragging, false);
     if (!committed_this_gesture) snapBack();
@@ -422,6 +482,7 @@ async function onClickDialog(event: Event): Promise<void> {
   if (!target) return;
   if ([
     'preview-dialog',
+    'preview-dialog__close-drag',
     'preview-dialog__header',
     'preview-dialog__content',
     'preview-dialog__slide-cell',
@@ -484,6 +545,14 @@ onUnmounted(() => {
 
     &.preview-dialog--opaque-bg::backdrop {
       @apply bg-zinc-500/85 dark:bg-zinc-700/85;
+    }
+
+    & .preview-dialog__close-drag {
+      @apply absolute inset-0 flex flex-col flex-nowrap items-center justify-center;
+
+      /* Transform origin at top center so scale shrinks toward the drag start. */
+      will-change: transform, opacity;
+      transform-origin: top center;
     }
 
     & .preview-dialog__header {

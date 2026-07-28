@@ -6,7 +6,8 @@ import { useImageView } from 'composables/image_view.ts';
 import type { MaybeRefOrGetter } from 'vue';
 
 /**
- * Swipe / click-drag gallery navigation for the preview dialog.
+ * Swipe / click-drag gallery navigation for the preview dialog, plus a
+ * "swipe down from the top edge to dismiss" gesture.
  *
  * Built on raw Pointer Events rather than `@vueuse/core`'s `usePointerSwipe`
  * on purpose: that composable registers its listeners as `passive` and calls
@@ -16,21 +17,18 @@ import type { MaybeRefOrGetter } from 'vue';
  * bar, a zoomed image's panning — which is precisely what we must not do.
  *
  * Instead we watch the stream ourselves and only take over once we've locked
- * onto a horizontal gesture that didn't begin on an interactive control:
+ * onto a gesture that didn't begin on an interactive control:
  *
- *   1. `pointerdown` — record the origin, but grab nothing yet.
+ *   1. `pointerdown` — record the origin, but grab nothing yet. Note whether
+ *                      the press landed inside the close zone at the top edge.
  *   2. `pointermove` — once past a small threshold, decide the dominant axis.
- *                      Vertical → yield (native scroll). Horizontal → capture
- *                      the pointer on the dialog and `preventDefault` so the
- *                      browser can't reinterpret the drag as a scroll/zoom.
- *                      Every horizontal move also reports its live delta via
- *                      `onDragUpdate`, so the caller can render a drag-follow
- *                      slide animation instead of just swapping content.
- *   3. `pointerup`   — if the horizontal travel cleared the commit threshold,
- *                      fire the navigation callback. Either way, `onDragEnd`
- *                      fires last so the caller can settle its animation
- *                      (snap back if nothing committed, or let the commit
- *                      animation it already started run to completion).
+ *                      Horizontal → gallery swipe (capture + preventDefault).
+ *                      Vertical from close zone → dismiss gesture (override
+ *                      `touch-action: pan-y`). Vertical elsewhere → yield to
+ *                      native scrolling.
+ *   3. `pointerup`   — horizontal past threshold → navigate. Vertical from
+ *                      close zone past threshold → dismiss. Otherwise snap
+ *                      back. `onDragEnd` always fires last.
  *
  * A single `MaybeRefOrGetter` target (the `<dialog>`) makes the entire screen —
  * backdrop included — a swipe surface.
@@ -69,10 +67,19 @@ const AXIS_LOCK_THRESHOLD = 15;
 // the caller overrides it via `options.commitThresholdPx` (the tweakable
 // "dead zone").
 const DEFAULT_COMMIT_THRESHOLD = 100;
+// Distance from the top edge of the dialog within which a downward drag is
+// treated as a "swipe down to close" gesture rather than native scrolling.
+// Matches the typical pull-to-dismiss affordance (~60px).
+const CLOSE_ZONE_HEIGHT = 60;
+// Downward travel (px) required inside the close zone to dismiss the dialog.
+const CLOSE_COMMIT_THRESHOLD = 80;
 
 // The dominant axis of the in-flight gesture. `undecided` until we clear the
 // lock threshold; `vertical` means we've handed the gesture back to the browser.
 type SwipeAxis = 'undecided' | 'horizontal' | 'vertical';
+// Whether the current gesture is a potential "swipe down to close". Set on
+// pointerdown when the origin is inside the close zone at the top edge.
+let is_close_gesture = false;
 
 export interface UsePreviewSwipeOptions {
   /**
@@ -100,6 +107,23 @@ export interface UsePreviewSwipeOptions {
   onNext: () => void;
   /** Committed right swipe (content dragged right → go back to the previous). */
   onPrevious: () => void;
+  /**
+   * Called during a downward drag inside the close zone at the top edge,
+   * reporting live signed vertical travel (positive = down). Drive a
+   * drag-follow dim/shrink animation from this value.
+   */
+  onCloseDragUpdate?: (dy: number) => void;
+  /**
+   * Called when a downward swipe inside the close zone clears the commit
+   * threshold and should dismiss the dialog. The caller animates the exit
+   * then closes.
+   */
+  onCloseCommit?: () => void;
+  /**
+   * Called when a close-zone drag ends without committing (short swipe).
+   * The caller animates snap-back to the resting position.
+   */
+  onCloseSnapBack?: () => void;
 }
 
 export function usePreviewSwipe(
@@ -130,6 +154,7 @@ export function usePreviewSwipe(
     }
     pointer_id = undefined;
     axis = 'undecided';
+    is_close_gesture = false;
   }
 
   useEventListener(target, 'pointerdown', (event: PointerEvent) => {
@@ -151,6 +176,11 @@ export function usePreviewSwipe(
     start_x = event.clientX;
     start_y = event.clientY;
     axis = 'undecided';
+
+    // Determine if this press is inside the close zone at the top edge of the
+    // dialog. Only a downward drag from here will attempt to dismiss.
+    const element = resolveTarget();
+    is_close_gesture = element !== null && event.clientY - element.getBoundingClientRect().top <= CLOSE_ZONE_HEIGHT;
   });
 
   useEventListener(target, 'pointermove', (event: PointerEvent) => {
@@ -160,35 +190,65 @@ export function usePreviewSwipe(
 
     if (axis === 'undecided') {
       if (Math.hypot(dx, dy) < AXIS_LOCK_THRESHOLD) return;
+
       if (Math.abs(dx) > Math.abs(dy)) {
+        // Horizontal dominates → gallery swipe as usual.
         axis = 'horizontal';
         did_swipe = true;
-        // Take the pointer so the remainder of the drag lands on the dialog
-        // even if it strays over the video surface or another child.
+        try {
+          resolveTarget()?.setPointerCapture(event.pointerId);
+        } catch { /* best-effort */ }
+      } else if (is_close_gesture && dy > 0) {
+        // Vertical downward from the top edge → close gesture. Override
+        // `touch-action: pan-y` by capturing and preventing default.
+        axis = 'vertical';
+        did_swipe = true;
         try {
           resolveTarget()?.setPointerCapture(event.pointerId);
         } catch { /* best-effort */ }
       } else {
-        // Vertical: yield the whole gesture back to native scrolling.
+        // Vertical but not from the close zone: yield to native scrolling.
         axis = 'vertical';
         return;
       }
     }
 
-    // Non-passive listener → stop the browser turning the drag into a scroll.
     if (axis === 'horizontal') {
       event.preventDefault();
       options.onDragUpdate?.(dx);
+    }
+
+    // Close-zone downward drag: prevent the browser from interpreting this as
+    // a scroll (beats `touch-action: pan-y`) and report live delta.
+    if (axis === 'vertical' && is_close_gesture && dy > 0) {
+      event.preventDefault();
+      options.onCloseDragUpdate?.(dy);
     }
   }, { passive: false });
 
   useEventListener(target, 'pointerup', (event: PointerEvent) => {
     if (pointer_id !== event.pointerId) return;
     const dx = event.clientX - start_x;
+    const dy = event.clientY - start_y;
+
     if (axis === 'horizontal' && Math.abs(dx) >= (options.commitThresholdPx ?? DEFAULT_COMMIT_THRESHOLD)) {
       if (dx < 0) options.onNext();
       else options.onPrevious();
     }
+
+    // Close-zone downward swipe committed? Dismiss.
+    if (axis === 'vertical' && is_close_gesture && dy >= CLOSE_COMMIT_THRESHOLD) {
+      options.onCloseCommit?.();
+      endGesture();
+      options.onDragEnd?.();
+      return;
+    }
+
+    // Close-zone drag didn't reach threshold → snap back.
+    if (axis === 'vertical' && is_close_gesture && dy > 0) {
+      options.onCloseSnapBack?.();
+    }
+
     endGesture();
     options.onDragEnd?.();
   });
@@ -199,6 +259,11 @@ export function usePreviewSwipe(
     // suppression flag now rather than carrying it to the next unrelated click.
     // (pointerup must NOT do this — it needs the flag to survive to the click.)
     did_swipe = false;
+    // Cancel a close-gesture drag in flight → snap back.
+    if (is_close_gesture && axis === 'vertical') {
+      options.onCloseSnapBack?.();
+    }
+    is_close_gesture = false;
     endGesture();
     options.onDragEnd?.();
   });
