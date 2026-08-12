@@ -67,10 +67,10 @@ const AXIS_LOCK_THRESHOLD = 15;
 // the caller overrides it via `options.commitThresholdPx` (the tweakable
 // "dead zone").
 const DEFAULT_COMMIT_THRESHOLD = 100;
-// Distance from the top edge of the dialog within which a downward drag is
+// Distance from the top edge of the viewport within which a downward drag is
 // treated as a "swipe down to close" gesture rather than native scrolling.
-// Matches the typical pull-to-dismiss affordance (~60px).
-const CLOSE_ZONE_HEIGHT = 60;
+// Wider on purpose so it's easy to find on mobile without being accidental.
+const CLOSE_ZONE_HEIGHT = 80;
 // Downward travel (px) required inside the close zone to dismiss the dialog.
 const CLOSE_COMMIT_THRESHOLD = 80;
 
@@ -88,8 +88,16 @@ export interface UsePreviewSwipeOptions {
    * Defaults to 50px.
    */
   commitThresholdPx?: number;
-  /** Gate: only begin tracking while the gallery is navigable (open + >1 media). */
+  /**
+   * Gate for horizontal gallery swipe: only begin tracking while the gallery
+   * is navigable (open + >1 media). Does NOT affect close-gesture tracking.
+   */
   enabled: () => boolean;
+  /**
+   * Gate for swipe-down-to-close: only track while the dialog is in a state
+   * where dismissing makes sense. Defaults to `enabled()` for backward compat.
+   */
+  enabledClose?: () => boolean;
   /**
    * Fires once per gesture on release/cancel, whether or not it committed —
    * AFTER onNext/onPrevious, so the caller can tell "this release also
@@ -163,7 +171,8 @@ export function usePreviewSwipe(
     // (e.g. tapping a button, the seek bar, or Close right after a swipe).
     did_swipe = false;
 
-    if (!options.enabled()) return;
+    // Neither gesture active? Ignore entirely.
+    if (!options.enabled() && !(options.enabledClose?.())) return;
     // Primary button only for mouse; touch / pen always report button 0.
     if (event.button !== 0) return;
     // Never wrestle the gesture away from a control that drags itself.
@@ -178,9 +187,10 @@ export function usePreviewSwipe(
     axis = 'undecided';
 
     // Determine if this press is inside the close zone at the top edge of the
-    // dialog. Only a downward drag from here will attempt to dismiss.
-    const element = resolveTarget();
-    is_close_gesture = element !== null && event.clientY - element.getBoundingClientRect().top <= CLOSE_ZONE_HEIGHT;
+    // viewport (using window coordinate directly, more reliable than bounding
+    // rect on a full-screen fixed <dialog>). Only a downward drag from here
+    // will attempt to dismiss.
+    is_close_gesture = event.clientY <= CLOSE_ZONE_HEIGHT;
   });
 
   useEventListener(target, 'pointermove', (event: PointerEvent) => {
@@ -192,15 +202,18 @@ export function usePreviewSwipe(
       if (Math.hypot(dx, dy) < AXIS_LOCK_THRESHOLD) return;
 
       if (Math.abs(dx) > Math.abs(dy)) {
-        // Horizontal dominates → gallery swipe as usual.
+        // Horizontal dominates → gallery swipe (gated by enabled()).
+        if (!options.enabled()) return;
         axis = 'horizontal';
         did_swipe = true;
         try {
           resolveTarget()?.setPointerCapture(event.pointerId);
         } catch { /* best-effort */ }
       } else if (is_close_gesture && dy > 0) {
-        // Vertical downward from the top edge → close gesture. Override
-        // `touch-action: pan-y` by capturing and preventing default.
+        // Vertical downward from the top edge → close gesture (gated by
+        // enabledClose). Override `touch-action: pan-y` by capturing and
+        // preventing default.
+        if (!(options.enabledClose?.())) return;
         axis = 'vertical';
         did_swipe = true;
         try {

@@ -446,8 +446,8 @@ function showNextMedia(): void {
 // drag-follow animation; the paired onDragEnd snaps back unless this gesture
 // already committed via onNext/onPrevious.
 usePreviewSwipe(dialog, {
-  enabled: () => $store.preview_open && get(has_multiple_media) && !get(is_animating) &&
-    !get(is_closing) && !get(is_close_snapping),
+  enabled: () => $store.preview_open && get(has_multiple_media) && !get(is_animating),
+  enabledClose: () => $store.preview_open && !get(is_closing) && !get(is_close_snapping),
   onCloseCommit: closeCommitAnimation,
   onCloseDragUpdate: (dy) => {
     set(close_drag_y, dy);
