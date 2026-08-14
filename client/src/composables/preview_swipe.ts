@@ -39,14 +39,21 @@ import type { MaybeRefOrGetter } from 'vue';
 //   • media-control-bar / [slot='centered-chrome'] → the video seek bar and its
 //     transport buttons (the seek range's shadow slider retargets to the
 //     <media-control-bar> host as the event leaves the shadow tree).
-//   • .preview-dialog__nav / __header / __title    → the dialog's own controls.
+//   • .preview-dialog__nav / __title               → the dialog's own controls.
 //   • .preview-dialog__overlays                    → the teleported action pill
 //     and dropdown menus that live in the isolated overlay host.
 //   • the generic interactive controls             → buttons, links, inputs.
 // Note: <media-controller> itself is intentionally absent so the video *surface*
 // stays swipeable — only its chrome is excluded.
+//
+// .preview-dialog__header is deliberately NOT listed here even though it hosts
+// the action bar: it's a `fixed top-0 w-full` container, so excluding the
+// whole element would black out the entire close-zone strip (the top ~80px a
+// "swipe down to dismiss" gesture starts from) even over its blank space,
+// since the visible buttons only occupy the right end (`justify-end`). Its
+// actual buttons/links are already covered by the generic `button` / `a[href]`
+// entries below, so nothing loses its own-gesture protection.
 const NO_SWIPE_SELECTOR = [
-  '.preview-dialog__header',
   '.preview-dialog__nav',
   '.preview-dialog__overlays',
   '.preview-dialog__title',
