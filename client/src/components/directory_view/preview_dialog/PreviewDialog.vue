@@ -557,7 +557,30 @@ onUnmounted(() => {
 
     & .preview-dialog__header {
       @apply fixed left-0 top-0 w-full flex flex-row flex-nowrap items-start justify-end gap-4 z-1010;
+
+      /* This element is the actual pointerdown target across almost all of the
+         top "close zone" strip (composables/preview_swipe.ts's CLOSE_ZONE_HEIGHT,
+         80px) — it's `fixed w-full`, top-most there (z-1010), and its blank flex
+         space still counts as its own hit box even where no button is visible.
+         Two things must hold for the swipe-down-to-close gesture to work on a
+         touchscreen, where `.preview-dialog`'s own `touch-action` (`pan-y` for
+         image/video, `auto` otherwise — needed so those previews keep native
+         vertical scroll/pan) would otherwise let the browser start a native pan
+         for a downward touch-drag before our pointermove handler's threshold-
+         gated `preventDefault()` ever runs, and mouse input never hits this path
+         at all (no competing native gesture), which is why this only broke on
+         mobile:
+           1. `touch-action: none` so the browser never attempts native panning
+              here, leaving every touch fully under JS control regardless of
+              timing (touch-action can only be narrowed by a descendant, not
+              re-widened, so this can't leak back out to a child).
+           2. `min-height` matching CLOSE_ZONE_HEIGHT so this element's hit box
+              covers the *entire* close zone the JS checks against, even the
+              part below the (shorter) visible button row, rather than handing
+              off the bottom slice of that strip to unprotected content. */
+      touch-action: none;
       cursor: initial;
+      min-height: 80px;
     }
 
     & .preview-dialog__title {
