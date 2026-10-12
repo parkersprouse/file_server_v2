@@ -53,6 +53,8 @@ export default {
         ],
       },
     ],
+    // Tailwind's @apply takes utility class names, which aren't valid CSS preludes
+    'at-rule-prelude-no-invalid': [true, { ignoreAtRules: ['apply'] }],
     'comment-empty-line-before': null,
     'declaration-block-no-duplicate-properties': [
       true,

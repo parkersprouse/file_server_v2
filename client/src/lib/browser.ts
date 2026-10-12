@@ -19,7 +19,7 @@ export function isMobile(name?: string, platform?: string): boolean {
 
   let mobile = false;
   if (lname) mobile = lname.includes('mobile');
-  if (lplatform) mobile = (lname ? mobile : true) && ['android', 'ios'].includes(lplatform);
+  if (lplatform) mobile = (!lname || mobile) && ['android', 'ios'].includes(lplatform);
   return mobile;
 }
 
