@@ -54,7 +54,7 @@ import { canPreview, isFile } from 'lib/entry_helpers.ts';
 import { http } from 'lib/http.ts';
 import { directory_cache } from 'lib/request_cache.ts';
 import { sortEntries } from 'lib/sort.ts';
-import { pathToRoute, toFileUrl } from 'lib/utils.ts';
+import { pathToRoute, stripTransientParams, toFileUrl } from 'lib/utils.ts';
 import { useStore } from 'stores/global.ts';
 import { useRouterStore } from 'stores/router.ts';
 
@@ -187,7 +187,8 @@ async function handleLinkedEntry(): Promise<void> {
 async function redirectLinkedNotFound(name: string): Promise<void> {
   await $router.replace({
     path: '/',
-    query: {},
+    // Keep the viewer's view / sort; only the transient params are dropped.
+    query: stripTransientParams($route.query),
   });
   // Set after the redirect so `handleBeforeNavigate` doesn't clear it mid-flight.
   $store.setLinkedEntryError(name);

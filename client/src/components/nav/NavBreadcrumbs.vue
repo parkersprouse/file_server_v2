@@ -77,7 +77,8 @@ const $route = useRoute();
 const $router_store = useRouterStore();
 
 const at_root = computed<boolean>(() => $route.path === '/');
-const collapsed_crumbs = computed(() => $router_store.breadcrumbs.slice(0, hiddenCount));
+// Reversed so the folder one level up is first in the dropdown.
+const collapsed_crumbs = computed(() => $router_store.breadcrumbs.slice(0, hiddenCount).reverse());
 const visible_crumbs = computed(() => $router_store.breadcrumbs.slice(hiddenCount));
 </script>
 

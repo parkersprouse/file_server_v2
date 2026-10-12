@@ -11,7 +11,7 @@
     </ContextMenuTrigger>
     <ContextMenuContent>
       <EntryContextMenuItemCopyLink :entry='entry' />
-      <EntryContextMenuItemNewTab :href='entry.path' />
+      <EntryContextMenuItemNewTab :href='buildEntryLink(entry)' />
     </ContextMenuContent>
   </ContextMenu>
 </template>
@@ -19,7 +19,7 @@
 <script setup lang='ts'>
 import { computed } from 'vue';
 
-import { buildEntryRoute } from 'lib/entry_helpers.ts';
+import { buildEntryLink, buildEntryRoute } from 'lib/entry_helpers.ts';
 import { useRouterStore } from 'stores/router.ts';
 
 import type { Entry } from 'types/entry.d.ts';

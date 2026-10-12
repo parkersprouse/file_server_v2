@@ -79,23 +79,30 @@ export function buildEntryRoute(
 }
 
 /**
- * An absolute, shareable URL that deep-links to an entry: its parent
- * directory's path with the entry's name in the `linked` query param. The
- * link survives new siblings and re-sorting, and breaks if the entry is
- * moved or renamed.
+ * An absolute, shareable URL for an entry. A folder links to its own page. A
+ * file deep-links via its parent directory's path with the file's name in the
+ * `linked` query param, which survives new siblings and re-sorting and breaks
+ * if the file is moved or renamed.
  */
 export function buildEntryLink(entry: Entry): string {
   // Encode per segment so the `/` separators are preserved (see `toFileUrl`).
-  const parent = entryLocation(entry)
+  const encode_path = (path: string): string => path
     .split('/')
     .map((segment) => encodeURIComponent(segment))
     .join('/');
-  const query = {
-    ...queryToObject(location.search),
+  // Keep the viewer's view / sort params; search and direct-link state is
+  // transient and must not leak into a shared link.
+  const query = stripTransientParams(queryToObject(location.search));
+
+  if (isDir(entry)) {
+    return `${location.origin}${encode_path(entry.path)}${formatQuery(query)}`;
+  }
+
+  return `${location.origin}${encode_path(entryLocation(entry))}${formatQuery({
+    ...query,
     // Raw name: `formatQuery` does the encoding.
     [QueryParam.LINKED]: entry.name,
-  };
-  return `${location.origin}${parent}${formatQuery(query)}`;
+  })}`;
 }
 
 /**
