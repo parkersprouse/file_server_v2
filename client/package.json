@@ -44,7 +44,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dayjs": "^1.11.21",
-    "dompurify": "^3.4.11",
+    "dompurify": "^3.4.13",
     "emittery": "^2.0.0",
     "marked": "^18.0.5",
     "media-chrome": "^4.19.2",
