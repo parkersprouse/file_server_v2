@@ -4,7 +4,7 @@
   "type": "module",
   "engines": {
     "node": "^24",
-    "pnpm": "^11"
+    "pnpm": "^12"
   },
   "scripts": {
     "start": "concurrently --kill-others --names \"Dev Client\",\"Dev Server\" --prefix-colors blue,yellow \"pnpm run client:dev\" \"pnpm run server:dev\"",
