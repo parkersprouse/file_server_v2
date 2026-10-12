@@ -1,13 +1,19 @@
 <template>
-  <component
-    ref='entry'
-    :is='isDir(entry) ? DirEntry : FileEntry'
-    :entry='entry'
-  >
-    <template #default>
-      <slot name='default' />
-    </template>
-  </component>
+  <!--
+    The actions menu is a sibling of the entry link, not a child: interactive
+    elements can't nest, and the button mustn't trigger the link's navigation.
+  -->
+  <div class='entry-cell'>
+    <component
+      :is='isDir(entry) ? DirEntry : FileEntry'
+      :entry='entry'
+    >
+      <template #default>
+        <slot name='default' />
+      </template>
+    </component>
+    <EntryActionsMenu :entry='entry' />
+  </div>
 </template>
 
 <script setup lang='ts'>

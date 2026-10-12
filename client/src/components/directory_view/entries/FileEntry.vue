@@ -1,48 +1,32 @@
 <template>
-  <ContextMenu>
-    <ContextMenuTrigger as-child>
-      <a
-        v-if='entry.external_url'
-        :href='entry.external_url'
-        class='entry'
-        :class='{ "entry--linked": is_linked }'
-        target='_blank'
-      >
-        <slot name='default' />
-      </a>
-      <a
-        v-else-if='can_preview'
-        ref='entry_ele'
-        href='#'
-        class='entry'
-        :class='{ "entry--linked": is_linked }'
-        @click.prevent='onClick'
-      >
-        <slot name='default' />
-      </a>
-      <a
-        v-else
-        :href='`${entry.url}?download`'
-        download
-        class='entry'
-        :class='{ "entry--linked": is_linked }'
-      >
-        <slot name='default' />
-      </a>
-    </ContextMenuTrigger>
-    <ContextMenuContent>
-      <EntryContextMenuItemCopyLink :entry='entry' />
-      <EntryContextMenuItemNewTab :href='`${entry.url}?inline`' />
-      <ContextMenuItem
-        as='a'
-        :href='`${entry.url}?download`'
-        download
-      >
-        <icon-download-simple />
-        Download
-      </ContextMenuItem>
-    </ContextMenuContent>
-  </ContextMenu>
+  <a
+    v-if='entry.external_url'
+    :href='entry.external_url'
+    class='entry'
+    :class='{ "entry--linked": is_linked }'
+    target='_blank'
+  >
+    <slot name='default' />
+  </a>
+  <a
+    v-else-if='can_preview'
+    ref='entry_ele'
+    href='#'
+    class='entry'
+    :class='{ "entry--linked": is_linked }'
+    @click.prevent='onClick'
+  >
+    <slot name='default' />
+  </a>
+  <a
+    v-else
+    :href='`${entry.url}?download`'
+    download
+    class='entry'
+    :class='{ "entry--linked": is_linked }'
+  >
+    <slot name='default' />
+  </a>
 </template>
 
 <script setup lang='ts'>

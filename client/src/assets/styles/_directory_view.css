@@ -1,3 +1,7 @@
+.entry-cell {
+  @apply relative min-w-0;
+}
+
 .entry {
   /*
    * `block` is required: the entry anchor wraps a block-level `[data-slot='item']`.
@@ -125,6 +129,24 @@
     & [data-slot^='card-'],
     & [data-slot^='item-'] {
       @apply text-primary!;
+    }
+  }
+
+  /* Also matches while the cell's actions button (a sibling overlay) is hovered. */
+  @media (hover: hover) {
+    .entry-cell:hover > & {
+      @apply text-primary!;
+
+      & [data-slot='card'],
+      & [data-slot='item'] {
+        @apply border-primary!;
+      }
+
+      & .entry-meta,
+      & [data-slot^='card-'],
+      & [data-slot^='item-'] {
+        @apply text-primary!;
+      }
     }
   }
 }

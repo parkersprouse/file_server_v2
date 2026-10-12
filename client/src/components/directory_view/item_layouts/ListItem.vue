@@ -63,10 +63,15 @@ const $router_store = useRouterStore();
       @apply bg-muted;
     }
 
+    /* Slim, vertically centred button in a slot reserved at the row's right edge. */
+    & .entry-actions {
+      @apply top-1/2 right-1 size-7 -translate-y-1/2 rounded-none;
+    }
+
     & .entry {
       & [data-slot='item'] {
         /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-        @apply py-2! flex-nowrap border-l-0 border-r-0;
+        @apply py-2! pr-10! flex-nowrap border-l-0 border-r-0;
 
         & * {
           --tw-translate-x: 0;
