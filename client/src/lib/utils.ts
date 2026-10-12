@@ -1,6 +1,6 @@
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { stringifyQuery } from 'vue-router';
+import { parseQuery, stringifyQuery } from 'vue-router';
 
 import { QueryParam } from 'enums/query_param.ts';
 import { http } from 'lib/http.ts';
@@ -42,11 +42,12 @@ export function formatQuery(query: LocationQuery): string {
   return Object.keys(query).length > 0 ? `?${stringifyQuery(query)}` : '';
 }
 
-export function queryToObject(query: string): Record<string, string> {
-  const qs: string = query.startsWith('?') ? query.substring(1) : query;
-  const params: string[] = qs.split('&');
-  const kv_pairs: string[][] = params.map((param) => param.split('='));
-  return Object.fromEntries(kv_pairs);
+/**
+ * Parse a raw query string into decoded values (the inverse of `formatQuery`,
+ * which encodes them again), so round-tripping never double-encodes.
+ */
+export function queryToObject(query: string): LocationQuery {
+  return parseQuery(query);
 }
 
 /**

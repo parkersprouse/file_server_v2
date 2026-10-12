@@ -92,7 +92,8 @@ export function buildEntryLink(entry: Entry): string {
     .join('/');
   const query = {
     ...queryToObject(location.search),
-    [QueryParam.LINKED]: encodeURIComponent(entry.name),
+    // Raw name: `formatQuery` does the encoding.
+    [QueryParam.LINKED]: entry.name,
   };
   return `${location.origin}${parent}${formatQuery(query)}`;
 }
