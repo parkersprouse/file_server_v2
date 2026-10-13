@@ -99,6 +99,13 @@
 	#     Caddy has permission to do so)
 	#   - on other devices: import the root certificate from
 	#     ./.caddy/pki/authorities/local/root.crt
+	#   - Firefox-based browsers keep their own trust store and ignore the OS one
+	#     (desktop: set `security.enterprise_roots.enabled` = true in about:config;
+	#     Firefox/IronFox on Android: enable "Use third-party CA certificates" under
+	#     Secret Settings, or the same about:config pref, then restart). On Android
+	#     the cert must be installed as a "CA certificate". Clicking through the
+	#     warning is NOT enough: the exception only covers the SPA's port, so
+	#     fetches to the API port still fail.
 	local_certs
 
 	# Demux the client port: TLS ClientHellos go to the real HTTPS site block,
