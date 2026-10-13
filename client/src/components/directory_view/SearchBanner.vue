@@ -1,7 +1,7 @@
 <template>
   <Alert class='container mb-4 max-w-9/10'>
     <icon-magnifying-glass aria-hidden='true' />
-    <AlertTitle class='truncate'>
+    <AlertTitle class='truncate font-normal'>
       <!-- explicit `{{ " " }}` spaces: whitespace between tags is condensed away -->
       <template v-if='count !== undefined'>
         {{ count }} {{ count === 1 ? "result" : "results" }} for{{ " " }}
@@ -9,7 +9,7 @@
       <template v-else>
         Searching for{{ " " }}
       </template>
-      <strong>&ldquo;{{ $router_store.search_query }}&rdquo;</strong>{{ " " }}{{ scope_label }}
+      "<span class='font-semibold'>{{ $router_store.search_query }}</span>"{{ " " }}{{ scope_label }}
     </AlertTitle>
     <AlertDescription
       v-if='has_badges'
