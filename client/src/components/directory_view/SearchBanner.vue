@@ -4,7 +4,7 @@
     <AlertTitle class='truncate font-normal'>
       <!-- explicit `{{ " " }}` spaces: whitespace between tags is condensed away -->
       <template v-if='count !== undefined'>
-        {{ count }} {{ count === 1 ? "result" : "results" }} for{{ " " }}
+        <span class='font-semibold'>{{ count }}</span> {{ count === 1 ? "result" : "results" }} for{{ " " }}
       </template>
       <template v-else>
         Searching for{{ " " }}
@@ -17,25 +17,25 @@
     >
       <Badge
         v-if='$router_store.search_match !== SearchMatch.ALL'
-        variant='secondary'
+        variant='outline'
       >
         {{ $router_store.search_match === SearchMatch.FILES ? "files only" : "folders only" }}
       </Badge>
       <Badge
         v-if='$router_store.search_case_sensitive'
-        variant='secondary'
+        variant='outline'
       >
         case sensitive
       </Badge>
       <Badge
         v-if='$router_store.search_fuzzy'
-        variant='secondary'
+        variant='outline'
       >
         fuzzy
       </Badge>
       <Badge
         v-if='limit_reached'
-        variant='secondary'
+        variant='outline'
       >
         showing first {{ count }} matches
       </Badge>
