@@ -9,6 +9,40 @@ import { defineConfig } from 'vite';
 import { ViteToml } from 'vite-plugin-toml';
 import VueDevtools from 'vite-plugin-vue-devtools';
 
+// Video.js custom elements used in Vue templates (the preview media players).
+// Vue's compiler must leave these to the browser instead of resolving them as
+// components; per the Video.js Vue guide this lists exact tags, not a prefix.
+const VIDEOJS_ELEMENTS = new Set([
+  'audio-player',
+  'media-buffering-indicator',
+  'media-container',
+  'media-controls',
+  'media-controls-content',
+  'media-controls-group',
+  'media-fullscreen-button',
+  'media-gesture',
+  'media-hotkey',
+  'media-mute-button',
+  'media-play-button',
+  'media-poster',
+  'media-seek-button',
+  'media-slider-buffer',
+  'media-slider-fill',
+  'media-slider-preview',
+  'media-slider-thumb',
+  'media-slider-track',
+  'media-slider-value',
+  'media-time',
+  'media-time-group',
+  'media-time-separator',
+  'media-time-slider',
+  'media-tooltip',
+  'media-tooltip-group',
+  'media-tooltip-label',
+  'media-volume-slider',
+  'video-player',
+]);
+
 // https://vite.dev/config/
 export default defineConfig(({ command }) => ({
   appType: 'spa',
@@ -25,6 +59,11 @@ export default defineConfig(({ command }) => ({
         //   longer accepts the object form of `manualChunks`, so map each
         //   package to its chunk via the function form instead.
         manualChunks(id): string | undefined {
+          // Helpers the es2020 lowering injects (class fields etc.) are shared by
+          //   app and vendor code. Left alone, Rolldown parks them in the first
+          //   chunk needing them — the lazy vendor-media (Video.js) — making it a
+          //   first-paint import. Pin them to the always-loaded core chunk.
+          if (id.includes('@oxc-project+runtime')) return 'vendor-core';
           if (!id.includes('node_modules')) return;
           const chunk_groups: Record<string, string[]> = {
             'vendor-core': [
@@ -41,7 +80,7 @@ export default defineConfig(({ command }) => ({
               'axios',
             ],
             'vendor-media': [
-              'media-chrome',
+              '@videojs',
             ],
             'vendor-ui': [
               'reka-ui',
@@ -80,7 +119,7 @@ export default defineConfig(({ command }) => ({
     Vue({
       template: {
         compilerOptions: {
-          isCustomElement: (tag) => tag.toLowerCase().startsWith('media-'),
+          isCustomElement: (tag) => VIDEOJS_ELEMENTS.has(tag),
         },
       },
     }),

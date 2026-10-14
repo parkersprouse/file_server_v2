@@ -471,8 +471,9 @@ function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
   // Like swipe, keyboard traversal stays available with the on-screen controls
   // hidden — it's gated only on there being another media file to move to.
   if (!$store.preview_open || !get(has_multiple_media) || get(is_animating)) return;
-  // Leave the arrow keys to a focused video player so they still seek it.
-  if (document.activeElement?.closest('media-controller')) return;
+  // Leave the arrow keys to a focused media player so they still seek it (its
+  // `<media-hotkey>`s listen on the `<media-container>`, which takes focus).
+  if (document.activeElement?.closest('media-container')) return;
   event.preventDefault();
   navigate();
 }

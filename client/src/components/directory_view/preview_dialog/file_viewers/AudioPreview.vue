@@ -1,140 +1,176 @@
 <template>
-  <media-controller
-    ref='media_controller'
-    audio
-    keyboardbackwardseekoffset='5'
-    keyboardforwardseekoffset='5'
+  <audio-player
+    ref='player'
+    class='preview-media-player preview-audio-player'
   >
-    <audio
-      ref='audio_ele'
-      slot='media'
-      :src='entry.url'
-    />
-
-    <div slot='centered-chrome'>
-      <media-seek-backward-button
-        seekoffset='5'
-        class='preview-audio-player__control'
-      >
-        <ricon-replay-5-fill slot='icon' />
-      </media-seek-backward-button>
-      <media-loop-toggle-button class='preview-audio-player__control ' />
-      <media-play-button class='preview-audio-player__control'>
-        <ricon-play-fill slot='play' />
-        <ricon-pause-fill slot='pause' />
-      </media-play-button>
-      <media-mute-button class='preview-audio-player__control'>
-        <ricon-volume-up-fill slot='high' />
-        <ricon-volume-up-fill slot='medium' />
-        <ricon-volume-down-fill slot='low' />
-        <ricon-volume-mute-fill slot='off' />
-      </media-mute-button>
-      <media-seek-forward-button
-        seekoffset='5'
-        class='preview-audio-player__control'
-      >
-        <ricon-forward-5-fill slot='icon' />
-      </media-seek-forward-button>
-    </div>
-
-    <media-control-bar>
-      <media-play-button class='preview-audio-player__control'>
-        <ricon-play-fill slot='play' />
-        <ricon-pause-fill slot='pause' />
-      </media-play-button>
-      <media-time-range>
-        <div
-          slot='current'
-          part='arrow'
-        />
-      </media-time-range>
-      <media-time-display
-        showduration
-        class='preview-audio-player__control'
+    <media-container class='preview-media-player__container'>
+      <audio
+        ref='audio_ele'
+        class='preview-media-player__media'
+        :src='entry.url'
       />
-      <media-loop-toggle-button class='preview-audio-player__control' />
-      <media-mute-button class='preview-audio-player__control'>
-        <ricon-volume-up-fill slot='high' />
-        <ricon-volume-up-fill slot='medium' />
-        <ricon-volume-down-fill slot='low' />
-        <ricon-volume-mute-fill slot='off' />
-      </media-mute-button>
-      <media-volume-range class='preview-audio-player__control' />
-    </media-control-bar>
 
-  </media-controller>
+      <!-- media-chrome's default shortcut set, with its 5s keyboard seek offset. -->
+      <media-hotkey
+        keys='Space'
+        action='togglePaused'
+      />
+      <media-hotkey
+        keys='k'
+        action='togglePaused'
+      />
+      <media-hotkey
+        keys='m'
+        action='toggleMuted'
+      />
+      <media-hotkey
+        v-for='hotkey in SEEK_HOTKEYS'
+        :key='hotkey.keys'
+        action='seekStep'
+        :keys='hotkey.keys'
+        :value='hotkey.value'
+      />
+      <media-hotkey
+        keys='ArrowUp'
+        action='volumeStep'
+      />
+      <media-hotkey
+        keys='ArrowDown'
+        action='volumeStep'
+      />
+      <media-hotkey
+        keys='<'
+        action='speedDown'
+      />
+      <media-hotkey
+        keys='>'
+        action='speedUp'
+      />
+
+      <!-- Audio has nothing to reveal on idle, so its controls never hide. -->
+      <media-controls
+        class='preview-media-player__controls'
+        visibility='always'
+      >
+        <media-controls-content class='preview-media-player__controls-content'>
+          <!-- Mobile only: a row of large transport buttons above the bar. -->
+          <media-controls-group
+            class='preview-audio-player__transport'
+            aria-label='Playback controls'
+          >
+            <media-seek-button
+              :seconds='-5'
+              class='preview-media-player__control'
+            >
+              <ricon-replay-5-fill />
+            </media-seek-button>
+            <MediaLoopButton
+              class='preview-media-player__control preview-audio-player__loop'
+              v-model:looping='looping'
+            />
+            <media-play-button class='preview-media-player__control'>
+              <ricon-play-fill class='icon-play' />
+              <ricon-pause-fill class='icon-pause' />
+            </media-play-button>
+            <MediaMuteButton class='preview-media-player__control' />
+            <media-seek-button
+              :seconds='5'
+              class='preview-media-player__control'
+            >
+              <ricon-forward-5-fill />
+            </media-seek-button>
+          </media-controls-group>
+
+          <media-controls-group
+            class='preview-media-player__bar'
+            aria-label='Media controls'
+          >
+            <media-tooltip-group>
+              <media-play-button class='preview-media-player__control preview-audio-player__desktop-only'>
+                <ricon-play-fill class='icon-play' />
+                <ricon-pause-fill class='icon-pause' />
+              </media-play-button>
+              <media-tooltip class='preview-media-player__tooltip' />
+
+              <MediaTimeSlider />
+              <MediaTimeDisplay class='preview-media-player__control' />
+
+              <MediaLoopButton
+                class='preview-media-player__control preview-audio-player__desktop-only'
+                v-model:looping='looping'
+              />
+              <media-tooltip class='preview-media-player__tooltip'>
+                <media-tooltip-label>Loop</media-tooltip-label>
+              </media-tooltip>
+
+              <MediaMuteButton class='preview-media-player__control preview-audio-player__desktop-only' />
+              <media-tooltip class='preview-media-player__tooltip' />
+
+              <MediaVolumeSlider class='preview-audio-player__desktop-only' />
+            </media-tooltip-group>
+          </media-controls-group>
+        </media-controls-content>
+      </media-controls>
+    </media-container>
+  </audio-player>
 </template>
 
 <script setup lang='ts'>
-import { get, useEventListener } from '@vueuse/core';
-import 'media-chrome';
+import '@videojs/html/audio/player';
 import { useTemplateRef } from 'vue';
 
-import MediaLoopToggleButton from './video_preview/media_loop_button.ts';
+import { useMediaLooping, useMediaPreferences } from 'composables/media_player.ts';
 
-import type { MediaController } from 'media-chrome';
+import MediaLoopButton from './media_player/MediaLoopButton.vue';
+import MediaMuteButton from './media_player/MediaMuteButton.vue';
+import MediaTimeDisplay from './media_player/MediaTimeDisplay.vue';
+import MediaTimeSlider from './media_player/MediaTimeSlider.vue';
+import MediaVolumeSlider from './media_player/MediaVolumeSlider.vue';
+import { SEEK_HOTKEYS } from './media_player/register.ts';
+
+import type { AudioPlayerElement } from '@videojs/html/audio';
 import type { Entry } from 'types/entry.d.ts';
 
 const { entry } = defineProps<{
   entry: Entry;
 }>();
 
+const player = useTemplateRef<AudioPlayerElement>('player');
 const audio_ele = useTemplateRef<HTMLAudioElement>('audio_ele');
-const media_controller = useTemplateRef<MediaController>('media_controller');
+const looping = useMediaLooping(audio_ele);
 
-function toggleLooping(event: Event): void {
-  const ele = get(audio_ele);
-  if (!ele) return;
-  const toggle_button = event.target as MediaLoopToggleButton;
-  ele.loop = toggle_button.mediaLooping;
-}
-
-useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleLooping);
+useMediaPreferences(player, { save: true });
 </script>
 
 <style>
 @reference '../../../../assets/styles/index.css';
 
 @utility desktop-audio-player {
-  [slot='centered-chrome'] {
+  & .preview-audio-player__transport {
     @apply hidden;
-  }
-
-  media-control-bar {
-    & .preview-audio-player__control {
-      display: var(--media-control-display, inline-flex);
-      flex-flow: row nowrap;
-    }
   }
 }
 
 @utility mobile-audio-player {
-  [slot='centered-chrome'] {
-    --media-button-icon-width: 2.5rem;
-    --media-button-icon-height: 2.5rem;
-
+  & .preview-audio-player__transport {
     @apply flex flex-row flex-nowrap justify-evenly items-stretch w-full;
     background-color: var(--media-control-background);
 
-    & .preview-audio-player__control {
-      @apply not-hover:bg-transparent flex-1;
+    & .preview-media-player__control {
+      @apply flex-1 not-hover:bg-transparent;
+
+      & svg {
+        @apply size-10;
+      }
     }
 
-    & media-loop-toggle-button {
-      --media-button-icon-width: 2rem;
-      --media-button-icon-height: 2rem;
+    & .preview-audio-player__loop svg {
+      @apply size-8;
     }
   }
 
-  media-control-bar {
-    media-seek-backward-button,
-    media-play-button,
-    media-seek-forward-button,
-    media-mute-button,
-    media-volume-range,
-    media-loop-toggle-button {
-      @apply hidden;
-    }
+  & .preview-audio-player__desktop-only {
+    @apply hidden;
   }
 }
 
@@ -143,13 +179,9 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleLoopi
     & .preview-dialog__content {
       @apply container;
 
-      & media-controller {
+      & .preview-media-player__container {
         @apply w-full h-full border border-zinc-700/85 dark:border-zinc-800
-               mobile-audio-player md:desktop-audio-player;
-
-        & [slot='media'] {
-          @apply w-full h-full inline-block!;
-        }
+               max-md:mobile-audio-player md:desktop-audio-player;
       }
     }
   }

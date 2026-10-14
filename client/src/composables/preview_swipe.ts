@@ -36,15 +36,14 @@ import type { MaybeRefOrGetter } from 'vue';
 
 // Descendants that own their own drag / pointer gestures, so a press starting
 // on one must NEVER be hijacked as a gallery swipe:
-//   • media-control-bar / [slot='centered-chrome'] → the video seek bar and its
-//     transport buttons (the seek range's shadow slider retargets to the
-//     <media-control-bar> host as the event leaves the shadow tree).
+//   • media-controls-group                         → the media players' control
+//     rows (seek slider, transport buttons), all light-DOM Video.js elements.
 //   • .preview-dialog__nav / __title               → the dialog's own controls.
 //   • .preview-dialog__overlays                    → the teleported action pill
 //     and dropdown menus that live in the isolated overlay host.
 //   • the generic interactive controls             → buttons, links, inputs.
-// Note: <media-controller> itself is intentionally absent so the video *surface*
-// stays swipeable — only its chrome is excluded.
+// Note: <media-container> itself is intentionally absent so the video *surface*
+// stays swipeable — only its controls are excluded.
 //
 // .preview-dialog__header is deliberately NOT listed here even though it hosts
 // the action bar: it's a `fixed top-0 w-full` container, so excluding the
@@ -58,11 +57,10 @@ const NO_SWIPE_SELECTOR = [
   '.preview-dialog__overlays',
   '.preview-dialog__title',
   '[role="slider"]',
-  '[slot="centered-chrome"]',
   'a[href]',
   'button',
   'input',
-  'media-control-bar',
+  'media-controls-group',
   'select',
   'textarea',
 ].join(',');
@@ -290,8 +288,8 @@ export function usePreviewSwipe(
 
   // Swallow the click that terminates a mouse drag so a backdrop swipe doesn't
   // close the dialog and a swipe over the video doesn't toggle playback. Runs
-  // in the capture phase so it beats the dialog's own click handler and
-  // media-chrome. Mirrors the same trick in ImagePreview's pan handling.
+  // in the capture phase so it beats the dialog's own click handler and the
+  // player's own handlers. Mirrors the same trick in ImagePreview's pan handling.
   useEventListener(target, 'click', (event: MouseEvent) => {
     if (!did_swipe) return;
     event.stopPropagation();
