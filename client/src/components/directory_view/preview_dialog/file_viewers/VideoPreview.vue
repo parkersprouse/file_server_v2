@@ -194,6 +194,23 @@ useEventListener(media_controller, MediaLoopToggleButton.EVENT_NAME, toggleLoopi
           }
         }
 
+        /*
+          media-chrome's autohide timer (and mouseleave / tap-to-toggle) sets
+          `userinactive` regardless of play state, but its shadow styles exempt
+          `[mediapaused]` from hiding. Mirror its playing-state rules for the
+          paused state; light-DOM rules outrank its `::slotted()` ones.
+        */
+        &[userinactive][mediapaused]:not([mediaisairplaying], [mediaiscasting]) {
+          & > :not([slot='media'], [slot='poster'], [noautohide], [role='dialog']) {
+            opacity: 0;
+            transition: var(--media-control-transition-out, opacity 1s);
+          }
+
+          & [slot='media'] {
+            cursor: none;
+          }
+        }
+
         & [slot='media'] {
           @apply object-contain object-center aspect-auto h-full w-full;
         }
