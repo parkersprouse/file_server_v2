@@ -7,7 +7,9 @@
       $store.preview_bg_enabled && "preview-dialog--opaque-bg",
       preview_type?.class,
     )'
+    closedby='none'
     @click='onClickDialog'
+    @cancel='onCancelDialog'
   >
     <template v-if='entry'>
       <!--
@@ -140,7 +142,7 @@
 </template>
 
 <script setup lang='ts'>
-import { get, onKeyStroke, set, useMediaQuery, useMutationObserver } from '@vueuse/core';
+import { get, onKeyStroke, set, useEventListener, useMediaQuery, useMutationObserver } from '@vueuse/core';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -324,7 +326,27 @@ const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   return attrs;
 });
 
-onKeyStroke('Escape', close, { dedupe: true });
+// Esc while a player is fullscreen belongs to the browser, which uses it to
+//   exit fullscreen; the same press must not also close the preview. Engines
+//   differ on ordering — the keydown and the dialog's native `cancel` can land
+//   before or just after `fullscreenchange` — so also treat the press as
+//   fullscreen's for a moment after leaving it.
+const FULLSCREEN_ESCAPE_GRACE_MS = 300;
+let fullscreen_exited_at = Number.NEGATIVE_INFINITY;
+
+useEventListener(document, 'fullscreenchange', () => {
+  if (!document.fullscreenElement) fullscreen_exited_at = performance.now();
+});
+
+function fullscreenOwnsEscape(): boolean {
+  return Boolean(document.fullscreenElement) ||
+    performance.now() - fullscreen_exited_at < FULLSCREEN_ESCAPE_GRACE_MS;
+}
+
+onKeyStroke('Escape', async () => {
+  if (fullscreenOwnsEscape()) return;
+  await close();
+}, { dedupe: true });
 onKeyStroke('ArrowLeft', (event) => onArrowNav(event, showPreviousMedia), { dedupe: true });
 onKeyStroke('ArrowRight', (event) => onArrowNav(event, showNextMedia), { dedupe: true });
 
@@ -476,6 +498,15 @@ function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
   if (document.activeElement?.closest('media-container')) return;
   event.preventDefault();
   navigate();
+}
+
+// The dialog's built-in Esc handling (a `cancel` close request) would bypass
+//   the keydown guard above, and Chromium makes that `cancel` uncancelable
+//   without a fresh user activation — so `closedby='none'` switches it off and
+//   leaves Esc to the guarded handler. For engines without `closedby`, cancel
+//   the request here instead (best effort, for the same reason).
+function onCancelDialog(event: Event): void {
+  if (fullscreenOwnsEscape()) event.preventDefault();
 }
 
 async function onClickDialog(event: Event): Promise<void> {

@@ -41,9 +41,9 @@ These come from the migration guide's Known gaps section plus behavior the first
 | Volume/mute memory | Media Chrome's implicit `localStorage` | `useMediaPreferences` with the **same keys** (`media-chrome-pref-volume`, `media-chrome-pref-muted`) | Video restores volume only, always opens muted and never writes. Audio restores and saves both |
 | Hotkeys | Media Chrome defaults, ±5 s seek | Space/k, m, f (video only), ArrowLeft/Right and j/l at ±5 s, ArrowUp/Down volume, `<`/`>` speed | **Dropped:** `c` (captions – there are no tracks), `p` (PiP – no button), `?` (shortcuts dialog). Hotkeys only fire while the player container has focus (Video.js default) |
 | Tooltips | Media Chrome tooltips | Native-popover `media-tooltip`, desktop bar only | Shortcut hints are hidden to match the old look. Popovers live inside the `<dialog>` subtree, so they aren't inert |
-| `playsinline` | **Not set** | **Set** on the `<video>` (from the Video.js install plan) | **Behavior change on iPhone:** video now plays inline with the custom controls instead of jumping to the native iOS fullscreen player. Confirm on a real iPhone and ask the user if it's unwanted |
+| `playsinline` | **Not set** | **Set** on the `<video>` (from the Video.js install plan) | **Behavior change on iPhone:** video now plays inline with the custom controls instead of jumping to the native iOS fullscreen player. **Decided: keep inline.** Fullscreen should be the user's deliberate choice (the fullscreen button) |
 | Font | Media Chrome default (Arial) | Inherits the app font | Intentional |
-| Esc while fullscreen | Exits fullscreen **and closes the preview dialog** | Same | Pre-existing (confirmed against `95d37ef` in headless Chromium). Check whether real browsers do this too and report; don't fix without asking |
+| Esc while fullscreen | Exits fullscreen **and closes the preview dialog** (Chromium; WebKit left it open) | **Fixed:** Esc only exits fullscreen; Esc outside fullscreen closes the preview | `PreviewDialog.vue`: the Esc handler skips presses while fullscreen (and for 300 ms after leaving it), and `closedby='none'` stops the dialog's native Esc close, whose `cancel` Chromium won't let pages cancel without a fresh user activation. Needs a real-browser check: the in-app browser denies fullscreen |
 | Captions, analytics | None | None | Nothing to migrate. Out of scope unless the user asks |
 | Browser floor | – | Chrome/Edge 111, Firefox 121, Safari/iOS 16.4 | Tailwind v4 already needed the same or newer (Firefox 128), so support doesn't shrink. Popover API arrives in Firefox 125 and Safari 17; older supported versions use Video.js's in-player fallback |
 
@@ -231,5 +231,7 @@ Driven by hand in the in-app browser against a scratch server + this branch, wit
 | 10 | F1: tab order play → seek → mute → loop (`aria-checked`) → fullscreen, focus fill, controls stay visible while focused | pass | the time display isn't focusable (same as before) |
 | 11 | Visual parity: video letterbox background | **fixed** | Media Chrome's controller painted black. The new container was transparent, so the listing showed through above/below the picture (very visible on mobile). Fixed with `bg-black` on the video container |
 | 12 | E: built bundle | pass (static) | `vendor-media` isn't in `index.html`'s preloads |
+
+Decisions since: keep `playsinline` (inline playback); Esc while fullscreen must only exit fullscreen (fixed, see the deviations table).
 
 Still open: Firefox (B), real Safari (C), real iPhone/Android (D), HTTPS via Caddy (E3), screen reader (F2), throttled buffering spinner (G2).
