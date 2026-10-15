@@ -260,14 +260,23 @@ const next_media_entry = computed<Entry | undefined>(() => {
   return media[(index + 1) % media.length];
 });
 
-const track_style = computed<CSSProperties>(() => ({
-  display: 'flex',
-  height: '100%',
-  transform: `translateX(calc(-33.3333% + ${get(drag_x)}px))`,
-  transition: (get(is_dragging) || get(is_resetting)) ? 'none' : `transform ${motionMs()}ms ${SLIDE_EASING}`,
-  width: '300%',
-  willChange: 'transform',
-}));
+// At rest the track carries no transform: the one-cell offset is a margin, and
+// `transform` / `will-change` apply only while a drag or slide is in motion.
+// A transformed ancestor breaks CSS anchor positioning in Firefox, which places
+// the media players' anchored popups (the settings / speed menus) as if the
+// transform weren't there — i.e. off-screen by the track's offset.
+const track_style = computed<CSSProperties>(() => {
+  const moving = get(is_dragging) || get(is_animating) || get(drag_x) !== 0;
+  return {
+    display: 'flex',
+    height: '100%',
+    marginLeft: '-100%',
+    transform: moving ? `translateX(${get(drag_x)}px)` : 'none',
+    transition: (get(is_dragging) || get(is_resetting)) ? 'none' : `transform ${motionMs()}ms ${SLIDE_EASING}`,
+    width: '300%',
+    willChange: moving ? 'transform' : 'auto',
+  };
+});
 
 // Close-drag overlay: dims and shifts the entire dialog content downward as
 // the user drags from the top edge. No transition while actively dragging;
@@ -277,10 +286,13 @@ const close_overlay_style = computed<CSSProperties>(() => {
   const dy = Math.max(0, get(close_drag_y));
   const progress = Math.min(dy / CLOSE_COMMIT_DISTANCE, 1);
   const transitioning = get(is_closing) || get(is_close_snapping);
+  // Transform-free at rest, like the slide track (see track_style).
+  const moving = dy > 0 || transitioning;
   return {
     opacity: 1 - progress * 0.6,
-    transform: `translateY(${dy}px) scale(${1 - progress * 0.04})`,
+    transform: moving ? `translateY(${dy}px) scale(${1 - progress * 0.04})` : 'none',
     transition: transitioning ? `all ${motionMs()}ms ${SLIDE_EASING}` : 'none',
+    willChange: moving ? 'transform, opacity' : 'auto',
   };
 });
 
@@ -601,7 +613,6 @@ onUnmounted(() => {
       @apply absolute inset-0 flex flex-col flex-nowrap items-center justify-center;
 
       /* Transform origin at top center so scale shrinks toward the drag start. */
-      will-change: transform, opacity;
       transform-origin: top center;
     }
 
