@@ -343,12 +343,19 @@ function fullscreenOwnsEscape(): boolean {
     performance.now() - fullscreen_exited_at < FULLSCREEN_ESCAPE_GRACE_MS;
 }
 
-// Likewise an open menu/popover inside the dialog (reka-ui layers, mounted in
-//   `.preview-dialog__overlays`) takes Esc first: reka dismisses its topmost
-//   layer from its own window Escape listener without marking the event, so
-//   look for a live layer instead. Tooltips are excluded — they only show on
-//   hover/focus, and shouldn't make closing the preview take two presses.
-const ESCAPE_LAYER_SELECTOR = '[data-dismissable-layer]:not([data-state="closed"]):not(:has([role="tooltip"]))';
+// Likewise an open menu/popover inside the dialog takes Esc first: reka-ui
+//   layers (mounted in `.preview-dialog__overlays`) and the media players'
+//   Video.js popups (settings / speed menus). Both dismiss from their own
+//   listeners, so look for one that was open when the key went down (a
+//   closing Video.js popup keeps `data-open` through its exit transition).
+//   Tooltips and the hover-opened volume popover are excluded — they show on
+//   hover/focus, and shouldn't make closing the preview take extra presses.
+//   (Video.js also marks the event `defaultPrevented` when it dismisses, but a
+//   focus tooltip does the same, so that flag can't be trusted here.)
+const ESCAPE_LAYER_SELECTOR = [
+  '[data-dismissable-layer]:not([data-state="closed"]):not(:has([role="tooltip"]))',
+  '[data-popup][data-open]:not(media-tooltip, media-volume-popover)',
+].join(', ');
 
 function layerOwnsEscape(): boolean {
   return Boolean(get(dialog)?.querySelector(ESCAPE_LAYER_SELECTOR));

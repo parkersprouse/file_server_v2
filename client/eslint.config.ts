@@ -58,6 +58,7 @@ export default defineConfigWithVueTs(
     '**/dist/**/*',
     '**/node_modules/**/*',
     'src/components/ui/**/*',
+    'src/components/videojs/**/*',
     'src/vendor/**/*',
   ]),
   {

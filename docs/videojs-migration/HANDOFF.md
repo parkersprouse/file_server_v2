@@ -2,6 +2,13 @@
 
 > **For the session reading this:** you're picking up a migration that is already implemented and pushed. Your job is to **test the areas the first session couldn't reach**, fix anything that's broken, and report back. Don't redesign the player. Read `CLAUDE.md` first (especially the "Audio/video previews are Video.js 10 players…" bullet), then this file top to bottom.
 
+> **Update – Neutral skin:** the players have since moved off the custom-built UI onto Video.js's **Neutral skin**, vendored as shadcn registry source in `client/src/components/videojs/` (user decision; see the CLAUDE.md Video.js bullet for how it's installed and adapted). Most sections below describe the earlier custom UI. What changed:
+> - The `media_player/` controls (other than the Loop button), `register.ts` and the `.preview-media-player` theme are gone, and so are the mobile centred ±5 s row and the two-row mobile bar. The skin's responsive bar replaces them.
+> - Seek is now **10 s** (hotkeys, double-tap left/right, audio seek buttons). The user accepted the skin's extras (speed menu, PiP/Cast/AirPlay where supported, volume/seek indicators, error dialog), **without captions**.
+> - Still app-side: hide-while-paused (2 s idle), the Loop switch inside the bar, volume prefs, muted start, `preload='metadata'`, `playsinline`, and the Esc rules.
+> - The skin's double-tap-centre fullscreen gesture was **removed** (fullscreen stays deliberate). Double-tap left/right halves seek ±10 s.
+> - `verify-players.cjs` targets the old class names (`.preview-media-player__…`) and needs updating before reuse.
+
 ## Where things stand
 
 - **Branch:** `ccr-e6c7c619-ftyrhu`. **Migration commit:** `e1f55da` ("Migrate preview media players from Media Chrome to Video.js 10"). Its parent `e1f55da~1` (`95d37ef`) is the last Media Chrome version. Use it for side-by-side comparisons (see [Comparing against Media Chrome](#comparing-against-media-chrome)).
@@ -26,7 +33,7 @@
 ### Decisions already made (don't relitigate)
 
 - **Version 10.1.0, no `minimumReleaseAgeExclude`.** The user chose this. pnpm 12's one-day release-age policy rejects `@videojs/*@10.1.0` until **2026-10-14 ~16:29 UTC** (the last package, `@videojs/html`, was published 2026-10-13 16:28:34 UTC). **Do not add the exemption pnpm suggests.** Before that time, *every* pnpm command fails (not just `install`, `pnpm exec`/`pnpm dev` too). Either wait, or run tools directly: `node node_modules/vite/bin/vite.js`, `node node_modules/vue-tsc/bin/vue-tsc.js -b`, and so on.
-- **Custom UI, no packaged skin.** It preserves the app's existing control layout. Shadcn skin source isn't available for Vue.
+- ~~**Custom UI, no packaged skin.**~~ Superseded: the user later chose the Neutral skin via its shadcn HTML source (see the update note at the top).
 - **Controls idle-hide after 2 s even while paused** (the app's pre-migration behavior, from commit `95d37ef` "Hide video player controls when paused"). Video.js keeps controls visible while paused by design, so the CSS keys off `data-user-active` instead of `data-visible`.
 
 ## Known gaps and intentional deviations
@@ -198,7 +205,7 @@ Media Chrome's markup uses `media-controller` / `media-control-bar` where the ne
   - Register JS-created elements in `register.ts`.
 - **Docs:** use `client/node_modules/@videojs/html/docs/llms.txt` (version-matched). The Video.js skill is installable with `npx @videojs/cli agents skills`. Relevant pages: `guides/migrate-from-media-chrome.md`, `guides/controls.md`, `guides/fullscreen.md`, `guides/browser-support.md`, `reference/components/*`.
 - Before committing: `pnpm run lint`, `pnpm run check`, `pnpm run build-only` (or their `node node_modules/...` equivalents before the release-age cutoff), then rerun `verify-players.cjs` on the engines you touched.
-- **Don't:** add a `minimumReleaseAgeExclude`, change the Video.js version, re-enable a packaged skin, or change intentional deviations (table above) without asking the user. Commit messages and docs must not include model identifiers.
+- **Don't:** add a `minimumReleaseAgeExclude`, change the Video.js version, or change intentional deviations (table above) without asking the user. Commit messages and docs must not include model identifiers.
 
 ## Reporting back
 

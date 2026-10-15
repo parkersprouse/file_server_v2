@@ -14,31 +14,65 @@ import VueDevtools from 'vite-plugin-vue-devtools';
 // components; per the Video.js Vue guide this lists exact tags, not a prefix.
 const VIDEOJS_ELEMENTS = new Set([
   'audio-player',
+  'media-airplay-button',
+  'media-audio-track-radio-group',
   'media-buffering-indicator',
+  'media-cast-button',
   'media-container',
   'media-controls',
+  'media-controls-backdrop',
   'media-controls-content',
   'media-controls-group',
+  'media-dialog-backdrop',
+  'media-dialog-close',
+  'media-dialog-description',
+  'media-dialog-popup',
+  'media-dialog-title',
+  'media-error-dialog',
   'media-fullscreen-button',
   'media-gesture',
   'media-hotkey',
+  'media-icon',
+  'media-menu',
+  'media-menu-content',
+  'media-menu-item',
+  'media-menu-separator',
   'media-mute-button',
+  'media-pip-button',
   'media-play-button',
+  'media-playback-rate-button',
+  'media-playback-rate-radio-group',
   'media-poster',
+  'media-quality-radio-group',
   'media-seek-button',
+  'media-seek-indicator',
+  'media-seek-indicator-value',
   'media-slider-buffer',
   'media-slider-fill',
   'media-slider-preview',
   'media-slider-thumb',
+  'media-slider-thumbnail',
   'media-slider-track',
   'media-slider-value',
+  'media-status-announcer',
+  'media-status-indicator',
+  'media-status-indicator-value',
+  'media-text',
   'media-time',
   'media-time-group',
   'media-time-separator',
   'media-time-slider',
+  'media-time-slider-chapter-title',
+  'media-time-slider-chapters',
+  'media-title',
   'media-tooltip',
   'media-tooltip-group',
   'media-tooltip-label',
+  'media-tooltip-shortcut',
+  'media-volume-indicator',
+  'media-volume-indicator-fill',
+  'media-volume-indicator-value',
+  'media-volume-popover',
   'media-volume-slider',
   'video-player',
 ]);
@@ -64,6 +98,10 @@ export default defineConfig(({ command }) => ({
           //   chunk needing them — the lazy vendor-media (Video.js) — making it a
           //   first-paint import. Pin them to the always-loaded core chunk.
           if (id.includes('@oxc-project+runtime')) return 'vendor-core';
+          // Same for Vite's dynamic-import preload helper: the Video.js skins
+          //   import lazily too, so without this it lands in vendor-media and
+          //   every lazy import in the app pulls that chunk on first paint.
+          if (id.includes('vite/preload-helper')) return 'vendor-core';
           if (!id.includes('node_modules')) return;
           const chunk_groups: Record<string, string[]> = {
             'vendor-core': [
