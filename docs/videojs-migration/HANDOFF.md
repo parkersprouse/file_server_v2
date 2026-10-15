@@ -212,3 +212,24 @@ Then list:
 - what you fixed (with commits)
 - open questions for the user, at minimum the iPhone `playsinline` behavior and Esc closing the dialog while fullscreen
 - anything you couldn't test and why
+
+## Round 2 results (macOS, Claude desktop browser pane – Chromium 152 with H.264)
+
+Driven by hand in the in-app browser against a scratch server + this branch, with `e1f55da~1` alongside for comparison. Playwright was dropped: its Firefox builds don't launch on this macOS, and the user prefers manual verification in the local browser.
+
+| # | Area | Result | Notes |
+| --- | --- | --- | --- |
+| 1 | A: H.264/AAC (`clip.mp4`, `portrait.mp4`, `song.m4a`), VP9 (`clip2.webm`) | pass | poster fades to 0 on play |
+| 2 | A: `long.mp4` time display | pass | `0:00:00 / 1:01:40` |
+| 3 | B1: late-`moov` seek (Chromium) | pass | seekable 0–120 at metadata, seek to 1:40 in ~30 ms. Firefox still unverified |
+| 4 | Desktop: play/pause labels, click-to-play, hotkeys (arrows ±5 stay in player, j, k, m) | pass | |
+| 5 | Desktop: autohide playing + paused, hover reveal, tooltips (shortcut hint hidden) | pass | |
+| 6 | Fullscreen (button, `f`) | not testable | the pane blocks element fullscreen; Media Chrome fails identically there |
+| 7 | Audio prefs: legacy restore, slider drag saves, mute persists; video restores volume only, always muted, never writes | pass | |
+| 8 | G3: gallery switch | parity, not as this doc expected | the `<video>` element is reused, so unmute and loop carry over to the next entry. Media Chrome on `95d37ef` does exactly the same. Previous media does stop |
+| 9 | Mobile emulation: centred row, ±5 seek, tap toggles while paused + playing, idle hide, portrait, audio layout | pass | touch driven with synthetic `pointerType: 'touch'` events |
+| 10 | F1: tab order play → seek → mute → loop (`aria-checked`) → fullscreen, focus fill, controls stay visible while focused | pass | the time display isn't focusable (same as before) |
+| 11 | Visual parity: video letterbox background | **fixed** | Media Chrome's controller painted black. The new container was transparent, so the listing showed through above/below the picture (very visible on mobile). Fixed with `bg-black` on the video container |
+| 12 | E: built bundle | pass (static) | `vendor-media` isn't in `index.html`'s preloads |
+
+Still open: Firefox (B), real Safari (C), real iPhone/Android (D), HTTPS via Caddy (E3), screen reader (F2), throttled buffering spinner (G2).

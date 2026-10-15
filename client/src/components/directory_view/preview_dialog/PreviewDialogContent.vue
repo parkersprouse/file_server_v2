@@ -89,6 +89,15 @@ onUnmounted(() => {
           @apply flex flex-col pointer-events-none transition-opacity duration-1000;
         }
 
+        /*
+          media-chrome's controller painted black behind the picture, so the
+          letterbox bands around the video stay opaque instead of showing the
+          directory listing through.
+        */
+        &.preview-video-player .preview-media-player__container {
+          @apply bg-black;
+        }
+
         /* Video overlays its controls on the picture; audio stacks them in flow. */
         &.preview-video-player .preview-media-player__controls-content {
           @apply absolute inset-0 justify-end;
