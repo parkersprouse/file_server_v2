@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "browserslist": "since 2018, > 0.3%, not dead",
-  "packageManager": "pnpm@12.8.1",
+  "packageManager": "pnpm@12.11.2",
   "engines": {
     "node": "^24",
     "pnpm": "^12"
