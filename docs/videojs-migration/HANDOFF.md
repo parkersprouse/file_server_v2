@@ -43,7 +43,7 @@ These come from the migration guide's Known gaps section plus behavior the first
 | Tooltips | Media Chrome tooltips | Native-popover `media-tooltip`, desktop bar only | Shortcut hints are hidden to match the old look. Popovers live inside the `<dialog>` subtree, so they aren't inert |
 | `playsinline` | **Not set** | **Set** on the `<video>` (from the Video.js install plan) | **Behavior change on iPhone:** video now plays inline with the custom controls instead of jumping to the native iOS fullscreen player. **Decided: keep inline.** Fullscreen should be the user's deliberate choice (the fullscreen button) |
 | Font | Media Chrome default (Arial) | Inherits the app font | Intentional |
-| Esc while fullscreen | Exits fullscreen **and closes the preview dialog** (Chromium; WebKit left it open) | **Fixed:** Esc only exits fullscreen; Esc outside fullscreen closes the preview | `PreviewDialog.vue`: the Esc handler skips presses while fullscreen (and for 300 ms after leaving it), and `closedby='none'` stops the dialog's native Esc close, whose `cancel` Chromium won't let pages cancel without a fresh user activation. Needs a real-browser check: the in-app browser denies fullscreen |
+| Esc while fullscreen | Exits fullscreen **and closes the preview dialog** (Chromium; WebKit left it open) | **Fixed:** Esc only exits fullscreen; Esc outside fullscreen closes the preview | `PreviewDialog.vue`: the Esc handler skips presses while fullscreen (and for 300 ms after leaving it), and `closedby='none'` stops the dialog's native Esc close, whose `cancel` Chromium won't let pages cancel without a fresh user activation. **Verified by the user in Firefox** (Esc exits fullscreen and leaves the preview open). Chromium and Safari unchecked: the in-app browser denies fullscreen |
 | Captions, analytics | None | None | Nothing to migrate. Out of scope unless the user asks |
 | Browser floor | – | Chrome/Edge 111, Firefox 121, Safari/iOS 16.4 | Tailwind v4 already needed the same or newer (Firefox 128), so support doesn't shrink. Popover API arrives in Firefox 125 and Safari 17; older supported versions use Video.js's in-player fallback |
 
@@ -224,14 +224,15 @@ Driven by hand in the in-app browser against a scratch server + this branch, wit
 | 3 | B1: late-`moov` seek (Chromium) | pass | seekable 0–120 at metadata, seek to 1:40 in ~30 ms. Firefox still unverified |
 | 4 | Desktop: play/pause labels, click-to-play, hotkeys (arrows ±5 stay in player, j, k, m) | pass | |
 | 5 | Desktop: autohide playing + paused, hover reveal, tooltips (shortcut hint hidden) | pass | |
-| 6 | Fullscreen (button, `f`) | not testable | the pane blocks element fullscreen; Media Chrome fails identically there |
+| 6 | Fullscreen (button, `f`) | not testable here; **pass in Firefox** | the pane blocks element fullscreen (Media Chrome fails identically there). The user entered fullscreen in Firefox and confirmed Esc exits it without closing the preview |
 | 7 | Audio prefs: legacy restore, slider drag saves, mute persists; video restores volume only, always muted, never writes | pass | |
 | 8 | G3: gallery switch | parity, not as this doc expected | the `<video>` element is reused, so unmute and loop carry over to the next entry. Media Chrome on `95d37ef` does exactly the same. Previous media does stop |
 | 9 | Mobile emulation: centred row, ±5 seek, tap toggles while paused + playing, idle hide, portrait, audio layout | pass | touch driven with synthetic `pointerType: 'touch'` events |
 | 10 | F1: tab order play → seek → mute → loop (`aria-checked`) → fullscreen, focus fill, controls stay visible while focused | pass | the time display isn't focusable (same as before) |
 | 11 | Visual parity: video letterbox background | **fixed** | Media Chrome's controller painted black. The new container was transparent, so the listing showed through above/below the picture (very visible on mobile). Fixed with `bg-black` on the video container |
 | 12 | E: built bundle | pass (static) | `vendor-media` isn't in `index.html`'s preloads |
+| 13 | Esc with a menu open in the preview | **fixed** | pre-existing: Esc closed the menu and the whole preview. The first Esc now closes only the menu (focus returns to its trigger); a second closes the preview. Tooltips don't count, so one Esc still closes the preview while one shows |
 
 Decisions since: keep `playsinline` (inline playback); Esc while fullscreen must only exit fullscreen (fixed, see the deviations table).
 
-Still open: Firefox (B), real Safari (C), real iPhone/Android (D), HTTPS via Caddy (E3), screen reader (F2), throttled buffering spinner (G2).
+Still open: the rest of Firefox (B; only fullscreen + Esc was checked there), real Safari (C), real iPhone/Android (D), HTTPS via Caddy (E3), screen reader (F2), throttled buffering spinner (G2).
