@@ -1,10 +1,10 @@
-import { selectControls, selectPlayback, selectVolume } from '@videojs/html';
+import { selectControls, selectPiP, selectPlayback, selectVolume } from '@videojs/html';
 import { get, set, useEventListener } from '@vueuse/core';
-import { computed, ref, toValue, watch } from 'vue';
+import { computed, readonly, ref, toValue, watch } from 'vue';
 
 import type { AudioPlayerElement } from '@videojs/html/audio';
 import type { VideoPlayerElement } from '@videojs/html/video';
-import type { MaybeRefOrGetter, WritableComputedRef } from 'vue';
+import type { DeepReadonly, MaybeRefOrGetter, Ref, WritableComputedRef } from 'vue';
 
 /*
  * Video.js (unlike media-chrome) doesn't persist volume / mute across sessions
@@ -131,6 +131,50 @@ export function useMediaLooping(media: MaybeRefOrGetter<HTMLMediaElement | null>
       set(looping, value);
     },
   });
+}
+
+/**
+ * Picture-in-picture state for controls outside `<media-pip-button>` (the
+ * narrow video player's Settings menu item), which has to track availability
+ * itself: the button hides where PiP is unsupported (Firefox), and so must it.
+ * `toggle` runs synchronously in the caller's click so the request keeps its
+ * user activation; it rejects before metadata has loaded, which is ignored.
+ */
+export function useMediaPictureInPicture(player: MaybeRefOrGetter<VideoPlayerElement | null>): {
+  active: DeepReadonly<Ref<boolean>>;
+  available: DeepReadonly<Ref<boolean>>;
+  toggle: () => void;
+} {
+  const active = ref<boolean>(false);
+  const available = ref<boolean>(false);
+
+  watch(() => toValue(player), (ele, _old, onCleanup) => {
+    if (!ele) return;
+    const { store } = ele;
+    const sync = (): void => {
+      const pip = selectPiP(store.state);
+      set(active, pip?.isPictureInPicture ?? false);
+      set(available, pip?.pictureInPictureAvailability === 'available');
+    };
+    onCleanup(store.subscribe(sync));
+    sync();
+  }, { immediate: true });
+
+  function toggle(): void {
+    const store = toValue(player)?.store;
+    const pip = store?.target ? selectPiP(store.state) : undefined;
+    if (!pip) return;
+    const request = pip.isPictureInPicture ? pip.exitPictureInPicture() : pip.requestPictureInPicture();
+    request.catch(() => {
+      // Not ready (no metadata yet) or refused by the browser; nothing to do.
+    });
+  }
+
+  return {
+    active: readonly(active),
+    available: readonly(available),
+    toggle,
+  };
 }
 
 // A touch counts as a tap below these limits (Video.js's own tap threshold).

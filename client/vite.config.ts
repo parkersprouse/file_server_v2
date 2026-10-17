@@ -34,6 +34,7 @@ const VIDEOJS_ELEMENTS = new Set([
   'media-hotkey',
   'media-icon',
   'media-menu',
+  'media-menu-checkbox-item',
   'media-menu-content',
   'media-menu-item',
   'media-menu-separator',

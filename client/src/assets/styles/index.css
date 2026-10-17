@@ -160,7 +160,13 @@
     --tw-ring-shadow: none !important;
     --tw-shadow: none !important;
     --tw-ring-color: inherit !important;
-    outline: none !important;
+    /*
+      `outline-style`, not the `outline` shorthand: the shorthand also resets
+      `outline-color` to `currentColor`, so components that transition their
+      outline colour (e.g. the Video.js time toggle) flashed a solid outline
+      as the state ended.
+    */
+    outline-style: none !important;
     box-shadow: none !important;
   }
 
@@ -176,7 +182,7 @@
       --tw-ring-shadow: none !important;
       --tw-shadow: none !important;
       --tw-ring-color: inherit !important;
-      outline: none !important;
+      outline-style: none !important;
       box-shadow: none !important;
     }
   }

@@ -6,6 +6,9 @@
       • no captions (button, settings submenu, `c` hotkey, status icons) — the
         files served here never carry text tracks;
       • a Loop switch in the trailing group (Video.js has no loop control);
+      • a mobile layout below the skin's 42rem breakpoint: a centre play
+        button (also shown for coarse pointers), and Loop / picture-in-picture
+        moved from the bar into the Settings menu so the buttons fit one row;
       • no touch `toggleControls` or double-tap fullscreen gesture (see the
         note by the gestures);
       • per-instance ids, and numeric/boolean props bound as values (Vue
@@ -78,6 +81,24 @@
 
       <media-controls>
         <media-controls-backdrop class='video-controls-backdrop' />
+        <!-- Big tap target for narrow / touch players; hidden otherwise by CSS. -->
+        <media-play-button class='media-button media-play-button preview-video-centre-play'>
+          <media-icon
+            family='neutral'
+            name='restart'
+            class='media-button-icon media-play-button-restart-icon'
+          />
+          <media-icon
+            family='neutral'
+            name='play'
+            class='media-button-icon media-play-button-play-icon'
+          />
+          <media-icon
+            family='neutral'
+            name='pause'
+            class='media-button-icon media-play-button-pause-icon'
+          />
+        </media-play-button>
         <media-controls-content class='video-controls video-controls-content video-controls-wrap'>
           <media-tooltip-group>
             <media-controls-group class='video-controls-start'>
@@ -215,18 +236,20 @@
             </media-controls-group>
 
             <media-controls-group class='video-controls-end'>
-              <MediaLoopButton
-                :id='ids.loop'
-                v-model:looping='looping'
-                class='media-button preview-media-loop-button'
-              />
-              <media-tooltip
-                :trigger='ids.loop'
-                side='top'
-                class='media-popup media-popup-safe-area media-popup-transition media-popup-surface media-tooltip'
-              >
-                <media-tooltip-label>{{ looping ? 'Disable loop' : 'Loop' }}</media-tooltip-label>
-              </media-tooltip>
+              <template v-if='!narrow'>
+                <MediaLoopButton
+                  :id='ids.loop'
+                  v-model:looping='looping'
+                  class='media-button preview-media-loop-button'
+                />
+                <media-tooltip
+                  :trigger='ids.loop'
+                  side='top'
+                  class='media-popup media-popup-safe-area media-popup-transition media-popup-surface media-tooltip'
+                >
+                  <media-tooltip-label>{{ looping ? 'Disable loop' : 'Loop' }}</media-tooltip-label>
+                </media-tooltip>
+              </template>
 
               <button
                 :id='ids.settings'
@@ -324,12 +347,46 @@
                       <!-- eslint-enable vue/no-v-text-v-html-on-component -->
                     </media-menu-content>
                   </template>
+                  <!-- On narrow players the bar's Loop and PiP buttons live here instead. -->
+                  <template v-if='narrow'>
+                    <!-- eslint-disable vue/v-on-event-hyphenation -- a DOM event name, used as-is -->
+                    <media-menu-checkbox-item
+                      class='media-menu-trigger-item'
+                      :checked='looping'
+                      @checked-change='onLoopChange'
+                    >
+                      <!-- eslint-enable vue/v-on-event-hyphenation -->
+                      <MediaLoopIcon
+                        class='media-menu-trigger-item-icon'
+                        :looping='looping'
+                      />
+                      <span>Loop</span>
+                      <span class='media-menu-hint'>
+                        <span class='media-menu-hint-label'>{{ looping ? 'On' : 'Off' }}</span>
+                      </span>
+                    </media-menu-checkbox-item>
+                    <media-menu-item
+                      v-if='pip_available'
+                      class='media-menu-trigger-item'
+                      @select='togglePip'
+                    >
+                      <media-icon
+                        family='neutral'
+                        :name='pip_active ? "pip-exit" : "pip-enter"'
+                        class='media-menu-trigger-item-icon'
+                      />
+                      <span>Picture-in-picture</span>
+                      <span class='media-menu-hint'>
+                        <span class='media-menu-hint-label'>{{ pip_active ? 'On' : 'Off' }}</span>
+                      </span>
+                    </media-menu-item>
+                  </template>
                 </media-menu-content>
               </media-menu>
 
               <media-controls-group class='video-controls-trailing'>
                 <template
-                  v-for='button in TRAILING_BUTTONS'
+                  v-for='button in trailing_buttons'
                   :key='button.tag'
                 >
                   <component
@@ -476,15 +533,23 @@
 </template>
 
 <script setup lang='ts'>
+// Not part of the registry skin, which has no checkbox items.
+import '@videojs/html/ui/menu-checkbox-item';
 import '@videojs/html/video/player';
-import { set } from '@vueuse/core';
-import { ref, useId, useTemplateRef } from 'vue';
+import { set, useElementSize } from '@vueuse/core';
+import { computed, ref, useId, useTemplateRef } from 'vue';
 
 import 'components/videojs/video/skin.ts';
-import { useMediaLooping, useMediaPreferences, usePausedTouchToggle } from 'composables/media_player.ts';
+import {
+  useMediaLooping,
+  useMediaPictureInPicture,
+  useMediaPreferences,
+  usePausedTouchToggle,
+} from 'composables/media_player.ts';
 
 import { VIDEO_HOTKEYS } from './media_player/hotkeys.ts';
 import MediaLoopButton from './media_player/MediaLoopButton.vue';
+import MediaLoopIcon from './media_player/MediaLoopIcon.vue';
 
 import type { VideoPlayerElement } from '@videojs/html/video';
 import type { Entry } from 'types/entry.d.ts';
@@ -579,6 +644,27 @@ const player = useTemplateRef<VideoPlayerElement>('player');
 const container = useTemplateRef<HTMLElement>('container');
 const video_ele = useTemplateRef<HTMLVideoElement>('video_ele');
 const looping = useMediaLooping(video_ele);
+const {
+  active: pip_active,
+  available: pip_available,
+  toggle: togglePip,
+} = useMediaPictureInPicture(player);
+
+// The skin's own narrow breakpoint (`@container media-root (width < 42rem)`).
+// Moving controls between the bar and the menu needs `v-if`, not CSS: menu
+// keyboard navigation would still land on `display: none` items.
+const NARROW_REM = 42;
+const root_font_px = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+const { width: container_width } = useElementSize(container);
+const narrow = computed<boolean>(() => container_width.value > 0 && container_width.value < NARROW_REM * root_font_px);
+
+const trailing_buttons = computed(() => (narrow.value ?
+  TRAILING_BUTTONS.filter((button) => button.tag !== 'media-pip-button') :
+  TRAILING_BUTTONS));
+
+function onLoopChange(event: Event): void {
+  set(looping, (event as CustomEvent<{ checked: boolean; }>).detail.checked);
+}
 
 // The skin's container is an `inline-size` CSS container, so it can't shrink
 // to its video the way a plain element would. It takes the dialog's height and
@@ -629,11 +715,17 @@ usePausedTouchToggle(player, container);
       except while keyboard focus is inside the controls.
     */
     /* (`:has()` can't nest, so the focus exception is its own `:not(:has())`.) */
-    &:has(.video-controls-content:not([data-user-active])):not(:has(.video-controls-content :focus-visible)) {
+    &:has(.video-controls-content:not([data-user-active])):not(:has(
+      .video-controls-content :focus-visible, .preview-video-centre-play:focus-visible
+    )) {
       cursor: none;
 
       & .video-controls-backdrop {
         @apply opacity-0;
+      }
+
+      & .preview-video-centre-play {
+        @apply opacity-0 pointer-events-none;
       }
 
       & .video-controls-content {
@@ -641,6 +733,65 @@ usePausedTouchToggle(player, container);
 
         translate: 0 var(--media-hidden-offset);
         transition-duration: var(--media-duration-controls);
+      }
+    }
+
+    /* The skin's own hide (playing and idle) applies to the centre button too. */
+    &:has(.video-controls-content:not([data-visible])) .preview-video-centre-play {
+      @apply opacity-0 pointer-events-none;
+    }
+
+    /*
+      Mobile layout. The skin's narrow layout only re-flows the desktop bar, so
+      below its 42rem breakpoint (and for any touch screen) the app adds a
+      centre play button and bigger targets; the slider + time keep the
+      skin's own first row, and the buttons get a full second row (start group
+      left, end group right — Loop / PiP move to Settings via `narrow`).
+    */
+    & .preview-video-centre-play {
+      --media-icon-size: calc(var(--media-spacing) * 8);
+
+      z-index: 20;
+
+      width: calc(var(--media-spacing) * 16);
+      height: calc(var(--media-spacing) * 16);
+
+      color: var(--media-controls-foreground);
+
+      background-color: var(--media-popover);
+      backdrop-filter: blur(8px);
+
+      transition: opacity var(--media-duration-controls) ease-out;
+
+      @apply absolute inset-0 m-auto hidden rounded-full;
+    }
+
+    @container media-root (width < 42rem) {
+      & .preview-video-centre-play {
+        @apply grid;
+      }
+
+      /* Its play / pause flash would sit right under the centre button. */
+      & .media-playback-status-indicator {
+        @apply hidden;
+      }
+
+      & .video-controls-start,
+      & .video-controls-end,
+      & .video-controls-trailing {
+        gap: calc(var(--media-spacing) * 2);
+      }
+    }
+
+    @media (pointer: coarse) {
+      --media-control-size: calc(var(--media-spacing) * 11);
+
+      & .preview-video-centre-play {
+        @apply grid;
+      }
+
+      & .media-playback-status-indicator {
+        @apply hidden;
       }
     }
   }
