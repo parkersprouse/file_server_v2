@@ -700,6 +700,9 @@ usePausedTouchToggle(player, container);
     available width, where the skin's own black background letterboxes it).
   */
   .preview-video-skin {
+    /* Square corners, as the pre-Video.js player had (Neutral rounds 12px). */
+    --media-border-radius: 0;
+
     @apply h-full max-w-full;
 
     aspect-ratio: var(--preview-video-aspect, 16 / 9);

@@ -335,6 +335,9 @@ useMediaPreferences(player, { save: true });
     class, so mirror it here.
   */
   .preview-audio-skin {
+    /* Square corners, as the pre-Video.js player had (Neutral rounds 12px). */
+    --media-border-radius: 0;
+
     @apply w-full scheme-light dark:scheme-dark;
   }
 }
