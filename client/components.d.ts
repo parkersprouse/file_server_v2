@@ -166,6 +166,7 @@ declare module 'vue' {
     ListItem: typeof import('./src/components/directory_view/item_layouts/ListItem.vue')['default']
     MediaLoopButton: typeof import('./src/components/directory_view/preview_dialog/file_viewers/media_player/MediaLoopButton.vue')['default']
     MediaLoopIcon: typeof import('./src/components/directory_view/preview_dialog/file_viewers/media_player/MediaLoopIcon.vue')['default']
+    MediaSeekControl: typeof import('./src/components/directory_view/preview_dialog/file_viewers/media_player/MediaSeekControl.vue')['default']
     MobileSheet: typeof import('./src/components/nav/MobileSheet.vue')['default']
     NavBar: typeof import('./src/components/nav/NavBar.vue')['default']
     NavBreadcrumbs: typeof import('./src/components/nav/NavBreadcrumbs.vue')['default']
