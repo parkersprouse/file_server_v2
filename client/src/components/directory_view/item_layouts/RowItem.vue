@@ -87,9 +87,15 @@ const heic_check = inject<boolean>('heic_check', false);
         }
       }
 
+      /*
+       * Reserve the actions button's corner (`.entry-actions`: 2rem, 2.5rem on
+       * coarse pointers, flush top-right) so a long name truncates before it
+       * instead of running underneath. Always reserved, even while the button
+       * is hidden on hover devices, so the name doesn't reflow on hover.
+       */
       & [data-slot='item'] {
         /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-        @apply py-2! flex-nowrap;
+        @apply py-2! pr-10! pointer-coarse:pr-12! flex-nowrap;
       }
     }
 
