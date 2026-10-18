@@ -550,6 +550,8 @@ async function onClickDialog(event: Event): Promise<void> {
     'preview-dialog__slide-cell',
     'preview-dialog__slide-track',
     'preview-dialog__slide-viewport',
+    // The video player's own box around a letterboxed video.
+    'preview-video-player',
   ].some((klass) => target.classList.contains(klass))) {
     await close();
   }

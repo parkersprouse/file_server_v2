@@ -20,7 +20,7 @@
   <video-player
     ref='player'
     class='preview-video-player'
-    :style='{ "--preview-video-aspect": aspect_ratio }'
+    :style='{ "--preview-video-ratio": aspect_ratio }'
   >
     <media-container
       ref='container'
@@ -667,14 +667,13 @@ function onLoopChange(event: Event): void {
 }
 
 // The skin's container is an `inline-size` CSS container, so it can't shrink
-// to its video the way a plain element would. It takes the dialog's height and
-// derives its width from the video's own aspect ratio instead, which keeps the
-// player as wide as the picture (clicks beside it still reach the backdrop).
-const aspect_ratio = ref<string>('16 / 9');
+// to its video the way a plain element would. Its size is computed from the
+// video's aspect ratio (width / height) instead; see the styles below.
+const aspect_ratio = ref<number>(16 / 9);
 
 function onLoadedMetadata(event: Event): void {
   const { videoHeight, videoWidth } = event.target as HTMLVideoElement;
-  if (videoWidth && videoHeight) set(aspect_ratio, `${videoWidth} / ${videoHeight}`);
+  if (videoWidth && videoHeight) set(aspect_ratio, videoWidth / videoHeight);
 }
 
 // The video always opens muted, so it restores the saved volume but never
@@ -688,24 +687,32 @@ usePausedTouchToggle(player, container);
 
 @layer app {
   .preview-dialog--video .preview-dialog__content {
-    @apply h-full;
-  }
-
-  .preview-video-player {
-    @apply block h-full max-w-full;
+    @apply size-full;
   }
 
   /*
-    Height from the dialog, width from the video's aspect ratio (capped at the
-    available width, where the skin's own black background letterboxes it).
+    The player element fills the space the dialog gives it and is a size
+    container, so the skin can fit the video inside whichever dimension runs
+    out first. Clicks on this element beside the video close the preview
+    (`PreviewDialog`'s `onClickDialog`).
+  */
+  .preview-video-player {
+    @apply grid place-items-center size-full;
+
+    container-type: size;
+  }
+
+  /*
+    Contain-fit: as wide as the space allows, or as wide as the full height at
+    the video's ratio, whichever is smaller, with the height following from
+    the ratio. (In fullscreen the UA's `:fullscreen` rules take over.)
   */
   .preview-video-skin {
     /* Square corners, as the pre-Video.js player had (Neutral rounds 12px). */
     --media-border-radius: 0;
-
-    @apply h-full max-w-full;
-
-    aspect-ratio: var(--preview-video-aspect, 16 / 9);
+    aspect-ratio: var(--preview-video-ratio, 16 / 9);
+    width: min(100cqw, 100cqh * var(--preview-video-ratio, 16 / 9));
+    height: auto;
 
     & > video {
       @apply size-full;
