@@ -29,7 +29,7 @@ const $is_mobile = useIsMobile();
     & .preview-dialog__title {
       @apply grow-0 shrink flex flex-row flex-nowrap items-center justify-start font-normal
              text-muted-foreground! w-fit max-w-full px-1.5 py-0.5 gap-2 bg-background!
-             whitespace-pre-line text-sm! border-l border-t border-b-0! border-r-0! cursor-default;
+             whitespace-pre-line text-[1rem]! border-l border-t border-b-0! border-r-0! cursor-default;
     }
   }
 }

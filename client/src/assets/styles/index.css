@@ -201,7 +201,7 @@
 }
 
 @utility body-basics {
-  @apply bg-background text-foreground; /* overflow-hidden -- this breaks vivaldi */
+  @apply bg-background text-foreground; /* overflow-hidden -- this breaks in some browsers, like vivaldi */
 
   width: 100%;
   min-width: 100%;
@@ -229,7 +229,9 @@
   @supports (font-variation-settings: normal) {
     /* Modern browsers with variable font support */
     body {
-      font-feature-settings: 'cv11'; /* Optional: enable contextual alternates if needed */
+      /* Even though our vendored version of Inter already enables this, *
+       * enable equal-sized numbers in CSS as well to fill any gaps      */
+      font-variant-numeric: tabular-nums;
     }
   }
 

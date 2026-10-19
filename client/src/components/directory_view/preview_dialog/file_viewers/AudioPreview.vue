@@ -321,8 +321,14 @@ useMediaPreferences(player, { save: true });
 @reference '../../../../assets/styles/index.css';
 
 @layer app {
-  .preview-dialog--audio .preview-dialog__content {
-    @apply container;
+  /*
+    `overflow-visible` (and the skin's below) let the timeline's hover time
+    preview, drawn above the slider, show past the top edge of the player.
+    `.preview-dialog` doubles the specificity to beat the content box's base
+    `overflow-hidden` rule without depending on stylesheet order.
+  */
+  .preview-dialog.preview-dialog--audio .preview-dialog__content {
+    @apply container overflow-visible;
   }
 
   .preview-audio-player {
@@ -341,6 +347,13 @@ useMediaPreferences(player, { save: true });
     */
     --media-border-radius: 0;
     --media-controls-radius: 0;
+
+    /*
+      The timeline is the top row here, so its hover time preview would be cut
+      off by the skin's `overflow: clip`, which only exists to clip the
+      rounded corners removed above.
+    */
+    overflow: visible;
 
     @apply w-full scheme-light dark:scheme-dark;
   }

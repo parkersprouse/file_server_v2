@@ -1814,7 +1814,23 @@
     }
 
     .media-time-slider-value {
+      --media-popup-side-offset: var(--media-tooltip-side-offset);
+
+      backdrop-filter: var(--media-backdrop-filter-surface);
+      background-color: var(--media-popover);
+      border-radius: var(--media-control-radius);
+      box-shadow:
+        0 0 #0000,
+        0 0 #0000,
+        0 0 #0000,
+        0 0 #0000,
+        var(--media-shadow-tooltip) !important;
+      color: var(--media-popover-foreground);
+      font-size: calc(var(--media-spacing) * 3.25);
       font-variant-numeric: tabular-nums;
+      padding-block: var(--media-spacing);
+      padding-inline: calc(var(--media-spacing) * 2);
+      white-space: nowrap;
     }
   }
 
@@ -2487,13 +2503,14 @@
       pointer-events: none;
       z-index: 10;
       border-radius: inherit;
-      background-image: var(--media-controls-gradient);
       transition-property: opacity;
       transition-duration: 0.15s;
       transition-duration: var(--media-duration-controls);
       transition-timing-function: cubic-bezier(0, 0, 0.2, 1);
       position: absolute;
       inset: 0;
+      /* background-image: var(--media-controls-gradient); */
+      display: none; /* hide the backdrop at all times - I'm not a fan of it */
     }
 
     .video-controls-backdrop:not([data-visible]) {
