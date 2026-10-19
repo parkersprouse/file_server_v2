@@ -81,7 +81,7 @@
 
       <media-controls>
         <media-controls-backdrop class='video-controls-backdrop' />
-        <!-- Big tap target for narrow / touch players; hidden otherwise by CSS. -->
+        <!-- Big tap target for touch screens (`pointer: coarse`); hidden otherwise by CSS. -->
         <media-play-button class='media-button media-play-button preview-video-centre-play'>
           <media-icon
             family='neutral'
@@ -337,12 +337,12 @@
                       <media-audio-track-radio-group
                         v-else-if='submenu.key === "audio"'
                         class='media-menu-radio-group'
-                        v-html='MENU_ITEM_TEMPLATE'
+                        v-html='RADIO_ITEM_TEMPLATE'
                       />
                       <media-playback-rate-radio-group
                         v-else
                         class='media-menu-radio-group'
-                        v-html='MENU_ITEM_TEMPLATE'
+                        v-html='RADIO_ITEM_TEMPLATE'
                       />
                       <!-- eslint-enable vue/no-v-text-v-html-on-component -->
                     </media-menu-content>
@@ -544,7 +544,7 @@
 // Not part of the registry skin, which has no checkbox items.
 import '@videojs/html/ui/menu-checkbox-item';
 import '@videojs/html/video/player';
-import { set, useElementSize } from '@vueuse/core';
+import { set } from '@vueuse/core';
 import { computed, ref, useId, useTemplateRef } from 'vue';
 
 import 'components/videojs/video/skin.ts';
@@ -552,12 +552,14 @@ import {
   useMediaLooping,
   useMediaPictureInPicture,
   useMediaPreferences,
+  useSkinNarrow,
   useTouchTapToggle,
 } from 'composables/media_player.ts';
 
 import { VIDEO_HOTKEYS } from './media_player/hotkeys.ts';
 import MediaLoopButton from './media_player/MediaLoopButton.vue';
 import MediaLoopIcon from './media_player/MediaLoopIcon.vue';
+import { QUALITY_ITEM_TEMPLATE, RADIO_ITEM_TEMPLATE } from './media_player/menu_templates.ts';
 
 import type { VideoPlayerElement } from '@videojs/html/video';
 import type { Entry } from 'types/entry.d.ts';
@@ -574,25 +576,6 @@ const CHAPTER_TEMPLATE = `<template>
       <media-slider-fill class="media-slider-fill media-time-slider-chapter-layer"></media-slider-fill>
     </media-slider-track>
   </div>
-</template>`;
-
-const ITEM_INDICATOR = `<media-menu-item-indicator force-mount class="media-menu-item-indicator">
-  <media-icon family="neutral" name="check" class="media-menu-radio-item-icon"></media-icon>
-</media-menu-item-indicator>`;
-
-const QUALITY_ITEM_TEMPLATE = `<template>
-  <media-menu-radio-item class="media-menu-radio-item">
-    <span><span data-part="label"></span><sup data-part="tier" class="media-menu-tier"></sup></span>
-    <span data-part="badge" class="media-menu-badge"></span>
-    ${ITEM_INDICATOR}
-  </media-menu-radio-item>
-</template>`;
-
-const MENU_ITEM_TEMPLATE = `<template>
-  <media-menu-radio-item class="media-menu-radio-item">
-    <span data-part="label"></span>
-    ${ITEM_INDICATOR}
-  </media-menu-radio-item>
 </template>`;
 
 const SETTINGS_SUBMENUS = [
@@ -658,13 +641,7 @@ const {
   toggle: togglePip,
 } = useMediaPictureInPicture(player);
 
-// The skin's own narrow breakpoint (`@container media-root (width < 42rem)`).
-// Moving controls between the bar and the menu needs `v-if`, not CSS: menu
-// keyboard navigation would still land on `display: none` items.
-const NARROW_REM = 42;
-const root_font_px = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
-const { width: container_width } = useElementSize(container);
-const narrow = computed<boolean>(() => container_width.value > 0 && container_width.value < NARROW_REM * root_font_px);
+const narrow = useSkinNarrow(container);
 
 const trailing_buttons = computed(() => (narrow.value ?
   TRAILING_BUTTONS.filter((button) => button.tag !== 'media-pip-button') :
@@ -726,6 +703,37 @@ useTouchTapToggle(player, container);
       @apply size-full;
     }
 
+    /* No gradient scrim behind the controls, ever (a design choice). */
+    & .video-controls-backdrop {
+      @apply hidden;
+    }
+
+    /*
+      The timeline's hover time gets the skin's tooltip surface, so it reads
+      as a tooltip over the video instead of bare text.
+    */
+    & .media-time-slider-value {
+      --media-popup-side-offset: var(--media-tooltip-side-offset);
+
+      padding-block: var(--media-spacing);
+      padding-inline: calc(var(--media-spacing) * 2);
+      border-radius: var(--media-control-radius);
+
+      font-size: calc(var(--media-spacing) * 3.25);
+      color: var(--media-popover-foreground);
+      white-space: nowrap;
+
+      background-color: var(--media-popover);
+      backdrop-filter: var(--media-backdrop-filter-surface);
+      /* `!important` (as the skin's tooltip has) outlasts the global hover / focus reset. */
+      box-shadow:
+        0 0 #0000,
+        0 0 #0000,
+        0 0 #0000,
+        0 0 #0000,
+        var(--media-shadow-tooltip) !important;
+    }
+
     /*
       The app hides the controls after 2s idle even while paused (its
       pre-migration behaviour); the skin keys visibility off `data-visible`,
@@ -737,10 +745,6 @@ useTouchTapToggle(player, container);
       .video-controls-content :focus-visible, .preview-video-centre-play:focus-visible
     )) {
       cursor: none;
-
-      & .video-controls-backdrop {
-        @apply opacity-0;
-      }
 
       & .preview-video-centre-play {
         @apply opacity-0 pointer-events-none;
@@ -761,10 +765,12 @@ useTouchTapToggle(player, container);
 
     /*
       Mobile layout. The skin's narrow layout only re-flows the desktop bar, so
-      below its 42rem breakpoint (and for any touch screen) the app adds a
-      centre play button and bigger targets; the slider + time keep the
-      skin's own first row, and the buttons get a full second row (start group
-      left, end group right — Loop / PiP move to Settings via `narrow`).
+      below its 42rem breakpoint the app widens the button gaps (the slider +
+      time keep the skin's own first row, and the buttons get a full second
+      row: start group left, end group right — Loop / PiP move to Settings via
+      `narrow`). The centre play button and bigger targets go by input, not
+      size: only touch screens get them, where the bar's small play button is
+      hard to hit, so a narrow video on a desktop looks like a wide one.
     */
     & .preview-video-centre-play {
       --media-icon-size: calc(var(--media-spacing) * 8);
@@ -785,15 +791,6 @@ useTouchTapToggle(player, container);
     }
 
     @container media-root (width < 42rem) {
-      & .preview-video-centre-play {
-        @apply grid;
-      }
-
-      /* Its play / pause flash would sit right under the centre button. */
-      & .media-playback-status-indicator {
-        @apply hidden;
-      }
-
       & .video-controls-start,
       & .video-controls-end,
       & .video-controls-trailing {
@@ -808,6 +805,7 @@ useTouchTapToggle(player, container);
         @apply grid;
       }
 
+      /* Its play / pause flash would sit right under the centre button. */
       & .media-playback-status-indicator {
         @apply hidden;
       }

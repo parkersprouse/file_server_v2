@@ -116,7 +116,7 @@
                     <!-- eslint-disable vue/no-v-text-v-html-on-component -- custom element, static markup -->
                     <media-playback-rate-radio-group
                       class='media-menu-radio-group'
-                      v-html='RATE_ITEM_TEMPLATE'
+                      v-html='RADIO_ITEM_TEMPLATE'
                     />
                     <!-- eslint-enable vue/no-v-text-v-html-on-component -->
                   </media-menu-content>
@@ -261,15 +261,15 @@
 
 <script setup lang='ts'>
 import '@videojs/html/audio/player';
-import { useElementSize } from '@vueuse/core';
-import { computed, useId, useTemplateRef } from 'vue';
+import { useId, useTemplateRef } from 'vue';
 
 import 'components/videojs/audio/skin.ts';
-import { useMediaLooping, useMediaPreferences } from 'composables/media_player.ts';
+import { useMediaLooping, useMediaPreferences, useSkinNarrow } from 'composables/media_player.ts';
 
 import { MEDIA_HOTKEYS } from './media_player/hotkeys.ts';
 import MediaLoopButton from './media_player/MediaLoopButton.vue';
 import MediaSeekControl from './media_player/MediaSeekControl.vue';
+import { RADIO_ITEM_TEMPLATE } from './media_player/menu_templates.ts';
 
 import type { AudioPlayerElement } from '@videojs/html/audio';
 import type { Entry } from 'types/entry.d.ts';
@@ -277,15 +277,6 @@ import type { Entry } from 'types/entry.d.ts';
 const { entry } = defineProps<{
   entry: Entry;
 }>();
-
-const RATE_ITEM_TEMPLATE = `<template>
-  <media-menu-radio-item class="media-menu-radio-item">
-    <span data-part="label"></span>
-    <media-menu-item-indicator force-mount class="media-menu-item-indicator">
-      <media-icon family="neutral" name="check" class="media-menu-radio-item-icon"></media-icon>
-    </media-menu-item-indicator>
-  </media-menu-radio-item>
-</template>`;
 
 // The skin's 10 s seek step.
 const SEEK_SECONDS = 10;
@@ -306,14 +297,9 @@ const player = useTemplateRef<AudioPlayerElement>('player');
 const audio_ele = useTemplateRef<HTMLAudioElement>('audio_ele');
 const looping = useMediaLooping(audio_ele);
 
-// The skin's own wide breakpoint (`@container media-root (width >= 42rem)`),
-// which switches the hover volume popover for an inline slider.
-const NARROW_REM = 42;
-const root_font_px = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+// Below the skin's breakpoint the inline volume slider becomes a hover popover.
 const container = useTemplateRef<HTMLElement>('container');
-const { width: container_width } = useElementSize(container);
-// Unmeasured (0) counts as wide, as in VideoPreview.
-const narrow = computed<boolean>(() => container_width.value > 0 && container_width.value < NARROW_REM * root_font_px);
+const narrow = useSkinNarrow(container);
 
 useMediaPreferences(player, { save: true });
 </script>
@@ -355,6 +341,9 @@ useMediaPreferences(player, { save: true });
       rounded corners removed above.
     */
     overflow: visible;
+
+    /* Larger base text than the skin's (`* 3.25`), for the times and menus. */
+    font-size: calc(var(--media-spacing) * 4.25);
 
     @apply w-full scheme-light dark:scheme-dark;
   }

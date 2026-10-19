@@ -1,5 +1,5 @@
 import { selectControls, selectPiP, selectVolume } from '@videojs/html';
-import { get, set, useEventListener } from '@vueuse/core';
+import { get, set, useElementSize, useEventListener } from '@vueuse/core';
 import { computed, onScopeDispose, readonly, ref, toValue, watch } from 'vue';
 
 import type { AudioPlayerElement } from '@videojs/html/audio';
@@ -131,6 +131,21 @@ export function useMediaLooping(media: MaybeRefOrGetter<HTMLMediaElement | null>
       set(looping, value);
     },
   });
+}
+
+// The Neutral skins' own layout breakpoint (`@container media-root (width < 42rem)`).
+const SKIN_NARROW_REM = 42;
+
+/**
+ * Whether the skin's container is below its narrow breakpoint, for layout
+ * changes CSS can't make (moving controls between the bar and a menu needs
+ * `v-if`: menu keyboard navigation would still land on `display: none` items).
+ * Unmeasured (0) counts as wide.
+ */
+export function useSkinNarrow(container: MaybeRefOrGetter<HTMLElement | null>): Readonly<Ref<boolean>> {
+  const root_font_px = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+  const { width } = useElementSize(container);
+  return computed<boolean>(() => get(width) > 0 && get(width) < SKIN_NARROW_REM * root_font_px);
 }
 
 /**

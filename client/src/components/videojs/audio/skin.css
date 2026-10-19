@@ -24,7 +24,7 @@
       height: 100%;
       min-height: 0;
       font-family: var(--media-font-family, "Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif);
-      font-size: calc(var(--media-spacing) * 4.25);
+      font-size: calc(var(--media-spacing) * 3.25);
       -webkit-font-smoothing: auto;
       -moz-osx-font-smoothing: auto;
       outline-offset: -4px;
