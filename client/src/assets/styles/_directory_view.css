@@ -40,7 +40,7 @@
   }
 
   & .entry-meta {
-    @apply text-xs transition-none gap-[0.15rem] bg-transparent text-muted-foreground px-1! py-0.25! border border-border;
+    @apply text-xs transition-none gap-[0.15rem] bg-transparent text-muted-foreground px-1! py-0.25! border border-border font-normal;
   }
 
   @variant hover {
@@ -110,15 +110,13 @@
   /*
    * The entry a direct link points at. Persistent while the `linked` query
    * param is active (the preview dialog may initially cover the list, so a
-   * one-shot flash could be missed). The ring is inset for the same reason as
-   * the focus ring above: an outward ring would be painted over by the next
-   * full-bleed zebra row.
+   * one-shot flash could be missed). It wears the hover border plus a tint —
+   * no extra outline, which drew a second, inset ring inside that border. The
+   * row layouts lift it above its neighbours like a hovered row, so the next
+   * zebra row can't paint over its bottom border.
    */
   &.entry--linked {
     @apply text-primary! bg-primary/10;
-
-    outline: 2px solid var(--color-primary);
-    outline-offset: -2px;
 
     & [data-slot='card'],
     & [data-slot='item'] {

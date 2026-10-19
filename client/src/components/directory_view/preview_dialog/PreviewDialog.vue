@@ -7,7 +7,9 @@
       $store.preview_bg_enabled && "preview-dialog--opaque-bg",
       preview_type?.class,
     )'
+    closedby='none'
     @click='onClickDialog'
+    @cancel='onCancelDialog'
   >
     <template v-if='entry'>
       <!--
@@ -56,8 +58,14 @@
               </div>
 
               <div class='preview-dialog__slide-cell'>
+                <!--
+                  Keyed per file so each one gets a fresh player: a reused
+                  <video> would keep the previous file's aspect ratio (until
+                  `loadedmetadata`) and its `loop` setting.
+                -->
                 <component
                   :is='preview_type?.type'
+                  :key='entry.url'
                   :entry='entry'
                 />
               </div>
@@ -84,6 +92,7 @@
           <component
             v-else
             :is='preview_type?.type'
+            :key='entry.url'
             :entry='entry'
           />
         </PreviewDialogContent>
@@ -140,7 +149,7 @@
 </template>
 
 <script setup lang='ts'>
-import { get, onKeyStroke, set, useMediaQuery, useMutationObserver } from '@vueuse/core';
+import { get, onKeyStroke, set, useEventListener, useMediaQuery, useMutationObserver } from '@vueuse/core';
 import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -258,14 +267,23 @@ const next_media_entry = computed<Entry | undefined>(() => {
   return media[(index + 1) % media.length];
 });
 
-const track_style = computed<CSSProperties>(() => ({
-  display: 'flex',
-  height: '100%',
-  transform: `translateX(calc(-33.3333% + ${get(drag_x)}px))`,
-  transition: (get(is_dragging) || get(is_resetting)) ? 'none' : `transform ${motionMs()}ms ${SLIDE_EASING}`,
-  width: '300%',
-  willChange: 'transform',
-}));
+// At rest the track carries no transform: the one-cell offset is a margin, and
+// `transform` / `will-change` apply only while a drag or slide is in motion.
+// A transformed ancestor breaks CSS anchor positioning in Firefox, which places
+// the media players' anchored popups (the settings / speed menus) as if the
+// transform weren't there — i.e. off-screen by the track's offset.
+const track_style = computed<CSSProperties>(() => {
+  const moving = get(is_dragging) || get(is_animating) || get(drag_x) !== 0;
+  return {
+    display: 'flex',
+    height: '100%',
+    marginLeft: '-100%',
+    transform: moving ? `translateX(${get(drag_x)}px)` : 'none',
+    transition: (get(is_dragging) || get(is_resetting)) ? 'none' : `transform ${motionMs()}ms ${SLIDE_EASING}`,
+    width: '300%',
+    willChange: moving ? 'transform' : 'auto',
+  };
+});
 
 // Close-drag overlay: dims and shifts the entire dialog content downward as
 // the user drags from the top edge. No transition while actively dragging;
@@ -275,10 +293,13 @@ const close_overlay_style = computed<CSSProperties>(() => {
   const dy = Math.max(0, get(close_drag_y));
   const progress = Math.min(dy / CLOSE_COMMIT_DISTANCE, 1);
   const transitioning = get(is_closing) || get(is_close_snapping);
+  // Transform-free at rest, like the slide track (see track_style).
+  const moving = dy > 0 || transitioning;
   return {
     opacity: 1 - progress * 0.6,
-    transform: `translateY(${dy}px) scale(${1 - progress * 0.04})`,
+    transform: moving ? `translateY(${dy}px) scale(${1 - progress * 0.04})` : 'none',
     transition: transitioning ? `all ${motionMs()}ms ${SLIDE_EASING}` : 'none',
+    willChange: moving ? 'transform, opacity' : 'auto',
   };
 });
 
@@ -324,7 +345,45 @@ const preview_type = computed<PreviewTypeAttrs | undefined>(() => {
   return attrs;
 });
 
-onKeyStroke('Escape', close, { dedupe: true });
+// Esc while a player is fullscreen belongs to the browser, which uses it to
+//   exit fullscreen; the same press must not also close the preview. Engines
+//   differ on ordering — the keydown and the dialog's native `cancel` can land
+//   before or just after `fullscreenchange` — so also treat the press as
+//   fullscreen's for a moment after leaving it.
+const FULLSCREEN_ESCAPE_GRACE_MS = 300;
+let fullscreen_exited_at = Number.NEGATIVE_INFINITY;
+
+useEventListener(document, 'fullscreenchange', () => {
+  if (!document.fullscreenElement) fullscreen_exited_at = performance.now();
+});
+
+function fullscreenOwnsEscape(): boolean {
+  return Boolean(document.fullscreenElement) ||
+    performance.now() - fullscreen_exited_at < FULLSCREEN_ESCAPE_GRACE_MS;
+}
+
+// Likewise an open menu/popover inside the dialog takes Esc first: reka-ui
+//   layers (mounted in `.preview-dialog__overlays`) and the media players'
+//   Video.js popups (settings / speed menus). Both dismiss from their own
+//   listeners, so look for one that was open when the key went down (a
+//   closing Video.js popup keeps `data-open` through its exit transition).
+//   Tooltips and the hover-opened volume popover are excluded — they show on
+//   hover/focus, and shouldn't make closing the preview take extra presses.
+//   (Video.js also marks the event `defaultPrevented` when it dismisses, but a
+//   focus tooltip does the same, so that flag can't be trusted here.)
+const ESCAPE_LAYER_SELECTOR = [
+  '[data-dismissable-layer]:not([data-state="closed"]):not(:has([role="tooltip"]))',
+  '[data-popup][data-open]:not(media-tooltip, media-volume-popover)',
+].join(', ');
+
+function layerOwnsEscape(): boolean {
+  return Boolean(get(dialog)?.querySelector(ESCAPE_LAYER_SELECTOR));
+}
+
+onKeyStroke('Escape', async () => {
+  if (fullscreenOwnsEscape() || layerOwnsEscape()) return;
+  await close();
+}, { dedupe: true });
 onKeyStroke('ArrowLeft', (event) => onArrowNav(event, showPreviousMedia), { dedupe: true });
 onKeyStroke('ArrowRight', (event) => onArrowNav(event, showNextMedia), { dedupe: true });
 
@@ -471,10 +530,21 @@ function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
   // Like swipe, keyboard traversal stays available with the on-screen controls
   // hidden — it's gated only on there being another media file to move to.
   if (!$store.preview_open || !get(has_multiple_media) || get(is_animating)) return;
-  // Leave the arrow keys to a focused video player so they still seek it.
-  if (document.activeElement?.closest('media-controller')) return;
+  // Leave the arrow keys to a focused media player so they still seek it (its
+  // `<media-hotkey>`s listen on the `<media-container>`, which takes focus).
+  if (document.activeElement?.closest('media-container')) return;
   event.preventDefault();
   navigate();
+}
+
+// The dialog's built-in Esc handling (a `cancel` close request) would bypass
+//   the keydown guard above, and Chromium makes that `cancel` uncancelable
+//   without a fresh user activation — so `closedby='none'` switches it off and
+//   leaves Esc to the guarded handler. For engines without `closedby`, cancel
+//   the request here instead, under the same guards (best effort, for the
+//   same reason).
+function onCancelDialog(event: Event): void {
+  if (fullscreenOwnsEscape() || layerOwnsEscape()) event.preventDefault();
 }
 
 async function onClickDialog(event: Event): Promise<void> {
@@ -488,6 +558,8 @@ async function onClickDialog(event: Event): Promise<void> {
     'preview-dialog__slide-cell',
     'preview-dialog__slide-track',
     'preview-dialog__slide-viewport',
+    // The video player's own box around a letterboxed video.
+    'preview-video-player',
   ].some((klass) => target.classList.contains(klass))) {
     await close();
   }
@@ -551,7 +623,6 @@ onUnmounted(() => {
       @apply absolute inset-0 flex flex-col flex-nowrap items-center justify-center;
 
       /* Transform origin at top center so scale shrinks toward the drag start. */
-      will-change: transform, opacity;
       transform-origin: top center;
     }
 

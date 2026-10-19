@@ -68,15 +68,16 @@ const heic_check = inject<boolean>('heic_check', false);
 .entries--row {
   & .entry-wrapper {
     /*
-     * Lift the row above its neighbours on hover AND focus. Rows are absolutely
-     * positioned and share one z-index, so without this the next (opaque, zebra)
-     * row paints over the focused row's bottom border / focus ring in their 1px
-     * overlap — visible only on even rows, whose following row is the muted one.
+     * Lift the row above its neighbours on hover AND focus (and while linked).
+     * Rows are absolutely positioned and share one z-index, so without this
+     * the next (opaque, zebra) row paints over the focused row's bottom border
+     * / focus ring in their 1px overlap — visible only on even rows, whose
+     * following row is the muted one.
      */
-    @apply z-10 hover:z-20 focus-within:z-20;
+    @apply z-10 hover:z-20 focus-within:z-20 has-[.entry--linked]:z-20;
 
     &[data-odd='true'] {
-      @apply bg-muted;
+      @apply bg-muted dark:bg-card;
     }
 
     & .entry {
@@ -86,9 +87,15 @@ const heic_check = inject<boolean>('heic_check', false);
         }
       }
 
+      /*
+       * Reserve the actions button's corner (`.entry-actions`: 2rem, 2.5rem on
+       * coarse pointers, flush top-right) so a long name truncates before it
+       * instead of running underneath. Always reserved, even while the button
+       * is hidden on hover devices, so the name doesn't reflow on hover.
+       */
       & [data-slot='item'] {
         /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
-        @apply py-2! flex-nowrap;
+        @apply py-2! pr-10! pointer-coarse:pr-12! flex-nowrap;
       }
     }
 

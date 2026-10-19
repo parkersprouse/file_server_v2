@@ -47,13 +47,13 @@ text for each is in git history.
 | 6.1 | Low | Event bus wrapped a singleton in a `computed` | ✅ 2026-06-25 — returns the singleton directly |
 | 6.2 | Low | `scroll_offset` map grew unbounded | ✅ 2026-06-25 — capped at 50 entries, LRU eviction, encapsulated behind store methods |
 | 6.3 | Low | Vue Devtools plugin always registered | ✅ 2026-06-25 — gated on `command === 'serve'` |
-| 6.5 | Low | `media-chrome` eagerly loaded on every page visit | ✅ 2026-06-28 — import moved into the lazy Audio/Video viewers; first-paint JS −14% (≈301.8 → ≈258.9 KB gzip) |
+| 6.5 | Low | `media-chrome` eagerly loaded on every page visit | ✅ 2026-06-28 — import moved into the lazy Audio/Video viewers; first-paint JS −14% (≈301.8 → ≈258.9 KB gzip). Still holds after the 2026-10-14 move to Video.js v10 (`@videojs/html`): its imports live in the same lazy viewers, and `manualChunks` pins the es2020 runtime helpers to `vendor-core` so `vendor-media` can't become a first-paint import (first-paint JS unchanged at ≈272 KB gzip) |
 | 7.2 | Correctness | `determine_created_at` returned modification time | ✅ 2026-06-29 — `metadata.created()` (btime) with `modified()` fallback for filesystems without btime |
 | 7.3 | Defense-in-depth | Add `frame-ancestors 'none'` to CSP | ✅ 2026-06-28 — CSP now `script-src 'none'; frame-ancestors 'none'` |
 
 **Still-standing strengths** (from §6.4): virtualized lists
 (`@tanstack/vue-virtual`), client request dedupe + TTL cache, lazy-loaded
-preview components/Prism/`media-chrome` with sensible `manualChunks`,
+preview components/Prism/Video.js (formerly `media-chrome`) with sensible `manualChunks`,
 `AbortController` on navigation, `NamedFile` (range/ETag/Last-Modified) +
 compression on the server.
 

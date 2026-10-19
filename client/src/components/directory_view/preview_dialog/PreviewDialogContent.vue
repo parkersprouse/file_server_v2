@@ -48,42 +48,6 @@ onUnmounted(() => {
       & object {
         @apply w-full h-full max-w-full max-h-full;
       }
-
-      & media-controller {
-        --media-control-background: rgb(20 20 30 / 70%);
-
-        &[audio] {
-          --media-control-background: var(--media-secondary-color, #0e0e15);
-        }
-
-        @apply max-w-full max-h-full overflow-hidden;
-
-        @variant hover {
-          --media-control-hover-background: #232331;
-        }
-
-        @variant focus {
-          --media-control-hover-background: #232331;
-        }
-
-        & [slot='media'] {
-          @apply max-w-full max-h-full;
-        }
-
-        & media-control-bar,
-        & [slot='centered-chrome'] {
-          @apply w-full;
-
-          & [class*='-player__control'] {
-            /* figure out how to not have tailwind override media chrome's styles */
-            padding: 0.5rem;
-
-            & svg {
-              @apply shrink-0;
-            }
-          }
-        }
-      }
     }
   }
 }
