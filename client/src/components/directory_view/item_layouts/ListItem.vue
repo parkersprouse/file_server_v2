@@ -61,7 +61,7 @@ const $router_store = useRouterStore();
     @apply z-10 hover:z-20 focus-within:z-20 has-[.entry--linked]:z-20;
 
     &[data-odd='true'] {
-      @apply bg-muted;
+      @apply bg-muted dark:bg-card;
     }
 
     /* Slim, vertically centred button in a slot reserved at the row's right edge. */

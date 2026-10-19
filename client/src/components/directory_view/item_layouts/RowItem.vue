@@ -77,7 +77,7 @@ const heic_check = inject<boolean>('heic_check', false);
     @apply z-10 hover:z-20 focus-within:z-20 has-[.entry--linked]:z-20;
 
     &[data-odd='true'] {
-      @apply bg-muted;
+      @apply bg-muted dark:bg-card;
     }
 
     & .entry {

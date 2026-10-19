@@ -97,7 +97,7 @@ const { scroll_margin, virtual_items: virtual_rows, virtualizer } = useVirtualiz
     @apply grid items-stretch gap-4;
 
     & .entry {
-      @apply min-w-0 h-[200px];
+      @apply min-w-0 h-50;
 
       & .entry-title {
         @apply text-sm py-1 px-2;
