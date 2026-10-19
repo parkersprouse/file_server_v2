@@ -22,7 +22,7 @@
 | `client/src/components/directory_view/preview_dialog/file_viewers/VideoPreview.vue` | Video player: desktop bar, mobile centered transport row plus two-row bar, poster, buffering spinner, hotkeys, mouse-click gesture |
 | `client/src/components/directory_view/preview_dialog/file_viewers/AudioPreview.vue` | Audio player: desktop bar with volume slider, mobile transport row, controls always visible |
 | `client/src/components/directory_view/preview_dialog/file_viewers/media_player/` | Shared pieces: `register.ts` (registers every Video.js element and holds the ±5 s `SEEK_HOTKEYS`), `MediaLoopButton.vue`, `MediaMuteButton.vue`, `MediaTimeDisplay.vue`, `MediaTimeSlider.vue`, `MediaVolumeSlider.vue` |
-| `client/src/composables/media_player.ts` | App-side workarounds for Video.js gaps: `useMediaPreferences`, `useMediaLooping`, `usePausedTouchToggle` |
+| `client/src/composables/media_player.ts` | App-side workarounds for Video.js gaps: `useMediaPreferences`, `useMediaLooping`, `useTouchTapToggle` |
 | `client/src/components/directory_view/preview_dialog/PreviewDialogContent.vue` | The shared player theme (`.preview-media-player` block): colors, icon swaps, sliders, tooltips, autohide CSS |
 | `client/src/components/directory_view/preview_dialog/PreviewDialog.vue` | Arrow-key gallery navigation yields to a focused `media-container` |
 | `client/src/composables/preview_swipe.ts` | `media-controls-group` is a swipe exemption |
@@ -43,7 +43,7 @@ These come from the migration guide's Known gaps section plus behavior the first
 | Area | Media Chrome (before) | Now | Notes |
 | --- | --- | --- | --- |
 | Autohide delay | `autohide='2'` | Fixed 2 s in Video.js | Same value, so no change. `autohideovercontrols` has no equivalent, but a still pointer over the controls hides them either way |
-| Hide while paused | App CSS override | `data-user-active` CSS plus `usePausedTouchToggle` | Without the composable, a touch tap on a paused video could never re-show hidden controls |
+| Hide while paused | App CSS override | `data-user-active` CSS plus `useTouchTapToggle` | Without the composable, a touch tap on a paused video could never re-show hidden controls; it also defers taps past the double-tap window (with a disabled `tap → toggleControls` gesture claiming them) so double-tap seeks don't flash the controls |
 | Loop toggle | Custom `MediaChromeButton` subclass | `MediaLoopButton.vue` (plain `role=switch` button) over the native `loop` property via `useMediaLooping` | Video.js has no loop state |
 | Volume/mute memory | Media Chrome's implicit `localStorage` | `useMediaPreferences` with the **same keys** (`media-chrome-pref-volume`, `media-chrome-pref-muted`) | Video restores volume only, always opens muted and never writes. Audio restores and saves both |
 | Hotkeys | Media Chrome defaults, ±5 s seek | Space/k, m, f (video only), ArrowLeft/Right and j/l at ±5 s, ArrowUp/Down volume, `<`/`>` speed | **Dropped:** `c` (captions – there are no tracks), `p` (PiP – no button), `?` (shortcuts dialog). Hotkeys only fire while the player container has focus (Video.js default) |

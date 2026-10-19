@@ -9,8 +9,8 @@
       • a mobile layout below the skin's 42rem breakpoint: a centre play
         button (also shown for coarse pointers), and Loop / picture-in-picture
         moved from the bar into the Settings menu so the buttons fit one row;
-      • no touch `toggleControls` or double-tap fullscreen gesture (see the
-        note by the gestures);
+      • the touch `toggleControls` gesture disabled (app-handled) and no
+        double-tap fullscreen gesture (see the note by the gestures);
       • per-instance ids, and numeric/boolean props bound as values (Vue
         assigns known custom-element props as properties, so a plain
         `seconds='5'` would arrive as the string '5');
@@ -435,13 +435,21 @@
         region='center'
       />
       <!--
-        The skin's `tap → toggleControls` touch gesture is omitted: it fires
-        after the double-tap window, undoing `usePausedTouchToggle`'s reveal
-        on paused video. The container's built-in touch tap still toggles the
-        controls while playing. So is its double-tap-centre fullscreen:
-        fullscreen should only ever be a deliberate choice (button or `f`),
-        and with no centre region the left / right seeks each cover a half.
+        The skin's `tap → toggleControls` touch gesture is kept but disabled: a
+        disabled binding still claims touch taps, which stops Video.js's
+        controls feature from toggling on every tap (so a double-tap seek would
+        flash the controls on and off). `useTouchTapToggle` toggles instead,
+        once the double-tap window has passed. The skin's double-tap-centre
+        fullscreen is omitted: fullscreen should only ever be a deliberate
+        choice (button or `f`), and with no centre region the left / right
+        seeks each cover a half.
       -->
+      <media-gesture
+        type='tap'
+        action='toggleControls'
+        pointer='touch'
+        :disabled='true'
+      />
       <media-gesture
         type='doubletap'
         action='seekStep'
@@ -544,7 +552,7 @@ import {
   useMediaLooping,
   useMediaPictureInPicture,
   useMediaPreferences,
-  usePausedTouchToggle,
+  useTouchTapToggle,
 } from 'composables/media_player.ts';
 
 import { VIDEO_HOTKEYS } from './media_player/hotkeys.ts';
@@ -679,7 +687,7 @@ function onLoadedMetadata(event: Event): void {
 // The video always opens muted, so it restores the saved volume but never
 // writes preferences back (matching media-chrome's `muted`-attribute rules).
 useMediaPreferences(player, { save: false });
-usePausedTouchToggle(player, container);
+useTouchTapToggle(player, container);
 </script>
 
 <style>

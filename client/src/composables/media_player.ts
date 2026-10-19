@@ -1,6 +1,6 @@
-import { selectControls, selectPiP, selectPlayback, selectVolume } from '@videojs/html';
+import { selectControls, selectPiP, selectVolume } from '@videojs/html';
 import { get, set, useEventListener } from '@vueuse/core';
-import { computed, readonly, ref, toValue, watch } from 'vue';
+import { computed, onScopeDispose, readonly, ref, toValue, watch } from 'vue';
 
 import type { AudioPlayerElement } from '@videojs/html/audio';
 import type { VideoPlayerElement } from '@videojs/html/video';
@@ -180,33 +180,44 @@ export function useMediaPictureInPicture(player: MaybeRefOrGetter<VideoPlayerEle
 // A touch counts as a tap below these limits (Video.js's own tap threshold).
 const TAP_MAX_MS = 250;
 const TAP_MAX_TRAVEL_PX = 10;
+// Video.js's double-tap window; a single tap only resolves once it has passed.
+const DOUBLETAP_WINDOW_MS = 200;
 
 /**
- * The players hide their controls on idle even while paused (media-chrome
- * behaviour this app kept), so CSS keys off `userActive`. Video.js's own touch
- * tap toggles off `controlsVisible` instead, which is pinned on while paused —
- * so on a paused video a tap would only ever re-mark the user inactive, and
- * hidden controls could never be tapped back. While paused, this re-resolves
- * such a tap as a toggle of `userActive`. It runs on a macrotask so it lands
- * after Video.js's own `pointerup` handling on the same container.
+ * Touch taps on the media surface toggle the controls, but only once the
+ * double-tap window has passed without a second tap, so double-tap seeking
+ * doesn't flash the controls on and off.
+ *
+ * Video.js's controls feature toggles on every quick touch `pointerup` unless
+ * a `tap → toggleControls` gesture claims it. The template therefore declares
+ * that gesture `disabled` (a disabled binding still claims, but never fires)
+ * and this does the toggling instead. It can't be left to the enabled gesture:
+ * the store's `toggleControls` keys off `controlsVisible`, which Video.js pins
+ * on while paused, whereas the players hide their controls on idle even while
+ * paused (media-chrome behaviour this app kept), so CSS keys off `userActive`
+ * and so does this toggle.
  */
-export function usePausedTouchToggle(
+export function useTouchTapToggle(
   player: MaybeRefOrGetter<MediaPlayerElement | null>,
   container: MaybeRefOrGetter<HTMLElement | null>,
 ): void {
   let tap: {
-    active: boolean;
     at: number;
     x: number;
     y: number;
   } | null = null;
+  let last_tap_at = 0;
+  let pending: ReturnType<typeof setTimeout> | undefined;
+
+  function cancelPending(): void {
+    clearTimeout(pending);
+    pending = undefined;
+  }
 
   useEventListener(container, 'pointerdown', (event: PointerEvent) => {
     tap = null;
-    const store = toValue(player)?.store;
-    if (event.pointerType !== 'touch' || !store?.target) return;
+    if (event.pointerType !== 'touch' || !toValue(player)?.store.target) return;
     tap = {
-      active: selectControls(store.state)?.userActive ?? false,
       at: Date.now(),
       x: event.clientX,
       y: event.clientY,
@@ -218,11 +229,26 @@ export function usePausedTouchToggle(
     const start = tap;
     tap = null;
     if (!start || !store?.target || event.pointerType !== 'touch') return;
-    if (Date.now() - start.at > TAP_MAX_MS) return;
+    const now = Date.now();
+    if (now - start.at > TAP_MAX_MS) return;
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_MAX_TRAVEL_PX) return;
     // Only taps on the media surface itself toggle; controls handle their own.
     if (event.target !== toValue(container) && !(event.target instanceof HTMLMediaElement)) return;
-    if (!selectPlayback(store.state)?.paused) return;
-    setTimeout(() => selectControls(store.state)?.toggleControls(!start.active));
+    // A second tap inside the window is a double tap (a seek): drop the first.
+    if (now - last_tap_at < DOUBLETAP_WINDOW_MS) {
+      cancelPending();
+      last_tap_at = 0;
+      return;
+    }
+    last_tap_at = now;
+    cancelPending();
+    pending = setTimeout(() => {
+      pending = undefined;
+      last_tap_at = 0;
+      const controls = selectControls(store.state);
+      controls?.toggleControls(!controls.userActive);
+    }, DOUBLETAP_WINDOW_MS);
   });
+
+  onScopeDispose(cancelPending);
 }
