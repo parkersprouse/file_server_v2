@@ -6,9 +6,10 @@
       • no captions (button, settings submenu, `c` hotkey, status icons) — the
         files served here never carry text tracks;
       • a Loop switch in the trailing group (Video.js has no loop control);
-      • a mobile layout below the skin's 42rem breakpoint: a centre play
-        button (also shown for coarse pointers), and Loop / picture-in-picture
-        moved from the bar into the Settings menu so the buttons fit one row;
+      • a mobile layout below the skin's 42rem breakpoint: Loop /
+        picture-in-picture moved from the bar into the Settings menu so the
+        buttons fit one row; separately, coarse pointers (at any width) get a
+        centre play button and bigger targets;
       • the touch `toggleControls` gesture disabled (app-handled) and no
         double-tap fullscreen gesture (see the note by the gestures);
       • per-instance ids, and numeric/boolean props bound as values (Vue

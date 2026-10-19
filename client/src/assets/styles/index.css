@@ -225,16 +225,6 @@
     @apply body-basics;
   }
 
-  /* Optimize font rendering with font-display: swap to prevent layout shifts */
-  @supports (font-variation-settings: normal) {
-    /* Modern browsers with variable font support */
-    body {
-      /* Even though our vendored version of Inter already enables this, *
-       * enable equal-sized numbers in CSS as well to fill any gaps      */
-      font-variant-numeric: tabular-nums;
-    }
-  }
-
   blockquote {
     @apply mt-6 border-l-2 pl-6 italic;
   }
