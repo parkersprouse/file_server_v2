@@ -10,7 +10,7 @@ The two packages are built and served **independently** and run on **different p
 
 ## Toolchain
 
-- Node **24.18.0** (`.nvmrc`), pnpm **11.9.0** (pinned via `packageManager`; `corepack` will switch automatically). Client `engines` require node `^24` / pnpm `^11`.
+- Node **24.21.0** (`.nvmrc`), pnpm **12.11.2** (pinned via `client/package.json` `packageManager`; `corepack` will switch automatically). Both `engines` blocks (root and client) require node `^24` / pnpm `^12`.
 - Client: Vite **8** (Rolldown bundler), TypeScript **6**, Vue 3 (`<script setup>`), Pinia, vue-router 5, Tailwind v4, shadcn-vue, ESLint **10** (flat config), Stylelint **17**, Video.js **10** (`@videojs/html`, custom elements; Neutral skins vendored from its shadcn registry) for audio/video previews.
 - Server: Rust **edition 2024**, actix-web 4, `moka` caches, `ipnet`. Duration probing shells out to a system **`ffprobe`** binary (part of ffmpeg); it is skipped gracefully if absent.
 
@@ -87,7 +87,7 @@ A single catch-all `GET /{path:.*}` route (`main.rs`) → `index_route` → `res
 
 - Imports use bare path aliases (`@` → `src`, plus `assets`/`components`/`composables`/`enums`/`lib`/`stores`/`types`/`ui`/`utils`/`views`). These are defined in **both** `vite.config.ts` (`resolve.alias`) and `tsconfig.app.json` (`paths`) — keep the two in sync when adding one.
 - Vite 8 / Rolldown rejects the object form of `rollupOptions.output.manualChunks`; it must be the **function** form (see `vite.config.ts`).
-- pnpm 11 native-build approvals are declared in `client/pnpm-workspace.yaml` under `allowBuilds` (not interactive approval).
+- pnpm native-build approvals are declared in `client/pnpm-workspace.yaml` under `allowBuilds` (not interactive approval).
 - `client/components.d.ts` is **auto-generated** by `unplugin-vue-components` / `unplugin-icons` during a Vite run (dev or build) and is committed. Components under `src/components` and icons (`<icon-*>` → `ph`, `<ricon-*>` → `ri`) auto-register — no manual import — but a standalone `pnpm run check` (`vue-tsc`) will fail on a newly added component/icon until a Vite run regenerates the file, so run `pnpm run build-only` (or `pnpm dev`) first.
 - **All hand-written ambient declarations live in `client/env.d.ts`** (global augmentations, `*.toml` / `@/config.toml` module shims, untyped-package stubs) — `components.d.ts` is the only other `.d.ts` and is generated. Keep each `declare module` / `declare global` in that one file: `tsconfig.app.json` globs `**/*.d.ts`, so a shape declared in two files does **not** merge — for a `declare module` with a default export, TypeScript silently picks one file's copy and ignores the other, so editing the wrong duplicate compiles fine and changes nothing.
 - **shadcn-vue reference:** when adding or changing shadcn-vue components, prefer the shadcn MCP server (`mcp__shadcn__*`: search/view items, get the add command, examples). If it's unavailable (not connected, failed, or not authorized), consult <https://www.shadcn-vue.com/llms.txt> (the LLM-oriented docs index; follow its links to per-component pages) instead of guessing from memory. Components in `src/components/ui` are generated from the registry, so don't hand-write one from scratch.

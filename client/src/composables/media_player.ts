@@ -232,8 +232,15 @@ export function useTouchTapToggle(
     const now = Date.now();
     if (now - start.at > TAP_MAX_MS) return;
     if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > TAP_MAX_TRAVEL_PX) return;
-    // Only taps on the media surface itself toggle; controls handle their own.
-    if (event.target !== toValue(container) && !(event.target instanceof HTMLMediaElement)) return;
+    // Only taps on the media surface itself toggle. Elsewhere (the controls)
+    // a tap only keeps visible controls awake: the disabled gesture claims
+    // taps on non-interactive parts such as the bar's empty space, which
+    // stops Video.js from resetting its idle timer for them.
+    if (event.target !== toValue(container) && !(event.target instanceof HTMLMediaElement)) {
+      const controls = selectControls(store.state);
+      if (controls?.userActive) controls.toggleControls(true);
+      return;
+    }
     // A second tap inside the window is a double tap (a seek): drop the first.
     if (now - last_tap_at < DOUBLETAP_WINDOW_MS) {
       cancelPending();

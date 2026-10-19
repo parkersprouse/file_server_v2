@@ -312,7 +312,8 @@ const NARROW_REM = 42;
 const root_font_px = Number.parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
 const container = useTemplateRef<HTMLElement>('container');
 const { width: container_width } = useElementSize(container);
-const narrow = computed<boolean>(() => container_width.value < NARROW_REM * root_font_px);
+// Unmeasured (0) counts as wide, as in VideoPreview.
+const narrow = computed<boolean>(() => container_width.value > 0 && container_width.value < NARROW_REM * root_font_px);
 
 useMediaPreferences(player, { save: true });
 </script>

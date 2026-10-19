@@ -58,8 +58,14 @@
               </div>
 
               <div class='preview-dialog__slide-cell'>
+                <!--
+                  Keyed per file so each one gets a fresh player: a reused
+                  <video> would keep the previous file's aspect ratio (until
+                  `loadedmetadata`) and its `loop` setting.
+                -->
                 <component
                   :is='preview_type?.type'
+                  :key='entry.url'
                   :entry='entry'
                 />
               </div>
@@ -86,6 +92,7 @@
           <component
             v-else
             :is='preview_type?.type'
+            :key='entry.url'
             :entry='entry'
           />
         </PreviewDialogContent>
@@ -534,9 +541,10 @@ function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
 //   the keydown guard above, and Chromium makes that `cancel` uncancelable
 //   without a fresh user activation — so `closedby='none'` switches it off and
 //   leaves Esc to the guarded handler. For engines without `closedby`, cancel
-//   the request here instead (best effort, for the same reason).
+//   the request here instead, under the same guards (best effort, for the
+//   same reason).
 function onCancelDialog(event: Event): void {
-  if (fullscreenOwnsEscape()) event.preventDefault();
+  if (fullscreenOwnsEscape() || layerOwnsEscape()) event.preventDefault();
 }
 
 async function onClickDialog(event: Event): Promise<void> {
