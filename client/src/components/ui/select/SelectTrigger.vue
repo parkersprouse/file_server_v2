@@ -27,7 +27,7 @@ const forwardedProps = useForwardProps(delegatedProps)
   >
     <slot />
     <SelectIcon as-child>
-      <icon-caret-down class="text-muted-foreground size-3.5 pointer-events-none" />
+      <icon-chevron-down class="text-muted-foreground size-3.5 pointer-events-none" />
     </SelectIcon>
   </SelectTrigger>
 </template>

@@ -7,7 +7,7 @@
         class='entry-actions'
         :aria-label='`Actions for ${entry.name}`'
       >
-        <icon-dots-three-vertical aria-hidden='true' />
+        <icon-ellipsis-vertical aria-hidden='true' />
       </Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align='center'>
@@ -20,7 +20,7 @@
         :href='new_tab_href'
         target='_blank'
       >
-        <icon-arrow-square-out />
+        <icon-square-arrow-out-up-right />
         Open in New Tab
       </DropdownMenuItem>
       <DropdownMenuItem
@@ -29,7 +29,7 @@
         :href='`${entry.url}?download`'
         download
       >
-        <icon-download-simple />
+        <icon-download />
         Download
       </DropdownMenuItem>
     </DropdownMenuContent>

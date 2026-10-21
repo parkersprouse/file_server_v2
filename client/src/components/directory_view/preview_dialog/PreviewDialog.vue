@@ -109,7 +109,7 @@
             aria-label='Previous media'
             @click.stop='showPreviousMedia'
           >
-            <icon-caret-left aria-hidden='true' />
+            <icon-chevron-left aria-hidden='true' />
           </button>
 
           <button
@@ -118,7 +118,7 @@
             aria-label='Next media'
             @click.stop='showNextMedia'
           >
-            <icon-caret-right aria-hidden='true' />
+            <icon-chevron-right aria-hidden='true' />
           </button>
 
           <div

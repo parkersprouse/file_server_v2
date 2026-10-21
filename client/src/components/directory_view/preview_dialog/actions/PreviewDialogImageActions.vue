@@ -7,7 +7,7 @@
       :disabled='!view.can_zoom_out'
       @click='view.zoomOut()'
     >
-      <icon-magnifying-glass-minus />
+      <icon-zoom-out />
     </Button>
 
     <template #content>
@@ -38,7 +38,7 @@
       :disabled='!view.can_zoom_in'
       @click='view.zoomIn()'
     >
-      <icon-magnifying-glass-plus />
+      <icon-zoom-in />
     </Button>
 
     <template #content>
@@ -58,7 +58,7 @@
       class='ghost-ext h-auto!'
       @click='view.rotateCcw()'
     >
-      <icon-arrow-counter-clockwise />
+      <icon-rotate-ccw />
     </Button>
 
     <template #content>
@@ -73,7 +73,7 @@
       class='ghost-ext h-auto!'
       @click='view.rotateCw()'
     >
-      <icon-arrow-clockwise />
+      <icon-rotate-cw />
     </Button>
 
     <template #content>
@@ -89,7 +89,7 @@
       :disabled='!view.is_transformed'
       @click='view.reset()'
     >
-      <icon-arrows-in />
+      <icon-shrink />
     </Button>
 
     <template #content>

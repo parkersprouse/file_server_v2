@@ -8,7 +8,7 @@
       :aria-pressed='local_dir === SortDir.ASC'
       @click='setLocalDir(SortDir.ASC)'
     >
-      <icon-sort-ascending aria-hidden='true' class='size-12!' />
+      <icon-arrow-up-narrow-wide aria-hidden='true' class='size-12!' />
     </Button>
     <Button
       variant='ghost'
@@ -18,7 +18,7 @@
       :aria-pressed='local_dir === SortDir.DESC'
       @click='setLocalDir(SortDir.DESC)'
     >
-      <icon-sort-descending aria-hidden='true' class='size-12!' />
+      <icon-arrow-down-wide-narrow aria-hidden='true' class='size-12!' />
     </Button>
   </section>
 
@@ -53,7 +53,7 @@
       :aria-pressed='local_key === SortKey.MODIFIED'
       @click='setLocalKey(SortKey.MODIFIED)'
     >
-      <icon-clock-counter-clockwise aria-hidden='true' class='size-12!' />
+      <icon-rotate-ccw-clock aria-hidden='true' class='size-12!' />
     </Button>
 
     <Button

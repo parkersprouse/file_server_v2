@@ -175,13 +175,12 @@ export default defineConfig(({ command }) => ({
         UnpluginIconsResolver({
           alias: {
             // With this alias and prefixes disabled, icons can be used like `<icon-{name} />`
-            icon: 'ph',
-            // ^ but `<ricon-{name} />`
-            ricon: 'ri',
+            icon: 'lucide',
+            'icon-ext': 'lucide-extended',
           },
           enabledCollections: [
-            'ri',
-            'ph',
+            'lucide',
+            'lucide-extended',
           ],
           prefix: false,
         }),

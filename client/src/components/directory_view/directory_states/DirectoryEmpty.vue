@@ -3,7 +3,7 @@
     <Empty>
       <EmptyHeader>
         <EmptyMedia>
-          <icon-empty-light class='size-14!' />
+          <icon-ban class='size-14!' />
         </EmptyMedia>
         <EmptyTitle class='text-xl'>
           {{ $router_store.searching ? "No Results" : "Directory Empty" }}

@@ -6,8 +6,8 @@
     }'
     @select='() => onClick()'
   >
-    <icon-swatches-fill v-if='enabled' />
-    <icon-swatches v-else />
+    <icon-ext-swatch-book-filled v-if='enabled' />
+    <icon-swatch-book v-else />
     {{ label }}
   </DropdownMenuItem>
 
@@ -20,8 +20,8 @@
       :aria-pressed='enabled'
       @click='() => onClick()'
     >
-      <icon-swatches-fill v-if='enabled' aria-hidden='true' />
-      <icon-swatches v-else aria-hidden='true' />
+      <icon-ext-swatch-book-filled v-if='enabled' aria-hidden='true' />
+      <icon-swatch-book v-else aria-hidden='true' />
     </Button>
 
     <template #content>

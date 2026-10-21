@@ -8,5 +8,5 @@ const props = defineProps<{
 </script>
 
 <template>
-  <icon-circle-notch role="status" aria-label="Loading" :class="cn('size-4 animate-spin', props.class)" />
+  <icon-loader-circle role="status" aria-label="Loading" :class="cn('size-4 animate-spin', props.class)" />
 </template>

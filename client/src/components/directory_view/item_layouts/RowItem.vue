@@ -29,7 +29,7 @@
             variant='ghost'
             class='entry-meta entry-meta__location min-w-0'
           >
-            <icon-folder-simple aria-hidden='true' />
+            <icon-folder aria-hidden='true' />
             <span class='truncate'>{{ entryLocation(entry) }}</span>
           </Badge>
           <EntryModifiedBadge
@@ -81,12 +81,6 @@ const heic_check = inject<boolean>('heic_check', false);
     }
 
     & .entry {
-      & [data-slot='item-media'] {
-        & * {
-          @apply size-10;
-        }
-      }
-
       /*
        * Reserve the actions button's corner (`.entry-actions`: 2rem, 2.5rem on
        * coarse pointers, flush top-right) so a long name truncates before it
@@ -96,6 +90,16 @@ const heic_check = inject<boolean>('heic_check', false);
       & [data-slot='item'] {
         /* hover:bg-zinc-100 hover:dark:bg-zinc-900; */
         @apply py-2! pr-10! pointer-coarse:pr-12! flex-nowrap;
+
+        /*
+         * Direct child only: CSS `width`/`height` also apply to an icon's own
+         * `<rect>` shapes, which would stretch them to fill the box.
+         */
+        & [data-slot='item-media'] {
+          & > * {
+            @apply size-10;
+          }
+        }
       }
     }
 

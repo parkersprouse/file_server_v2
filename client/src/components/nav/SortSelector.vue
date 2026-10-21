@@ -28,7 +28,7 @@
           :class='{ "ghost-ext--active": local_dir === SortDir.ASC }'
           @select.prevent='setLocalDir(SortDir.ASC)'
         >
-          <icon-sort-ascending class='size-6!' />
+          <icon-arrow-up-narrow-wide class='size-6!' />
           Ascending
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -36,7 +36,7 @@
           :class='{ "ghost-ext--active": local_dir === SortDir.DESC }'
           @select.prevent='setLocalDir(SortDir.DESC)'
         >
-          <icon-sort-descending class='size-6!' />
+          <icon-arrow-down-wide-narrow class='size-6!' />
           Descending
         </DropdownMenuItem>
       </DropdownMenuGroup>
@@ -65,7 +65,7 @@
           :class='{ "ghost-ext--active": local_key === SortKey.MODIFIED }'
           @select.prevent='setLocalKey(SortKey.MODIFIED)'
         >
-          <icon-clock-counter-clockwise class='size-6!' />
+          <icon-rotate-ccw-clock class='size-6!' />
           Last Modified At
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -82,12 +82,12 @@
 </template>
 
 <script setup lang='ts'>
-import IconClockCounterClockwise from '~icons/ph/clock-counter-clockwise';
-import IconFilePlus from '~icons/ph/file-plus';
-import IconSortAscending from '~icons/ph/sort-ascending';
-import IconSortDescending from '~icons/ph/sort-descending';
-import IconTag from '~icons/ph/tag';
-import IconTimer from '~icons/ph/timer';
+import IconSortDescending from '~icons/lucide/arrow-down-wide-narrow';
+import IconSortAscending from '~icons/lucide/arrow-up-narrow-wide';
+import IconFilePlus from '~icons/lucide/file-plus';
+import IconClockCounterClockwise from '~icons/lucide/rotate-ccw-clock';
+import IconTag from '~icons/lucide/tag';
+import IconTimer from '~icons/lucide/timer';
 
 import { get, set } from '@vueuse/core';
 import { computed, onMounted, ref } from 'vue';

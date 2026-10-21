@@ -10,7 +10,7 @@
           "ghost-ext--active": $router_store.searching,
         }'
       >
-        <icon-magnifying-glass
+        <icon-search
           aria-hidden='true'
           :class='$is_mobile ? "size-8!" : "size-6!"'
         />
@@ -39,7 +39,7 @@
             spellcheck='false'
           />
           <InputGroupAddon>
-            <icon-magnifying-glass aria-hidden='true' />
+            <icon-search aria-hidden='true' />
           </InputGroupAddon>
         </InputGroup>
 
@@ -109,7 +109,7 @@
             type='submit'
             :disabled='query.trim().length === 0'
           >
-            <icon-magnifying-glass aria-hidden='true' />
+            <icon-search aria-hidden='true' />
             Search
           </Button>
           <Button
@@ -119,7 +119,7 @@
             variant='outline'
             @click='clear'
           >
-            <icon-x-circle aria-hidden='true' />
+            <icon-circle-x aria-hidden='true' />
             Clear search
           </Button>
         </DialogFooter>

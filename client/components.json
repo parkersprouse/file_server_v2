@@ -17,7 +17,7 @@
     "lib": "@/lib",
     "types": "@/types"
   },
-  "iconLibrary": "phosphor",
+  "iconLibrary": "lucide",
   "font": "inter",
   "rtl": false,
   "pointer": true,

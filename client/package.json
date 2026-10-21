@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "browserslist": "since 2018, > 0.3%, not dead",
-  "packageManager": "pnpm@12.11.2",
+  "packageManager": "pnpm@12.14.0",
   "engines": {
     "node": "^24",
     "pnpm": "^12"
@@ -61,8 +61,8 @@
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.8.1",
     "@eslint/js": "^10.0.1",
-    "@iconify-json/ph": "^1.2.2",
-    "@iconify-json/ri": "^1.2.10",
+    "@iconify-json/lucide": "^1.2.146",
+    "@iconify-json/lucide-extended": "^1.2.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@stylistic/stylelint-plugin": "^5.3.1",
     "@tsconfig/node24": "^24.0.5",

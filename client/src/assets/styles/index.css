@@ -219,6 +219,17 @@
     @apply border-border outline-ring/50;
   }
 
+  /* Lucide hard-codes stroke-width="2" on each icon's shapes; any CSS value beats
+     that presentation attribute, so the shapes inherit the svg's width instead.
+     Override per icon with a `stroke-*` utility on the icon itself. */
+  svg.icon {
+    stroke-width: 1.5;
+
+    & * {
+      stroke-width: inherit;
+    }
+  }
+
   html,
   body,
   #app {

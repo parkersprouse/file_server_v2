@@ -16,7 +16,7 @@ const props = defineProps<{
     :class="cn('size-5 [&>svg]:size-4 flex items-center justify-center', props.class)"
   >
     <slot>
-      <icon-dots-three />
+      <icon-ellipsis />
     </slot>
     <span class="sr-only">More</span>
   </span>

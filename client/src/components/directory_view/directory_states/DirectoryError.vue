@@ -3,7 +3,7 @@
     <Empty>
       <EmptyHeader>
         <EmptyMedia class='text-primary'>
-          <icon-warning class='size-14!' />
+          <icon-triangle-alert class='size-14!' />
         </EmptyMedia>
         <EmptyTitle class='text-xl font-bold text-primary'>
           {{ title }}

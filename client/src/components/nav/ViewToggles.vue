@@ -8,7 +8,7 @@
       :aria-pressed='$store.view === ViewType.LIST'
       @click='$store.view = ViewType.LIST'
     >
-      <icon-list-dashes aria-hidden='true' class='size-12!' />
+      <icon-list aria-hidden='true' class='size-12!' />
     </Button>
 
     <Button
@@ -19,7 +19,7 @@
       :aria-pressed='$store.view === ViewType.ROWS'
       @click='$store.view = ViewType.ROWS'
     >
-      <icon-rows aria-hidden='true' class='size-12!' />
+      <icon-stretch-horizontal aria-hidden='true' class='size-12!' />
     </Button>
 
     <Button
@@ -30,7 +30,7 @@
       :aria-pressed='$store.view === ViewType.GRID'
       @click='$store.view = ViewType.GRID'
     >
-      <icon-squares-four aria-hidden='true' class='size-12!' />
+      <icon-layout-grid aria-hidden='true' class='size-12!' />
     </Button>
   </section>
 </template>

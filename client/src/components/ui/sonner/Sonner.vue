@@ -1,10 +1,10 @@
 <script lang="ts" setup>
-import CircleCheckIcon from "~icons/ph/check-circle"
-import PhCircleNotch from "~icons/ph/circle-notch"
-import InfoIcon from "~icons/ph/info"
-import TriangleAlertIcon from "~icons/ph/warning"
-import PhX from "~icons/ph/x"
-import OctagonXIcon from "~icons/ph/x-circle"
+import CircleCheckIcon from "~icons/lucide/circle-check"
+import PhCircleNotch from "~icons/lucide/loader-circle"
+import InfoIcon from "~icons/lucide/info"
+import TriangleAlertIcon from "~icons/lucide/triangle-alert"
+import PhX from "~icons/lucide/x"
+import OctagonXIcon from "~icons/lucide/circle-x"
 
 import type { ToasterProps } from "vue-sonner"
 import { reactiveOmit } from "@vueuse/core"

@@ -10,7 +10,7 @@
         :variant='variant'
         class='entry-meta entry-meta__last-modified'
       >
-        <icon-clock-counter-clockwise />
+        <icon-rotate-ccw-clock />
         {{ relative(entry.last_modified_at) }}
       </Badge>
     </TooltipTrigger>

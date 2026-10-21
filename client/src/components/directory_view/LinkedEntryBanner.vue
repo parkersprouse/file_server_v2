@@ -1,6 +1,6 @@
 <template>
   <Alert variant='destructive' class='container mb-4 max-w-9/10'>
-    <icon-link-break aria-hidden='true' />
+    <icon-unlink aria-hidden='true' />
     <AlertTitle class='truncate'>
       The linked entry <strong>&ldquo;{{ name }}&rdquo;</strong> no longer exists or could not be found.
     </AlertTitle>

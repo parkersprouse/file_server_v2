@@ -35,7 +35,7 @@
           aria-label='More actions'
           class='ghost-ext h-auto! preview-dialog__overflow__trigger'
         >
-          <icon-dots-three />
+          <icon-ellipsis />
         </Button>
       </DropdownMenuTrigger>
 
@@ -55,14 +55,14 @@
           v-if='entry.preview_type && [PreviewType.IMAGE, PreviewType.VIDEO].includes(entry.preview_type)'
           @select='() => { $store.show_media_tools = !$store.show_media_tools; }'
         >
-          <ricon-pencil-ruler-2-fill v-if='$store.show_media_tools' />
-          <ricon-pencil-ruler-2-line v-else />
+          <icon-ext-pencil-ruler-filled v-if='$store.show_media_tools' />
+          <icon-pencil-ruler v-else />
           {{ $store.show_media_tools ? 'Hide' : 'Show' }} Controls
         </DropdownMenuItem>
 
         <DropdownMenuItem @select='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'>
-          <icon-checkerboard-fill v-if='$store.preview_bg_enabled' />
-          <icon-checkerboard v-else />
+          <icon-ext-contrast-filled v-if='$store.preview_bg_enabled' />
+          <icon-contrast v-else />
           {{ $store.preview_bg_enabled ? 'Darken' : 'Lighten' }} background
         </DropdownMenuItem>
 
@@ -75,7 +75,7 @@
             :href='`${entry.url}?download`'
             download
           >
-            <icon-download-simple />
+            <icon-download />
             Download
           </a>
         </DropdownMenuItem>
@@ -85,7 +85,7 @@
             :href='`${entry.url}?inline`'
             target='_blank'
           >
-            <icon-arrow-square-out />
+            <icon-square-arrow-out-up-right />
             Open in new tab
           </a>
         </DropdownMenuItem>
@@ -143,6 +143,10 @@
 </template>
 
 <script setup lang='ts'>
+// Imported explicitly: the auto-resolver mangles names with a digit segment (`<icon-grid-2x2>` -> `grid2x2`).
+// import IconGrid2x2 from '~icons/lucide/grid-2x2';
+// import IconGrid2x2Filled from '~icons/lucide-extended/grid-2x2-filled';
+
 import { get } from '@vueuse/core';
 import { useTemplateRef } from 'vue';
 

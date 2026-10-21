@@ -26,6 +26,6 @@ const forwardedProps = useForwardProps(delegatedProps)
     )"
   >
     <slot />
-    <icon-caret-right class="cn-rtl-flip ml-auto" />
+    <icon-chevron-right class="cn-rtl-flip ml-auto" />
   </DropdownMenuSubTrigger>
 </template>

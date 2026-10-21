@@ -6,7 +6,7 @@
     }'
     @select='() => onClick()'
   >
-    <ricon-text-wrap />
+    <icon-text-wrap />
     {{ label }}
   </DropdownMenuItem>
 
@@ -19,7 +19,7 @@
       :aria-pressed='enabled'
       @click='() => onClick()'
     >
-      <ricon-text-wrap aria-hidden='true' />
+      <icon-text-wrap aria-hidden='true' />
     </Button>
 
     <template #content>

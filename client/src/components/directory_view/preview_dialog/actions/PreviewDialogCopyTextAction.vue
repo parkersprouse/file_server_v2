@@ -10,8 +10,8 @@
       }'
       @click='async () => await $event_bus.emit("copy_text")'
     >
-      <icon-check-bold v-if='successful_copy' aria-hidden='true' />
-      <icon-warning v-else-if='failed_copy' aria-hidden='true' />
+      <icon-check v-if='successful_copy' aria-hidden='true' />
+      <icon-triangle-alert v-else-if='failed_copy' aria-hidden='true' />
       <icon-clipboard v-else aria-hidden='true' />
     </Button>
 

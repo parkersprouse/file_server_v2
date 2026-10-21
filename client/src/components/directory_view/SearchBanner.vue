@@ -1,6 +1,6 @@
 <template>
   <Alert class='container mb-4 max-w-9/10'>
-    <icon-magnifying-glass aria-hidden='true' />
+    <icon-search aria-hidden='true' />
     <AlertTitle class='truncate font-normal'>
       <!-- explicit `{{ " " }}` spaces: whitespace between tags is condensed away -->
       <template v-if='count !== undefined'>

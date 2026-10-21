@@ -6,7 +6,7 @@
         aria-label='Open settings'
         class='p-1! h-auto ghost-ext'
       >
-        <icon-list aria-hidden='true' class='size-8!' />
+        <icon-menu aria-hidden='true' class='size-8!' />
       </Button>
     </SheetTrigger>
     <SheetContent
@@ -83,7 +83,7 @@
 </template>
 
 <script setup lang='ts'>
-import PhX from '~icons/ph/x';
+import PhX from '~icons/lucide/x';
 
 import { get } from '@vueuse/core';
 import { VisuallyHidden } from 'reka-ui';

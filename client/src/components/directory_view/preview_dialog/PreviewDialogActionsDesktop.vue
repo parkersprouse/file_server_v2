@@ -47,8 +47,8 @@
           class='ghost-ext h-auto!'
           @click.prevent='() => { $store.show_media_tools = !$store.show_media_tools; }'
         >
-          <ricon-pencil-ruler-2-fill v-if='$store.show_media_tools' />
-          <ricon-pencil-ruler-2-line v-else />
+          <icon-ext-pencil-ruler-filled v-if='$store.show_media_tools' />
+          <icon-pencil-ruler v-else />
         </Button>
 
         <template #content>
@@ -69,8 +69,8 @@
         class='ghost-ext h-auto!'
         @click.prevent='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'
       >
-        <icon-checkerboard-fill v-if='$store.preview_bg_enabled' />
-        <icon-checkerboard v-else />
+        <icon-ext-contrast-filled v-if='$store.preview_bg_enabled' />
+        <icon-contrast v-else />
       </Button>
 
       <template #content>
@@ -87,7 +87,7 @@
         download
         class='ghost-ext h-auto!'
       >
-        <icon-download-simple />
+        <icon-download />
       </a>
 
       <template #content>
@@ -102,7 +102,7 @@
         target='_blank'
         class='ghost-ext h-auto!'
       >
-        <icon-arrow-square-out />
+        <icon-square-arrow-out-up-right />
       </a>
 
       <template #content>

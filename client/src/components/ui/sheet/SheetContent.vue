@@ -2,7 +2,7 @@
 import type { DialogContentEmits, DialogContentProps } from 'reka-ui'
 
 import type { HTMLAttributes } from 'vue'
-import PhX from '~icons/ph/x'
+import PhX from '~icons/lucide/x'
 import { reactiveOmit } from '@vueuse/core'
 import {
   DialogClose,

@@ -20,7 +20,7 @@
           :class='{ "ghost-ext--active": $store.view === ViewType.LIST }'
           @click='$store.view = ViewType.LIST'
         >
-          <icon-list-dashes class='size-6!' />
+          <icon-list class='size-6!' />
           List
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -28,7 +28,7 @@
           :class='{ "ghost-ext--active": $store.view === ViewType.ROWS }'
           @click='$store.view = ViewType.ROWS'
         >
-          <icon-rows class='size-6!' />
+          <icon-stretch-horizontal class='size-6!' />
           Rows
         </DropdownMenuItem>
         <DropdownMenuItem
@@ -36,7 +36,7 @@
           :class='{ "ghost-ext--active": $store.view === ViewType.GRID }'
           @click='$store.view = ViewType.GRID'
         >
-          <icon-squares-four class='size-6!' />
+          <icon-layout-grid class='size-6!' />
           Grid
         </DropdownMenuItem>
       </DropdownMenuGroup>
@@ -45,9 +45,9 @@
 </template>
 
 <script setup lang='ts'>
-import IconListDashes from '~icons/ph/list-dashes';
-import IconRows from '~icons/ph/rows';
-import IconSquaresFour from '~icons/ph/squares-four';
+import IconSquaresFour from '~icons/lucide/layout-grid';
+import IconListDashes from '~icons/lucide/list';
+import IconRows from '~icons/lucide/stretch-horizontal';
 
 import { ref } from 'vue';
 
