@@ -218,6 +218,12 @@ function handleBeforeNavigate(to: RouteLocationNormalizedGeneric, from: RouteLoc
   // Leaving the directory dismisses the dead-link banner.
   if (to.path !== from.path) $store.clearLinkedEntryError();
 
+  // A navigation between identical routes changes nothing, so neither
+  // `path_updated` nor `query_updated` will follow to lift the cover again.
+  // Expanded mode causes exactly that: leaving it pops its own history entry,
+  // which shares the route (composables/fake_fullscreen.ts).
+  if (to.fullPath === from.fullPath) return;
+
   set(transitioning, true);
 }
 
