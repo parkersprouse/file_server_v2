@@ -259,6 +259,8 @@ onMounted(async () => {
     }),
 
     $event_bus.on('path_updated', async () => {
+      // A new visit: a link to the same name may auto-open its preview again.
+      set(auto_previewed, undefined);
       await getEntries();
       await setScrollPosition();
       set(transitioning, false);
@@ -278,6 +280,15 @@ onMounted(async () => {
 
     $event_bus.on('search_updated', async () => {
       await getEntries();
+    }),
+
+    // A bookmark opened while already in its directory: no `path_updated`
+    // follows, and re-opening the same one should show its preview again.
+    $event_bus.on('linked_updated', async ({ data: { refetch } }) => {
+      set(auto_previewed, undefined);
+      if (refetch) await getEntries();
+      // Still loading: the fetch in flight resolves the link when it lands.
+      else if (get(entries)) await handleLinkedEntry();
     }),
   );
 

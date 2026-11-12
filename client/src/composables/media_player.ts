@@ -11,14 +11,15 @@ import type { DeepReadonly, MaybeRefOrGetter, Ref, WritableComputedRef } from 'v
  * (videojs/v10#944), so this follows its "Remember user preferences" guide.
  * The keys are media-chrome's own, so preferences saved before the migration
  * carry over, and the semantics mirror what media-chrome did for this app:
- *   • every player restores the saved volume;
- *   • a player that `save`s (audio) also restores the saved mute state and
- *     writes both back on every change;
- *   • a player that doesn't (video, which always opens muted) never writes and
- *     stays muted after its volume is restored.
+ *   • every player restores the saved volume and writes it back on change;
+ *   • the mute state is restored and saved too, but per kind (`muted_key`):
+ *     muting a video shouldn't silence the next audio file. Until a kind has
+ *     a saved value its player keeps the state it starts in (the video's
+ *     `muted` attribute, so videos open muted by default).
  */
 const VOLUME_KEY = 'media-chrome-pref-volume';
-const MUTED_KEY = 'media-chrome-pref-muted';
+export const AUDIO_MUTED_KEY = 'media-chrome-pref-muted';
+export const VIDEO_MUTED_KEY = 'preview_video_muted';
 
 type MediaPlayerElement = AudioPlayerElement | VideoPlayerElement;
 
@@ -29,10 +30,10 @@ interface VolumePrefs {
 
 // Storage can be unavailable (private modes, blocked site data) — guard every
 // access so playback never depends on it.
-function readPrefs(): VolumePrefs {
+function readPrefs(muted_key: string): VolumePrefs {
   try {
     const volume = globalThis.localStorage.getItem(VOLUME_KEY);
-    const muted = globalThis.localStorage.getItem(MUTED_KEY);
+    const muted = globalThis.localStorage.getItem(muted_key);
     return {
       muted: muted === null ? null : muted === 'true',
       volume: volume !== null && Number.isFinite(Number(volume)) ? Number(volume) : null,
@@ -45,10 +46,10 @@ function readPrefs(): VolumePrefs {
   }
 }
 
-function writePrefs(volume: number, muted: boolean): void {
+function writePrefs(volume: number, muted: boolean, muted_key: string): void {
   try {
     globalThis.localStorage.setItem(VOLUME_KEY, String(volume));
-    globalThis.localStorage.setItem(MUTED_KEY, String(muted));
+    globalThis.localStorage.setItem(muted_key, String(muted));
   } catch {
     // Storage unavailable; skip persistence.
   }
@@ -56,12 +57,12 @@ function writePrefs(volume: number, muted: boolean): void {
 
 export function useMediaPreferences(
   player: MaybeRefOrGetter<MediaPlayerElement | null>,
-  { save }: { save: boolean; },
+  { muted_key }: { muted_key: string; },
 ): void {
   watch(() => toValue(player), (ele, _old, onCleanup) => {
     if (!ele) return;
     const { store } = ele;
-    const saved = readPrefs();
+    const saved = readPrefs(muted_key);
     let restored = false;
     let last: {
       volume: number;
@@ -75,10 +76,9 @@ export function useMediaPreferences(
       const volume = selectVolume(store.state);
       if (!volume) return true;
       const start_muted = volume.muted;
-      // `setVolume` unmutes above zero, so the mute state is re-applied after.
+      // `setVolume` unmutes above zero, so the mute state is applied after.
       if (saved.volume !== null) volume.setVolume(saved.volume);
-      const muted = save ? saved.muted ?? start_muted : start_muted;
-      if (muted) volume.setMuted(true);
+      volume.setMuted(saved.muted ?? start_muted);
       // Seed the diff with the restored state so only later changes are saved.
       const current = selectVolume(store.state);
       if (current) last = {
@@ -93,14 +93,13 @@ export function useMediaPreferences(
         restored = restore();
         return;
       }
-      if (!save) return;
       const volume = selectVolume(store.state);
       if (!volume || (volume.volume === last?.volume && volume.muted === last.muted)) return;
       last = {
         muted: volume.muted,
         volume: volume.volume,
       };
-      writePrefs(last.volume, last.muted);
+      writePrefs(last.volume, last.muted, muted_key);
     });
     restored = restore();
 
@@ -111,25 +110,51 @@ export function useMediaPreferences(
 /**
  * Video.js has no loop state or action (the player store only mirrors what its
  * features track), so looping stays on the media element's native `loop`
- * property. `loop` fires no event, which is why the state lives here — one
- * source of truth for every loop button bound to the same element.
+ * property. `loop` fires no event, which is why the state lives outside the
+ * element: `saved` (a persisted preference) is the one source of truth for
+ * every loop button bound to the same element, and is applied to each (new)
+ * media element as it arrives.
  */
-export function useMediaLooping(media: MaybeRefOrGetter<HTMLMediaElement | null>): WritableComputedRef<boolean> {
-  const looping = ref<boolean>(false);
-
-  // Adopt the element's own state whenever a (new) media element arrives.
-  watch(() => toValue(media), (ele) => {
-    set(looping, ele?.loop ?? false);
+export function useMediaLooping(
+  media: MaybeRefOrGetter<HTMLMediaElement | null>,
+  saved: Ref<boolean>,
+): WritableComputedRef<boolean> {
+  watch([(): HTMLMediaElement | null => toValue(media), saved], ([ele, looping]): void => {
+    if (ele) ele.loop = looping;
   }, { immediate: true });
 
   return computed({
-    get: () => get(looping),
-    set: (value) => {
-      const ele = toValue(media);
-      if (!ele) return;
-      ele.loop = value;
-      set(looping, value);
-    },
+    get: (): boolean => get(saved),
+    set: (value) => { set(saved, value); },
+  });
+}
+
+// The range browsers accept for `playbackRate` without throwing.
+const MIN_PLAYBACK_RATE = 0.0625;
+const MAX_PLAYBACK_RATE = 16;
+
+/**
+ * Remember the playback speed across previews and sessions. Video.js only
+ * mirrors the element's rate, so this works on the element directly: `saved`
+ * is applied to each (new) media element — as the default rate too, since
+ * loading a source resets `playbackRate` to `defaultPlaybackRate` — and every
+ * `ratechange` (the speed menu, a hotkey) is written back.
+ */
+export function useMediaPlaybackRate(
+  media: MaybeRefOrGetter<HTMLMediaElement | null>,
+  saved: Ref<number>,
+): void {
+  watch(() => toValue(media), (ele) => {
+    const rate = Number(get(saved));
+    if (!ele || !(rate >= MIN_PLAYBACK_RATE && rate <= MAX_PLAYBACK_RATE)) return;
+    ele.defaultPlaybackRate = rate;
+    ele.playbackRate = rate;
+  }, { immediate: true });
+
+  useEventListener(() => toValue(media), 'ratechange', (event: Event) => {
+    const ele = event.target as HTMLMediaElement;
+    ele.defaultPlaybackRate = ele.playbackRate;
+    set(saved, ele.playbackRate);
   });
 }
 

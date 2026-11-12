@@ -82,14 +82,19 @@ export function pathToRoute(route: RouteLocationNormalizedLoadedGeneric): string
   return `/${trim(route.path)}${formatQuery(query)}`;
 }
 
+/**
+ * Percent-encode a path one segment at a time so the `/` separators are
+ * preserved; a single `encodeURIComponent` would turn them into `%2F`, which
+ * many servers (including actix by default) reject inside a path.
+ */
+export function encodePath(path: string): string {
+  return path.split('/').map((segment) => encodeURIComponent(segment)).join('/');
+}
+
 export function toFileUrl(value: Entry | string): string {
   const path = typeof value === 'string' ? value : value.path;
   if (path.startsWith('http')) return path;
-  // Encode each segment individually so the `/` separators are preserved; a
-  // single `encodeURIComponent` would turn them into `%2F`, which many servers
-  // (including actix by default) reject inside a path.
-  const encoded = trim(path).split('/').map((segment) => encodeURIComponent(segment)).join('/');
-  return `${http.defaults.baseURL!}/${encoded}`;
+  return `${http.defaults.baseURL!}/${encodePath(trim(path))}`;
 }
 
 

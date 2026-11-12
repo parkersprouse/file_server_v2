@@ -6,6 +6,9 @@ export type AppEvent = {
   copy_text: undefined;
   dialog_clicked: Event;
   hide_dialog: undefined;
+  // An in-app direct link was opened without the path changing; `refetch`
+  // when the listing on screen isn't the directory's plain one (a search).
+  linked_updated: { refetch: boolean; };
   path_updated: PathUpdate;
   path_updating: PathUpdate;
   query_updated: QueryParamValue[];

@@ -1,11 +1,21 @@
 <template>
   <header
     id='toolbar'
-    class='h-fit rounded-none border border-x-0 border-t-0 p-0 pl-4 gap-4 flex items-center
+    class='h-fit rounded-none border border-x-0 border-t-0 p-0 gap-4 flex items-center
            justify-between z-10 fixed top-0 left-0 right-0'
   >
-    <section ref='breadcrumbs' class='breadcrumb-wrapper scrollbar-hidden'>
-      <NavBreadcrumbs :hidden-count='hidden_count' />
+    <!-- The bookmarks sheet slides in from the left, so its trigger sits there. -->
+    <section class='flex items-center self-stretch min-w-0 gap-4'>
+      <div class='flex self-stretch shrink-0'>
+        <BookmarksSheet />
+        <Separator
+          orientation='vertical'
+          class='h-auto! self-stretch!'
+        />
+      </div>
+      <section ref='breadcrumbs' class='breadcrumb-wrapper scrollbar-hidden'>
+        <NavBreadcrumbs :hidden-count='hidden_count' />
+      </section>
     </section>
 
     <!-- mobile view sheet trigger -->
@@ -121,11 +131,11 @@ onUnmounted(() => {
 */
 #toolbar {
   padding-right: env(safe-area-inset-right);
-  padding-left: calc(1rem + env(safe-area-inset-left));
+  padding-left: env(safe-area-inset-left);
 }
 
 .breadcrumb-wrapper {
-  @apply block h-full overflow-y-hidden overflow-x-auto;
+  @apply block self-center min-w-0 overflow-y-hidden overflow-x-auto;
 }
 
 .config-wrapper {

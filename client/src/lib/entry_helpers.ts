@@ -28,7 +28,7 @@ import { EntryType } from 'enums/entry_type.ts';
 import { FileType } from 'enums/file_type.ts';
 import { QueryParam } from 'enums/query_param.ts';
 import { checkSupport, features } from 'lib/browser.ts';
-import { formatQuery, queryToObject, stripTransientParams } from 'lib/utils.ts';
+import { encodePath, formatQuery, queryToObject, stripTransientParams } from 'lib/utils.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 import type { FunctionalComponent } from 'vue';
@@ -85,20 +85,15 @@ export function buildEntryRoute(
  * if the file is moved or renamed.
  */
 export function buildEntryLink(entry: Entry): string {
-  // Encode per segment so the `/` separators are preserved (see `toFileUrl`).
-  const encode_path = (path: string): string => path
-    .split('/')
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
   // Keep the viewer's view / sort params; search and direct-link state is
   // transient and must not leak into a shared link.
   const query = stripTransientParams(queryToObject(location.search));
 
   if (isDir(entry)) {
-    return `${location.origin}${encode_path(entry.path)}${formatQuery(query)}`;
+    return `${location.origin}${encodePath(entry.path)}${formatQuery(query)}`;
   }
 
-  return `${location.origin}${encode_path(entryLocation(entry))}${formatQuery({
+  return `${location.origin}${encodePath(entryLocation(entry))}${formatQuery({
     ...query,
     // Raw name: `formatQuery` does the encoding.
     [QueryParam.LINKED]: entry.name,
@@ -117,7 +112,7 @@ export function canPreview(entry: Entry): boolean {
  * The directory an entry lives in, as a display path ('/' for the root).
  * Used to show where a search result came from.
  */
-export function entryLocation(entry: Entry): string {
+export function entryLocation(entry: Pick<Entry, 'path'>): string {
   const index = entry.path.lastIndexOf('/');
   return index <= 0 ? '/' : entry.path.slice(0, index);
 }

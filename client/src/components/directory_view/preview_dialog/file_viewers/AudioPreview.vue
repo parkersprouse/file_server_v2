@@ -261,10 +261,18 @@
 
 <script setup lang='ts'>
 import '@videojs/html/audio/player';
+import { storeToRefs } from 'pinia';
 import { useId, useTemplateRef } from 'vue';
 
 import 'components/videojs/audio/skin.ts';
-import { useMediaLooping, useMediaPreferences, useSkinNarrow } from 'composables/media_player.ts';
+import {
+  AUDIO_MUTED_KEY,
+  useMediaLooping,
+  useMediaPlaybackRate,
+  useMediaPreferences,
+  useSkinNarrow,
+} from 'composables/media_player.ts';
+import { useStore } from 'stores/global.ts';
 
 import { MEDIA_HOTKEYS } from './media_player/hotkeys.ts';
 import MediaLoopButton from './media_player/MediaLoopButton.vue';
@@ -295,13 +303,15 @@ const ids = {
 
 const player = useTemplateRef<AudioPlayerElement>('player');
 const audio_ele = useTemplateRef<HTMLAudioElement>('audio_ele');
-const looping = useMediaLooping(audio_ele);
+const { preview_audio_loop, preview_audio_rate } = storeToRefs(useStore());
+const looping = useMediaLooping(audio_ele, preview_audio_loop);
+useMediaPlaybackRate(audio_ele, preview_audio_rate);
 
 // Below the skin's breakpoint the inline volume slider becomes a hover popover.
 const container = useTemplateRef<HTMLElement>('container');
 const narrow = useSkinNarrow(container);
 
-useMediaPreferences(player, { save: true });
+useMediaPreferences(player, { muted_key: AUDIO_MUTED_KEY });
 </script>
 
 <style>

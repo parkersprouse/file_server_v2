@@ -14,6 +14,10 @@ export const useStore = defineStore('global', () => {
   // Name of a direct-linked entry that failed to resolve; store state (rather
   // than route state) so the banner survives the redirect back to the root.
   const linked_entry_error = ref<string | undefined>();
+  // Media player preferences, per kind (a looping clip shouldn't make the next
+  // album track loop). Volume / mute live in `composables/media_player.ts`.
+  const preview_audio_loop = useLocalStorage<boolean>('preview_audio_loop', false);
+  const preview_audio_rate = useLocalStorage<number>('preview_audio_rate', 1);
   const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
   const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
   const preview_markdown_rendered = useLocalStorage<boolean>('preview_markdown_rendered', true);
@@ -25,6 +29,8 @@ export const useStore = defineStore('global', () => {
   // (Esc, backdrop click, the close button) and not just the ones we initiate.
   const preview_open = ref<boolean>(false);
   const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
+  const preview_video_loop = useLocalStorage<boolean>('preview_video_loop', false);
+  const preview_video_rate = useLocalStorage<number>('preview_video_rate', 1);
   // Opt-in to the real Fullscreen API in the video player (off by default: on
   // Android 17 a fullscreen request from a Chromium browser pulls a split-screen
   // task to the whole display, so the default is the app-drawn expanded mode).
@@ -81,11 +87,15 @@ export const useStore = defineStore('global', () => {
     /*-- State --*/
     file_highlight_result,
     linked_entry_error,
+    preview_audio_loop,
+    preview_audio_rate,
     preview_bg_enabled,
     preview_inline_colors_disabled,
     preview_markdown_rendered,
     preview_open,
     preview_text_wrapped,
+    preview_video_loop,
+    preview_video_rate,
     real_fullscreen_enabled,
     show_media_tools,
     toolbar_height,

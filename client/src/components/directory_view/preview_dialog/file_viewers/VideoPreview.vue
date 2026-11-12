@@ -593,6 +593,7 @@
 import '@videojs/html/ui/menu-checkbox-item';
 import '@videojs/html/video/player';
 import { set, useEventListener } from '@vueuse/core';
+import { storeToRefs } from 'pinia';
 import { computed, ref, useId, useTemplateRef } from 'vue';
 
 import 'components/videojs/video/skin.ts';
@@ -600,9 +601,11 @@ import { useInjectedFakeFullscreen } from 'composables/fake_fullscreen.ts';
 import {
   useMediaLooping,
   useMediaPictureInPicture,
+  useMediaPlaybackRate,
   useMediaPreferences,
   useSkinNarrow,
   useTouchTapToggle,
+  VIDEO_MUTED_KEY,
 } from 'composables/media_player.ts';
 import { useStore } from 'stores/global.ts';
 
@@ -686,7 +689,6 @@ const ids = {
 const player = useTemplateRef<VideoPlayerElement>('player');
 const container = useTemplateRef<HTMLElement>('container');
 const video_ele = useTemplateRef<HTMLVideoElement>('video_ele');
-const looping = useMediaLooping(video_ele);
 const {
   active: pip_active,
   available: pip_available,
@@ -700,6 +702,9 @@ const narrow = useSkinNarrow(container);
 // and only where the browser has one: without the opt-in nothing below renders
 // a control, hotkey or gesture that could call `requestFullscreen`.
 const $store = useStore();
+const { preview_video_loop, preview_video_rate } = storeToRefs($store);
+const looping = useMediaLooping(video_ele, preview_video_loop);
+useMediaPlaybackRate(video_ele, preview_video_rate);
 const expand = useInjectedFakeFullscreen();
 const expanded = expand.active;
 const fullscreen_supported = document.fullscreenEnabled;
@@ -742,9 +747,9 @@ function onLoadedMetadata(event: Event): void {
   if (videoWidth && videoHeight) set(aspect_ratio, videoWidth / videoHeight);
 }
 
-// The video always opens muted, so it restores the saved volume but never
-// writes preferences back (matching media-chrome's `muted`-attribute rules).
-useMediaPreferences(player, { save: false });
+// Videos open muted (the `muted` attribute) until the user unmutes one; from
+// then on the saved state wins. Kept apart from the audio player's mute.
+useMediaPreferences(player, { muted_key: VIDEO_MUTED_KEY });
 useTouchTapToggle(player, container);
 </script>
 

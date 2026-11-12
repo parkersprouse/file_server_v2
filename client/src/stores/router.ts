@@ -1,4 +1,4 @@
-import { get, set } from '@vueuse/core';
+import { get, set, useLocalStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -10,7 +10,7 @@ import { SearchScope } from 'enums/search_scope.ts';
 import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { ViewType } from 'enums/view_type.ts';
-import { SEARCH_QUERY_PARAMS, breadcrumbify } from 'lib/utils.ts';
+import { SEARCH_QUERY_PARAMS, breadcrumbify, encodePath, stripTransientParams } from 'lib/utils.ts';
 
 import type { Breadcrumb } from 'types/breadcrumb.d.ts';
 import type { SearchOptions } from 'types/search_options.d.ts';
@@ -35,9 +35,19 @@ export const useRouterStore = defineStore('router', () => {
 
   const breadcrumbs = ref<Breadcrumb[]>([]);
 
-  const dir = computed<SortDir>(() => validate($route.query.dir, SortDir, SortDir.ASC));
+  // The view / sort preferences live in local storage so they outlast the URL
+  // (an installed PWA always starts at `/`, with no query). The query params
+  // still win when present, so shared links and back/forward keep working;
+  // storage is only written when the user picks a value.
+  const saved_dir = useLocalStorage<SortDir>('sort_dir', SortDir.ASC);
+  const saved_key = useLocalStorage<SortKey>('sort_key', SortKey.NAME);
+  const saved_view = useLocalStorage<ViewType>('view', ViewType.LIST);
 
-  const key = computed<SortKey>(() => validate($route.query.key, SortKey, SortKey.NAME));
+  const dir = computed<SortDir>(() =>
+    validate($route.query.dir, SortDir, validate(get(saved_dir), SortDir, SortDir.ASC)));
+
+  const key = computed<SortKey>(() =>
+    validate($route.query.key, SortKey, validate(get(saved_key), SortKey, SortKey.NAME)));
 
   // The name of the entry a direct link points at, within the routed directory.
   const linked = computed<string | undefined>(() => {
@@ -63,8 +73,11 @@ export const useRouterStore = defineStore('router', () => {
   const searching = computed<boolean>(() => get(search_query).trim().length > 0);
 
   const view = computed({
-    get: () => validate($route.query.view, ViewType, ViewType.LIST),
-    set: (new_view: ViewType) => { applyQuery({ [QueryParam.VIEW]: new_view }); },
+    get: () => validate($route.query.view, ViewType, validate(get(saved_view), ViewType, ViewType.LIST)),
+    set: (new_view: ViewType) => {
+      set(saved_view, new_view);
+      applyQuery({ [QueryParam.VIEW]: new_view });
+    },
   });
 
   function addAfterCallback(callback: RouterEventCallback): void {
@@ -114,7 +127,34 @@ export const useRouterStore = defineStore('router', () => {
     await applyQuery({ [QueryParam.LINKED]: undefined }, true);
   }
 
+  /**
+   * Navigate in-app to what a "Copy Link" URL points at: a directory's plain
+   * listing, optionally with one of its entries as the direct-link target.
+   * When the path doesn't change no `path_updated` follows, so the listeners
+   * that would normally react to it are told explicitly.
+   */
+  async function openLinked(path: string, linked_name?: string): Promise<void> {
+    const from_path = $route.path;
+    const was_searching = get(searching);
+    try {
+      await $router.push({
+        path: encodePath(path),
+        query: {
+          ...stripTransientParams($route.query),
+          ...(linked_name ? { [QueryParam.LINKED]: linked_name } : {}),
+        },
+      });
+    } catch {
+      return;
+    }
+    if ($route.path !== from_path) return;
+    await $event_bus.emit('query_updated', []);
+    await $event_bus.emit('linked_updated', { refetch: was_searching });
+  }
+
   async function updateSorting(new_dir: SortDir, new_key: SortKey): Promise<void> {
+    set(saved_dir, new_dir);
+    set(saved_key, new_key);
     await applyQuery({
       [QueryParam.DIR]: new_dir,
       [QueryParam.KEY]: new_key,
@@ -202,6 +242,7 @@ export const useRouterStore = defineStore('router', () => {
     addBeforeCallback,
     clearLinked,
     clearSearch,
+    openLinked,
     removeAfterCallback,
     removeBeforeCallback,
     updateSearch,

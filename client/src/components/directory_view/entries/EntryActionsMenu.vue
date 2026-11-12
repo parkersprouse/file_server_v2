@@ -15,6 +15,12 @@
         <icon-link />
         Copy Link
       </DropdownMenuItem>
+      <!-- `click`, not `select`: a toggle must run exactly once per activation. -->
+      <DropdownMenuItem @click='toggleBookmark'>
+        <icon-bookmark-minus v-if='bookmarked' />
+        <icon-bookmark-plus v-else />
+        {{ bookmarked ? 'Remove Bookmark' : 'Add Bookmark' }}
+      </DropdownMenuItem>
       <DropdownMenuItem
         as='a'
         :href='new_tab_href'
@@ -38,9 +44,11 @@
 
 <script setup lang='ts'>
 import { computed } from 'vue';
+import { toast } from 'vue-sonner';
 
 import { useCopyLink } from 'composables/copy_link.ts';
 import { buildEntryLink, isDir } from 'lib/entry_helpers.ts';
+import { useBookmarksStore } from 'stores/bookmarks.ts';
 
 import type { Entry } from 'types/entry.d.ts';
 
@@ -49,6 +57,19 @@ const { entry } = defineProps<{
 }>();
 
 const $copy = useCopyLink(entry);
+const $bookmarks = useBookmarksStore();
+
+const bookmarked = computed<boolean>(() => $bookmarks.has(entry.path));
+
+function toggleBookmark(): void {
+  if (bookmarked.value) {
+    $bookmarks.remove(entry.path);
+    toast.success('Bookmark removed', { id: 'bookmark-toggled' });
+  } else {
+    $bookmarks.add($bookmarks.fromEntry(entry));
+    toast.success('Bookmark added', { id: 'bookmark-toggled' });
+  }
+}
 
 const new_tab_href = computed<string>(() => isDir(entry) ? buildEntryLink(entry) : `${entry.url}?inline`);
 </script>
