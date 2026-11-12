@@ -31,6 +31,7 @@ import { computed, watch } from 'vue';
 import { RouterView } from 'vue-router';
 
 import { useIsMobile } from 'composables/is_mobile.ts';
+import { usePwaUpdates } from 'composables/pwa.ts';
 import { useDark } from 'composables/theme.ts';
 import { useStore } from 'stores/global.ts';
 import { Toaster } from 'ui/sonner/index.ts';
@@ -57,6 +58,9 @@ const $store = useStore();
 const toast_target = computed<string>(() => ($store.preview_open ? '.preview-dialog__overlays' : 'body'));
 
 const $is_mobile = useIsMobile();
+
+// Registers the service worker and offers new builds through an update toast.
+usePwaUpdates();
 
 watch($is_mobile, (now_mobile) => {
   if (now_mobile) {

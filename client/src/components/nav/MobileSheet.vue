@@ -77,6 +77,22 @@
           </p>
           <ThemeToggle />
         </section>
+
+        <section
+          v-if='install_available'
+          class='navbar--mobile__actions__section'
+        >
+          <p class='navbar--mobile__actions__section__header'>
+            <span class='shrink-0 grow-0 text-lg text-muted-foreground font-semibold'>
+              App
+            </span>
+            <Separator
+              orientation='horizontal'
+              class='shrink-0 grow w-auto!'
+            />
+          </p>
+          <InstallButton labelled />
+        </section>
       </section>
     </SheetContent>
   </Sheet>
@@ -89,9 +105,12 @@ import { get } from '@vueuse/core';
 import { VisuallyHidden } from 'reka-ui';
 import { useTemplateRef } from 'vue';
 
+import { usePwaInstall } from 'composables/pwa.ts';
+
 import type SortToggles from 'components/nav/SortToggles.vue';
 
 const sort_toggle = useTemplateRef<typeof SortToggles>('sort_toggle');
+const { available: install_available } = usePwaInstall();
 
 async function onOpenUpdated(open: boolean): Promise<void> {
   if (!open) await get(sort_toggle)?.commit();

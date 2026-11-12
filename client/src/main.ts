@@ -5,6 +5,8 @@ import { createApp } from 'vue';
 
 import App from '@/App.vue';
 import router from '@/router/index.ts';
+// Side effect: starts listening for the browser's install prompt right away.
+import 'composables/pwa.ts';
 
 // https://vitejs.dev/guide/build.html#load-error-handling
 window.addEventListener('vite:preloadError', () => {

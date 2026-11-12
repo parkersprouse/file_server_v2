@@ -19,7 +19,12 @@
       v-if='$router_store.searching && !error'
       :count='entries?.length'
     />
-    <DirectoryError v-if='error' />
+    <DirectoryError
+      v-if='error && !online'
+      title="You're offline"
+      message='This folder will load once the connection is back.'
+    />
+    <DirectoryError v-else-if='error' />
     <DirectoryLoading v-else-if='!entries' />
     <DirectoryEmpty v-else-if='entries.length === 0' />
     <template v-else>
@@ -40,9 +45,9 @@
 </template>
 
 <script setup lang='ts'>
-import { get, set, useTitle } from '@vueuse/core';
+import { get, set, useOnline, useTitle } from '@vueuse/core';
 import { isAxiosError } from 'axios';
-import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef } from 'vue';
+import { computed, onMounted, onUnmounted, provide, ref, useTemplateRef, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
@@ -103,6 +108,15 @@ const page_title = computed<string>(() => {
   return `${current_dir} • [home]/${decodeURI(dirpath.map((path) => path.label).join('/'))}/`;
 });
 useTitle(page_title);
+
+// The installed app's shell loads from the service worker without a network,
+// but listings never do (they're always fetched fresh), so a failed one says
+// why while offline and retries by itself on reconnect — an installed window
+// has no reload button to do it with.
+const online = useOnline();
+watch(online, async (now_online) => {
+  if (now_online && get(error)) await getEntries();
+});
 
 async function getEntries(): Promise<void> {
   const path = pathToRoute($route);
@@ -275,6 +289,10 @@ onUnmounted(() => {
 
 main {
   @apply flex flex-col justify-start items-center py-6 px-0 z-0 w-full overflow-y-auto overflow-x-hidden relative;
+
+  /* Keep clear of display cutouts under `viewport-fit=cover` (0 elsewhere). */
+  padding-right: env(safe-area-inset-right);
+  padding-left: env(safe-area-inset-left);
 
   & .transition-cover {
     @apply hidden top-0 bottom-0 left-0 right-0 w-full h-full bg-background/75 z-10000;

@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/vue" />
 
 /* Single home for this app's ambient type declarations: global augmentations
    and module shims (`.toml` imports, untyped ESLint plugins). Keep every
@@ -13,6 +14,23 @@ declare global {
   interface Window {
     Prism?: type;
   }
+}
+
+/* PWA: browser APIs missing from the standard DOM typings. (Top-level, since
+   this file is a script: its interfaces are already global.) */
+
+// Chromium's install-prompt event.
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<{ outcome: 'accepted' | 'dismissed'; }>;
+}
+
+interface WindowEventMap {
+  beforeinstallprompt: BeforeInstallPromptEvent;
+}
+
+// Safari's pre-standard "launched from the home screen" flag.
+interface Navigator {
+  standalone?: boolean;
 }
 
 declare module '*.toml' {

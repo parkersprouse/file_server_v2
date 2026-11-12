@@ -5,6 +5,7 @@
     :class='cn(
       "preview-dialog",
       $store.preview_bg_enabled && "preview-dialog--opaque-bg",
+      expanded && "preview-dialog--expanded",
       preview_type?.class,
     )'
     closedby='none'
@@ -130,6 +131,22 @@
             {{ current_media_index + 1 }} / {{ media_entries.length }}
           </div>
         </template>
+
+        <!--
+          Expanded mode hides the action bar, so viewers without a control bar
+          of their own (images) get their way out here. The video player's
+          Expand button lives in its own controls and stays visible.
+        -->
+        <button
+          v-if='expanded && entry.preview_type !== PreviewType.VIDEO'
+          ref='collapse_button'
+          type='button'
+          class='preview-dialog__collapse'
+          aria-label='Exit expanded view'
+          @click.stop='() => expand.exit()'
+        >
+          <icon-minimize aria-hidden='true' />
+        </button>
       </div>
     </template>
 
@@ -150,9 +167,21 @@
 
 <script setup lang='ts'>
 import { get, onKeyStroke, set, useEventListener, useMediaQuery, useMutationObserver } from '@vueuse/core';
-import { computed, defineAsyncComponent, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
+import {
+  computed,
+  defineAsyncComponent,
+  nextTick,
+  onMounted,
+  onUnmounted,
+  provide,
+  ref,
+  useTemplateRef,
+  watch,
+} from 'vue';
+import { useRoute } from 'vue-router';
 
 import { useEventBus } from 'composables/event_bus.ts';
+import { FAKE_FULLSCREEN_KEY, useFakeFullscreen } from 'composables/fake_fullscreen.ts';
 import { usePreviewSwipe } from 'composables/preview_swipe.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { cn } from 'lib/utils.ts';
@@ -380,6 +409,41 @@ function layerOwnsEscape(): boolean {
   return Boolean(get(dialog)?.querySelector(ESCAPE_LAYER_SELECTOR));
 }
 
+// Expanded mode ("fake fullscreen"): the media fills the whole window with the
+//   dialog's chrome hidden, without the Fullscreen API (on Android 17 a real
+//   fullscreen request from a Chromium browser drags a split-screen task to the
+//   full display; see composables/fake_fullscreen.ts). The dialog is already a
+//   full-window, top-layer modal, so the mode is a class on it rather than a
+//   separate fixed overlay: no z-index or transformed-ancestor concerns, and
+//   the dialog's own modality already covers `aria-modal` and focus trapping.
+//   One instance serves every viewer, which reach it through `provide`.
+//   Its Esc handling runs before (and instead of) the close handler below, and
+//   yields to the same owners: real fullscreen and open in-dialog menus.
+const EXPAND_ESCAPE_GRACE_MS = 300;
+let expand_exited_at = Number.NEGATIVE_INFINITY;
+
+const expand = useFakeFullscreen({
+  canEscape: () => !fullscreenOwnsEscape() && !layerOwnsEscape(),
+  onExit: () => { expand_exited_at = performance.now(); },
+});
+const expanded = expand.active;
+provide(FAKE_FULLSCREEN_KEY, expand);
+
+const collapse_button = useTemplateRef<HTMLButtonElement>('collapse_button');
+
+// The trigger of a chrome-less viewer is in the (now hidden) action bar, so
+//   focus moves to the way back out; the composable restores it on exit.
+watch(expanded, async (now_expanded) => {
+  if (!now_expanded) return;
+  await nextTick();
+  get(collapse_button)?.focus({ preventScroll: true });
+});
+
+// A route change ends the mode but must not be undone by a `history.back()`.
+//   (The mode's own pushed entry shares the route, so it never triggers this.)
+const $route = useRoute();
+watch(() => $route.fullPath, () => expand.exit(false));
+
 onKeyStroke('Escape', async () => {
   if (fullscreenOwnsEscape() || layerOwnsEscape()) return;
   await close();
@@ -413,6 +477,7 @@ async function close(): Promise<void> {
   if (!$store.preview_open) return;
   const dialog_ele = get(dialog);
   if (!dialog_ele) return;
+  expand.exit();
   document.body.classList.remove('overflow-hidden!');
   set(entry, undefined);
   dialog_ele.close();
@@ -506,7 +571,8 @@ function showNextMedia(): void {
 // already committed via onNext/onPrevious.
 usePreviewSwipe(dialog, {
   enabled: () => $store.preview_open && get(has_multiple_media) && !get(is_animating),
-  enabledClose: () => $store.preview_open && !get(is_closing) && !get(is_close_snapping),
+  // Not while expanded: there the top edge belongs to the media.
+  enabledClose: () => $store.preview_open && !get(expanded) && !get(is_closing) && !get(is_close_snapping),
   onCloseCommit: closeCommitAnimation,
   onCloseDragUpdate: (dy) => {
     set(close_drag_y, dy);
@@ -544,12 +610,17 @@ function onArrowNav(event: KeyboardEvent, navigate: () => void): void {
 //   the request here instead, under the same guards (best effort, for the
 //   same reason).
 function onCancelDialog(event: Event): void {
-  if (fullscreenOwnsEscape() || layerOwnsEscape()) event.preventDefault();
+  // (The Esc that just left expanded mode never reaches the keydown handler,
+  //   but a native `cancel` for the same press still could.)
+  const left_expanded = get(expanded) || performance.now() - expand_exited_at < EXPAND_ESCAPE_GRACE_MS;
+  if (fullscreenOwnsEscape() || layerOwnsEscape() || left_expanded) event.preventDefault();
 }
 
 async function onClickDialog(event: Event): Promise<void> {
   const target = event.target as HTMLDivElement;
   if (!target) return;
+  // Expanded, the space around the media is part of the view, not a backdrop.
+  if (get(expanded)) return;
   if ([
     'preview-dialog',
     'preview-dialog__close-drag',
@@ -731,6 +802,53 @@ onUnmounted(() => {
     & .preview-dialog__counter {
       @apply fixed top-2 left-1/2 -translate-x-1/2 z-1008 px-2.5 py-0.5 rounded-full border
              bg-background/80 backdrop-blur-sm text-muted-foreground text-xs tabular-nums select-none;
+    }
+
+    /*
+      Expanded mode ("fake fullscreen"): the media on black, edge to edge, with
+      every piece of dialog chrome gone. `display: none` (rather than `v-if`)
+      keeps the action bars mounted — their teleports must not be toggled while
+      the dialog patches — while still taking them out of the focus order and
+      the accessibility tree. The safe-area padding keeps the media and its
+      controls clear of display cutouts and the gesture bar.
+    */
+    &.preview-dialog--expanded {
+      &::backdrop {
+        @apply bg-black;
+      }
+
+      & .preview-dialog__header,
+      & .preview-dialog__title,
+      & .preview-dialog__nav,
+      & .preview-dialog__counter,
+      & .preview-dialog__pill {
+        @apply hidden;
+      }
+
+      & .preview-dialog__close-drag {
+        padding:
+          env(safe-area-inset-top) env(safe-area-inset-right)
+          env(safe-area-inset-bottom) env(safe-area-inset-left);
+      }
+
+      & .preview-dialog__content,
+      & .preview-dialog__slide-cell {
+        @apply px-0;
+      }
+    }
+
+    & .preview-dialog__collapse {
+      @apply fixed z-1010 flex items-center justify-center size-11 rounded-full border
+             bg-background/80 backdrop-blur-sm text-muted-foreground
+             hover:text-primary hover:bg-background transition-colors;
+
+      cursor: pointer;
+      top: calc(env(safe-area-inset-top) + 0.5rem);
+      right: calc(env(safe-area-inset-right) + 0.5rem);
+
+      & svg {
+        @apply size-6 shrink-0;
+      }
     }
   }
 }

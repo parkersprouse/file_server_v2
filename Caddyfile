@@ -151,6 +151,20 @@ https://:{$WEB_FILE_BROWSER_CLIENT_TLS_BACKEND_PORT:18080} {
 	root * ./client/dist
 	encode zstd gzip
 
+	# Caching, which the PWA depends on to update safely:
+	#   - everything revalidates by default (`no-cache` still allows a cheap
+	#     304). That covers `index.html`, the manifest and above all `sw.js`:
+	#     a stale service worker script is how installed copies get stuck on
+	#     an old build.
+	#   - Vite's content-hashed output (`/assets/`, see `build.assetsDir` in
+	#     client/vite.config.ts) never changes under a given name.
+	header Cache-Control "no-cache"
+	header /assets/* Cache-Control "public, max-age=31536000, immutable"
+
+	# Go's built-in MIME table has no entry for `.webmanifest` (it only gets
+	# one where the OS supplies it, which Windows doesn't).
+	header /manifest.webmanifest Content-Type "application/manifest+json"
+
 	# SPA fallback: vue-router owns the path space (equivalent of `serve --single`).
 	try_files {path} /index.html
 	file_server

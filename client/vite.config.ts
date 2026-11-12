@@ -1,3 +1,4 @@
+/// <reference types='vitest/config' />
 import { fileURLToPath } from 'node:url';
 
 import Tailwind from '@tailwindcss/vite';
@@ -6,6 +7,7 @@ import UnpluginIconsResolver from 'unplugin-icons/resolver';
 import UnpluginIcons from 'unplugin-icons/vite';
 import UnpluginComponents from 'unplugin-vue-components/vite';
 import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 import { ViteToml } from 'vite-plugin-toml';
 import VueDevtools from 'vite-plugin-vue-devtools';
 
@@ -79,10 +81,14 @@ const VIDEOJS_ELEMENTS = new Set([
 ]);
 
 // https://vite.dev/config/
-export default defineConfig(({ command }) => ({
+export default defineConfig(({ command, mode }) => ({
   appType: 'spa',
   build: {
-    assetsDir: '.',
+    // Hashed build output gets its own directory so the web server can mark it
+    // `immutable` by path (see the Caddyfile) without also catching the
+    // unhashed files that must stay revalidated: `index.html`, `sw.js`, the
+    // manifest and the icons.
+    assetsDir: 'assets',
     copyPublicDir: true,
     emptyOutDir: true,
     minify: 'esbuild',
@@ -191,6 +197,78 @@ export default defineConfig(({ command }) => ({
       defaultClass: 'icon',
       scale: 1,
     }),
+    // Installable PWA: web app manifest + a Workbox service worker that
+    // precaches the app shell. The worker registers no runtime routes at all,
+    // which is deliberate:
+    //   • the API (listings, files, thumbnails, media) is on another origin
+    //     (same host, different port), so with no route matching it every one
+    //     of those requests goes straight to the network: listings stay fresh,
+    //     user files are never cached, and video / audio Range requests (which
+    //     seeking depends on) are never touched by the worker;
+    //   • the only thing it answers is the precached shell, plus navigations
+    //     inside this origin, which fall back to `index.html` (vue-router owns
+    //     the path space).
+    // Not registered by the dev server (`devOptions` stays off) or under test.
+    ...(mode === 'test' ?
+      [] :
+      [VitePWA({
+        includeAssets: [
+          'apple-touch-icon.png',
+          'favicon-16x16.png',
+          'favicon-32x32.png',
+          'favicon.ico',
+          'safari-pinned-tab.svg',
+        ],
+        // Registration is app code (`composables/pwa.ts`, via the
+        // `virtual:pwa-register/vue` module) so it can drive the update toast.
+        injectRegister: false,
+        manifest: {
+          background_color: '#302e2c',
+          description: 'Browse and preview the files on your file server.',
+          // `standalone`, not `fullscreen`: whether the `fullscreen` display
+          // mode triggers Android's system fullscreen request is untested.
+          display: 'standalone',
+          icons: [
+            {
+              sizes: '192x192',
+              src: '/android-chrome-192x192.png',
+              type: 'image/png',
+            },
+            {
+              sizes: '512x512',
+              src: '/android-chrome-512x512.png',
+              type: 'image/png',
+            },
+            {
+              purpose: 'maskable',
+              sizes: '512x512',
+              src: '/maskable-512x512.png',
+              type: 'image/png',
+            },
+          ],
+          id: '/',
+          name: 'File Browser',
+          orientation: 'any',
+          scope: '/',
+          short_name: 'Files',
+          start_url: '/',
+          theme_color: '#302e2c',
+        },
+        // `prompt`: a new worker waits until the user accepts the update toast,
+        // so nothing ever reloads in the middle of playback.
+        registerType: 'prompt',
+        // Kill switch for a bad worker on installed devices: a build made with
+        // `PWA_SELF_DESTROY=true` ships a worker that unregisters itself and
+        // clears its caches instead (see the README).
+        selfDestroying: process.env.PWA_SELF_DESTROY === 'true',
+        workbox: {
+          cleanupOutdatedCaches: true,
+          // Already content-hashed; no revision query needed.
+          dontCacheBustURLsMatching: /^assets\//,
+          globPatterns: ['**/*.{js,css,html,woff2,png,svg,ico}'],
+          navigateFallback: '/index.html',
+        },
+      })]),
   ],
   preview: {
     open: false,
@@ -209,5 +287,9 @@ export default defineConfig(({ command }) => ({
       utils: fileURLToPath(new URL('./src/lib/utils', import.meta.url)),
       views: fileURLToPath(new URL('./src/views', import.meta.url)),
     },
+  },
+  test: {
+    environment: 'happy-dom',
+    include: ['src/**/*.spec.ts'],
   },
 }));

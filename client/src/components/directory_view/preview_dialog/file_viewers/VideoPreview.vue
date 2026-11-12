@@ -12,6 +12,10 @@
         centre play button and bigger targets;
       • the touch `toggleControls` gesture disabled (app-handled) and no
         double-tap fullscreen gesture (see the note by the gestures);
+      • an Expand button in place of the fullscreen one: it fills the window
+        through the app's expanded mode, never the Fullscreen API (see
+        composables/fake_fullscreen.ts). The skin's real fullscreen button and
+        `f` hotkey come back only when the user opts in from the Settings menu;
       • per-instance ids, and numeric/boolean props bound as values (Vue
         assigns known custom-element props as properties, so a plain
         `seconds='5'` would arrive as the string '5');
@@ -348,6 +352,28 @@
                       <!-- eslint-enable vue/no-v-text-v-html-on-component -->
                     </media-menu-content>
                   </template>
+                  <!--
+                    Opt-in to the real Fullscreen API, off by default and only
+                    offered where the browser has one at all.
+                  -->
+                  <!-- eslint-disable vue/v-on-event-hyphenation -- a DOM event name, used as-is -->
+                  <media-menu-checkbox-item
+                    v-if='fullscreen_supported'
+                    class='media-menu-trigger-item'
+                    :checked='$store.real_fullscreen_enabled'
+                    @checked-change='onRealFullscreenChange'
+                  >
+                    <!-- eslint-enable vue/v-on-event-hyphenation -->
+                    <media-icon
+                      family='neutral'
+                      name='fullscreen-enter'
+                      class='media-menu-trigger-item-icon'
+                    />
+                    <span>Native fullscreen</span>
+                    <span class='media-menu-hint'>
+                      <span class='media-menu-hint-label'>{{ $store.real_fullscreen_enabled ? 'On' : 'Off' }}</span>
+                    </span>
+                  </media-menu-checkbox-item>
                   <!-- On narrow players the bar's Loop and PiP buttons live here instead. -->
                   <template v-if='narrow'>
                     <!-- eslint-disable vue/v-on-event-hyphenation -- a DOM event name, used as-is -->
@@ -386,6 +412,27 @@
               </media-menu>
 
               <media-controls-group class='video-controls-trailing'>
+                <button
+                  :id='ids.expand'
+                  type='button'
+                  class='media-button preview-video-expand-button'
+                  :aria-label='expanded ? "Exit expanded view" : "Expand to fill the window"'
+                  :aria-pressed='expanded'
+                  @click='() => expand.toggle()'
+                >
+                  <media-icon
+                    family='neutral'
+                    :name='expanded ? "fullscreen-exit" : "fullscreen-enter"'
+                    class='media-button-icon'
+                  />
+                </button>
+                <media-tooltip
+                  :trigger='ids.expand'
+                  side='top'
+                  class='media-popup media-popup-safe-area media-popup-transition media-popup-surface media-tooltip'
+                >
+                  <media-tooltip-label>{{ expanded ? 'Exit expanded view' : 'Expand' }}</media-tooltip-label>
+                </media-tooltip>
                 <template
                   v-for='button in trailing_buttons'
                   :key='button.tag'
@@ -422,7 +469,7 @@
       </media-controls>
 
       <media-hotkey
-        v-for='hotkey in VIDEO_HOTKEYS'
+        v-for='hotkey in hotkeys'
         :key='hotkey.keys'
         :keys='hotkey.keys'
         :action='hotkey.action'
@@ -441,9 +488,9 @@
         controls feature from toggling on every tap (so a double-tap seek would
         flash the controls on and off). `useTouchTapToggle` toggles instead,
         once the double-tap window has passed. The skin's double-tap-centre
-        fullscreen is omitted: fullscreen should only ever be a deliberate
-        choice (button or `f`), and with no centre region the left / right
-        seeks each cover a half.
+        fullscreen is omitted: expanding (or fullscreen) should only ever be a
+        deliberate choice (button or `f`), and with no centre region the left /
+        right seeks each cover a half.
       -->
       <media-gesture
         type='tap'
@@ -545,10 +592,11 @@
 // Not part of the registry skin, which has no checkbox items.
 import '@videojs/html/ui/menu-checkbox-item';
 import '@videojs/html/video/player';
-import { set } from '@vueuse/core';
+import { set, useEventListener } from '@vueuse/core';
 import { computed, ref, useId, useTemplateRef } from 'vue';
 
 import 'components/videojs/video/skin.ts';
+import { useInjectedFakeFullscreen } from 'composables/fake_fullscreen.ts';
 import {
   useMediaLooping,
   useMediaPictureInPicture,
@@ -556,8 +604,9 @@ import {
   useSkinNarrow,
   useTouchTapToggle,
 } from 'composables/media_player.ts';
+import { useStore } from 'stores/global.ts';
 
-import { VIDEO_HOTKEYS } from './media_player/hotkeys.ts';
+import { FULLSCREEN_HOTKEY, VIDEO_HOTKEYS } from './media_player/hotkeys.ts';
 import MediaLoopButton from './media_player/MediaLoopButton.vue';
 import MediaLoopIcon from './media_player/MediaLoopIcon.vue';
 import { QUALITY_ITEM_TEMPLATE, RADIO_ITEM_TEMPLATE } from './media_player/menu_templates.ts';
@@ -600,7 +649,8 @@ const SETTINGS_SUBMENUS = [
   },
 ] as const;
 
-// Each hides itself where unsupported (no Cast / AirPlay / PiP).
+// Each hides itself where unsupported (no Cast / AirPlay / PiP). The real
+// fullscreen button is filtered out unless the user opted in (see below).
 const TRAILING_BUTTONS = [
   {
     icon: 'cast',
@@ -623,6 +673,7 @@ const TRAILING_BUTTONS = [
 // `trigger` / `commandfor` pair elements by id, so ids must be unique per player.
 const uid = useId();
 const ids = {
+  expand: `${uid}-expand`,
   loop: `${uid}-loop`,
   mute: `${uid}-mute`,
   play: `${uid}-play`,
@@ -644,9 +695,38 @@ const {
 
 const narrow = useSkinNarrow(container);
 
-const trailing_buttons = computed(() => (narrow.value ?
-  TRAILING_BUTTONS.filter((button) => button.tag !== 'media-pip-button') :
-  TRAILING_BUTTONS));
+// Filling the window goes through the app's expanded mode by default. The
+// Fullscreen API is strictly opt-in (the Settings menu's "Native fullscreen"),
+// and only where the browser has one: without the opt-in nothing below renders
+// a control, hotkey or gesture that could call `requestFullscreen`.
+const $store = useStore();
+const expand = useInjectedFakeFullscreen();
+const expanded = expand.active;
+const fullscreen_supported = document.fullscreenEnabled;
+const real_fullscreen = computed<boolean>(() => fullscreen_supported && $store.real_fullscreen_enabled);
+
+const trailing_buttons = computed(() => TRAILING_BUTTONS.filter((button) => {
+  if (button.tag === 'media-pip-button') return !narrow.value;
+  if (button.tag === 'media-fullscreen-button') return real_fullscreen.value;
+  return true;
+}));
+
+const hotkeys = computed(() => (real_fullscreen.value ? [...VIDEO_HOTKEYS, FULLSCREEN_HOTKEY] : VIDEO_HOTKEYS));
+
+// `f` expands unless it is bound to real fullscreen above. Like the Video.js
+// hotkeys, it only applies while focus is inside the player.
+useEventListener(container, 'keydown', (event: KeyboardEvent) => {
+  if (real_fullscreen.value || event.key.toLowerCase() !== 'f') return;
+  if (event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented) return;
+  const target = event.target as HTMLElement | null;
+  if (target?.closest('input, textarea, select, [contenteditable]')) return;
+  event.preventDefault();
+  expand.toggle();
+});
+
+function onRealFullscreenChange(event: Event): void {
+  $store.real_fullscreen_enabled = (event as CustomEvent<{ checked: boolean; }>).detail.checked;
+}
 
 function onLoopChange(event: Event): void {
   set(looping, (event as CustomEvent<{ checked: boolean; }>).detail.checked);
@@ -691,7 +771,9 @@ useTouchTapToggle(player, container);
   /*
     Contain-fit: as wide as the space allows, or as wide as the full height at
     the video's ratio, whichever is smaller, with the height following from
-    the ratio. (In fullscreen the UA's `:fullscreen` rules take over.)
+    the ratio. Expanded mode needs nothing extra: the dialog drops its chrome
+    and padding, and this box simply has the whole window to fit into. (In
+    real fullscreen the UA's `:fullscreen` rules take over.)
   */
   .preview-video-skin {
     /* Square corners, as the pre-Video.js player had (Neutral rounds 12px). */

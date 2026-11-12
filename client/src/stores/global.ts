@@ -25,6 +25,10 @@ export const useStore = defineStore('global', () => {
   // (Esc, backdrop click, the close button) and not just the ones we initiate.
   const preview_open = ref<boolean>(false);
   const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
+  // Opt-in to the real Fullscreen API in the video player (off by default: on
+  // Android 17 a fullscreen request from a Chromium browser pulls a split-screen
+  // task to the whole display, so the default is the app-drawn expanded mode).
+  const real_fullscreen_enabled = useLocalStorage<boolean>('real_fullscreen_enabled', false);
   const scroll_offset = ref<{ [key: string]: number; }>({});
   const show_media_tools = useLocalStorage<boolean>('show_media_tooling', true);
   const toolbar_height = ref<number>(0);
@@ -82,6 +86,7 @@ export const useStore = defineStore('global', () => {
     preview_markdown_rendered,
     preview_open,
     preview_text_wrapped,
+    real_fullscreen_enabled,
     show_media_tools,
     toolbar_height,
 

@@ -51,6 +51,15 @@
           <PreviewDialogToggleInlineColorsAction v-if='$store.inline_colors_present' />
         </template>
 
+        <!-- Videos expand from the player's own control bar instead. -->
+        <DropdownMenuItem
+          v-if='entry.preview_type === PreviewType.IMAGE'
+          @select='() => expand.enter()'
+        >
+          <icon-maximize />
+          Expand
+        </DropdownMenuItem>
+
         <DropdownMenuItem
           v-if='entry.preview_type && [PreviewType.IMAGE, PreviewType.VIDEO].includes(entry.preview_type)'
           @select='() => { $store.show_media_tools = !$store.show_media_tools; }'
@@ -152,6 +161,7 @@ import { useTemplateRef } from 'vue';
 
 import PreviewDialogTitleAction from 'components/directory_view/preview_dialog/actions/PreviewDialogTitleAction.vue';
 import { useEventBus } from 'composables/event_bus.ts';
+import { useInjectedFakeFullscreen } from 'composables/fake_fullscreen.ts';
 import { usePreviewActions } from 'composables/preview_actions.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { useStore } from 'stores/global.ts';
@@ -164,6 +174,7 @@ const { entry } = defineProps<{
 
 const $event_bus = useEventBus();
 const $store = useStore();
+const expand = useInjectedFakeFullscreen();
 
 const title_action = useTemplateRef<InstanceType<typeof PreviewDialogTitleAction>>('title_action');
 

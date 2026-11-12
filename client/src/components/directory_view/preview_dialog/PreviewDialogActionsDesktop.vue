@@ -40,6 +40,22 @@
     </template>
 
     <template v-if='entry.preview_type && [PreviewType.IMAGE, PreviewType.VIDEO].includes(entry.preview_type)'>
+      <!-- Videos expand from the player's own control bar instead. -->
+      <PreviewDialogTooltip v-if='entry.preview_type === PreviewType.IMAGE'>
+        <Button
+          variant='ghost'
+          aria-label='Expand to fill the window'
+          class='ghost-ext h-auto!'
+          @click.prevent='() => expand.enter()'
+        >
+          <icon-maximize />
+        </Button>
+
+        <template #content>
+          Expand
+        </template>
+      </PreviewDialogTooltip>
+
       <PreviewDialogTooltip>
         <Button
           variant='ghost'
@@ -123,6 +139,7 @@
 
 <script setup lang='ts'>
 import { useEventBus } from 'composables/event_bus.ts';
+import { useInjectedFakeFullscreen } from 'composables/fake_fullscreen.ts';
 import { usePreviewActions } from 'composables/preview_actions.ts';
 import { PreviewType } from 'enums/preview_type.ts';
 import { useStore } from 'stores/global.ts';
@@ -135,6 +152,7 @@ const { entry } = defineProps<{
 
 const $event_bus = useEventBus();
 const $store = useStore();
+const expand = useInjectedFakeFullscreen();
 
 const {
   clipboard_available,

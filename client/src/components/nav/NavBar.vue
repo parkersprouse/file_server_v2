@@ -42,6 +42,13 @@
         class='h-auto! self-stretch!'
       />
       <ThemeToggle />
+      <template v-if='install_available'>
+        <Separator
+          orientation='vertical'
+          class='h-auto! self-stretch!'
+        />
+        <InstallButton />
+      </template>
     </section>
   </header>
 </template>
@@ -53,12 +60,14 @@ import { nextTick, onMounted, onUnmounted, ref, useTemplateRef } from 'vue';
 import { useBreadcrumbCollapse } from 'composables/breadcrumb_collapse.ts';
 import { useEventBus } from 'composables/event_bus.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
+import { usePwaInstall } from 'composables/pwa.ts';
 import { useStore } from 'stores/global.ts';
 
 import type { UnsubscribeFunction } from 'emittery';
 
 const $is_mobile = useIsMobile();
 const $store = useStore();
+const { available: install_available } = usePwaInstall();
 
 const event_unsubs = ref<UnsubscribeFunction[]>([]);
 const $event_bus = useEventBus();
@@ -104,6 +113,16 @@ onUnmounted(() => {
 
 <style>
 @reference '../../assets/styles/index.css';
+
+/*
+  `viewport-fit=cover` lets the page run under display cutouts (a phone in
+  landscape, or an installed app drawing edge to edge), so the bar's content
+  keeps clear of them itself. The insets are 0 everywhere else.
+*/
+#toolbar {
+  padding-right: env(safe-area-inset-right);
+  padding-left: calc(1rem + env(safe-area-inset-left));
+}
 
 .breadcrumb-wrapper {
   @apply block h-full overflow-y-hidden overflow-x-auto;

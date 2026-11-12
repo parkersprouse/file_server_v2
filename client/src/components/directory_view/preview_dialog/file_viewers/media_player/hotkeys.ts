@@ -1,9 +1,14 @@
 /*
  * The keyboard shortcuts both Neutral skins ship (`video/skin.html` /
  * `audio/skin.html` in the Video.js registry), shared so the two players stay
- * in step. Video adds its own fullscreen / picture-in-picture keys; captions'
- * `c` is left out because previews never carry text tracks. `value` is bound
- * as a number — Vue assigns a known custom-element prop as a property.
+ * in step. Video adds its own picture-in-picture key; captions' `c` is left
+ * out because previews never carry text tracks. `value` is bound as a number —
+ * Vue assigns a known custom-element prop as a property.
+ *
+ * The skin's `f → toggleFullscreen` is kept apart: by default `f` toggles the
+ * app's expanded mode instead (handled in `VideoPreview`, since it isn't a
+ * Video.js action), and the real-fullscreen binding is only rendered once the
+ * user has opted in to the Fullscreen API.
  */
 export interface MediaHotkey {
   action: string;
@@ -72,12 +77,13 @@ export const MEDIA_HOTKEYS: readonly MediaHotkey[] = [
   },
 ];
 
+export const FULLSCREEN_HOTKEY: MediaHotkey = {
+  action: 'toggleFullscreen',
+  keys: 'f',
+};
+
 export const VIDEO_HOTKEYS: readonly MediaHotkey[] = [
   ...MEDIA_HOTKEYS,
-  {
-    action: 'toggleFullscreen',
-    keys: 'f',
-  },
   {
     action: 'togglePictureInPicture',
     keys: 'i',
