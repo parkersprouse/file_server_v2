@@ -41,6 +41,15 @@ export const useBookmarksStore = defineStore('bookmarks', () => {
     set(stored, get(bookmarks).filter((bookmark) => bookmark.path !== path));
   }
 
+  /** Move the bookmark at index `from` to index `to` (indices into `bookmarks`). */
+  function move(from: number, to: number): void {
+    const list = [...get(bookmarks)];
+    const in_range = (index: number): boolean => Number.isInteger(index) && index >= 0 && index < list.length;
+    if (!in_range(from) || !in_range(to) || from === to) return;
+    list.splice(to, 0, ...list.splice(from, 1));
+    set(stored, list);
+  }
+
   function fromEntry(entry: Entry): Omit<Bookmark, 'added_at'> {
     return {
       file_type: isDir(entry) ? undefined : entry.file_type,
@@ -55,6 +64,7 @@ export const useBookmarksStore = defineStore('bookmarks', () => {
     add,
     fromEntry,
     has,
+    move,
     remove,
   };
 });

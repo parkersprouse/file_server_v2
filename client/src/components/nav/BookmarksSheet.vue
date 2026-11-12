@@ -67,16 +67,31 @@
         </EmptyHeader>
       </Empty>
 
-      <ul v-else class='bookmarks-sheet__list'>
+      <!--
+        Press and hold a row to pick it up and drag it to a new position
+        (composables/hold_reorder.ts); Alt + Up / Down does the same from the
+        keyboard.
+      -->
+      <ul
+        v-else
+        ref='list'
+        class='bookmarks-sheet__list'
+        :class='{ "bookmarks-sheet__list--dragging": dragging }'
+      >
         <li
-          v-for='bookmark in $bookmarks.bookmarks'
+          v-for='(bookmark, index) in $bookmarks.bookmarks'
           :key='bookmark.path'
           class='bookmarks-sheet__item'
+          :class='{ "bookmarks-sheet__item--dragged": dragging && itemStyle(index)?.zIndex === 1 }'
+          :style='itemStyle(index)'
         >
           <button
             type='button'
             class='bookmarks-sheet__link'
+            :aria-keyshortcuts='reorderable ? "Alt+ArrowUp Alt+ArrowDown" : undefined'
             @click='openBookmark(bookmark)'
+            @keydown.alt.up.prevent='moveWithKeyboard(index, -1, $event)'
+            @keydown.alt.down.prevent='moveWithKeyboard(index, 1, $event)'
           >
             <component
               :is='fileTypeToIcon(bookmark.file_type ?? EntryType.DIR)'
@@ -100,6 +115,17 @@
           </Button>
         </li>
       </ul>
+
+      <p
+        v-if='reorderable'
+        class='px-4 py-3 text-xs text-muted-foreground'
+      >
+        Press and hold a bookmark to reorder.
+      </p>
+
+      <VisuallyHidden>
+        <span aria-live='polite'>{{ announcement }}</span>
+      </VisuallyHidden>
     </SheetContent>
   </Sheet>
 </template>
@@ -109,9 +135,10 @@ import IconBookmark from '~icons/lucide/bookmark';
 import IconBookmarkFilled from '~icons/lucide-extended/bookmark-filled';
 
 import { VisuallyHidden } from 'reka-ui';
-import { computed, ref } from 'vue';
+import { computed, nextTick, ref, useTemplateRef } from 'vue';
 import { useRoute } from 'vue-router';
 
+import { useHoldReorder } from 'composables/hold_reorder.ts';
 import { useIsMobile } from 'composables/is_mobile.ts';
 import { EntryType } from 'enums/entry_type.ts';
 import { entryLocation, fileTypeToIcon } from 'lib/entry_helpers.ts';
@@ -156,6 +183,32 @@ function toggleCurrentFolder(): void {
   else $bookmarks.add(folder);
 }
 
+const list = useTemplateRef<HTMLElement>('list');
+const announcement = ref<string>('');
+const reorderable = computed<boolean>(() => $bookmarks.bookmarks.length > 1);
+
+function move(from: number, to: number): void {
+  const name = $bookmarks.bookmarks[from]?.name;
+  $bookmarks.move(from, to);
+  announcement.value = `${name} moved to position ${to + 1} of ${$bookmarks.bookmarks.length}`;
+}
+
+const { dragging, itemStyle } = useHoldReorder(list, {
+  // The remove button is a plain button, not a drag handle.
+  ignore_selector: '[data-slot="button"]',
+  item_selector: '.bookmarks-sheet__item',
+  onMove: move,
+});
+
+async function moveWithKeyboard(index: number, step: -1 | 1, event: KeyboardEvent): Promise<void> {
+  const to = index + step;
+  if (to < 0 || to >= $bookmarks.bookmarks.length) return;
+  move(index, to);
+  // Moving the row in the DOM drops its focus; put it back on the same row.
+  await nextTick();
+  (event.target as HTMLElement).focus();
+}
+
 async function openBookmark(bookmark: Bookmark): Promise<void> {
   open.value = false;
   if (bookmark.file_type === undefined) await $router_store.openLinked(bookmark.path);
@@ -173,11 +226,32 @@ async function openBookmark(bookmark: Bookmark): Promise<void> {
   padding-left: env(safe-area-inset-left);
 
   & .bookmarks-sheet__list {
-    @apply flex flex-col min-h-0 overflow-y-auto overflow-x-hidden;
+    @apply flex flex-col min-h-0 overflow-y-auto overflow-x-hidden select-none;
+
+    /* A long press picks a row up; it mustn't also open the iOS callout. */
+    -webkit-touch-callout: none;
   }
 
   & .bookmarks-sheet__item {
     @apply flex flex-row flex-nowrap items-center gap-1 pr-2 border-b;
+  }
+
+  /* Rows only animate while one is being dragged, so the drop itself (the
+     transforms clearing as the list reorders) doesn't play backwards. */
+  & .bookmarks-sheet__list--dragging {
+    @apply cursor-grabbing;
+
+    & .bookmarks-sheet__item:not(.bookmarks-sheet__item--dragged) {
+      @apply transition-transform duration-150;
+    }
+
+    & .bookmarks-sheet__link {
+      @apply cursor-grabbing;
+    }
+  }
+
+  & .bookmarks-sheet__item--dragged {
+    @apply bg-muted border-y shadow-lg;
   }
 
   & .bookmarks-sheet__link {
