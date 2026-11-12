@@ -776,9 +776,8 @@ useTouchTapToggle(player, container);
   /*
     Contain-fit: as wide as the space allows, or as wide as the full height at
     the video's ratio, whichever is smaller, with the height following from
-    the ratio. Expanded mode needs nothing extra: the dialog drops its chrome
-    and padding, and this box simply has the whole window to fit into. (In
-    real fullscreen the UA's `:fullscreen` rules take over.)
+    the ratio. (Expanded mode and real fullscreen fill the box instead; see
+    the expanded rules below and the UA's `:fullscreen` ones.)
   */
   .preview-video-skin {
     /* Square corners, as the pre-Video.js player had (Neutral rounds 12px). */
@@ -789,6 +788,39 @@ useTouchTapToggle(player, container);
 
     & > video {
       @apply size-full;
+    }
+
+    /*
+      Expanded mode mirrors what the skin does under `:fullscreen` (which the
+      app can't match, never being in real fullscreen): the skin fills the
+      whole window instead of hugging the video, so the controls span the
+      window's width and sit at its bottom edge, the video letterboxes inside
+      on black, the frame border goes, and the UI scales up on big windows
+      (the same steps as the skin's `:fullscreen` rules in `themes/theme.css`).
+    */
+    .preview-dialog--expanded & {
+      --media-object-fit: contain;
+
+      aspect-ratio: auto;
+      width: 100cqw;
+      height: 100cqh;
+      background-color: #000;
+
+      &::after {
+        @apply hidden;
+      }
+
+      @media (width >= 1280px) {
+        --media-scale: 1.25;
+      }
+
+      @media (width >= 1536px) {
+        --media-scale: 1.5;
+      }
+
+      @media (width >= 1920px) {
+        --media-scale: 1.75;
+      }
     }
 
     /* No gradient scrim behind the controls, ever (a design choice). */
