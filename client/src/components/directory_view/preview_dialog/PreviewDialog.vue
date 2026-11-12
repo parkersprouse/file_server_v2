@@ -565,14 +565,17 @@ function showNextMedia(): void {
 
 // Touch swipe / mouse click-drag across the dialog cycles the gallery, mirroring
 // the prev/next buttons. Enabled whenever the gallery is traversable — even with
-// the on-screen controls hidden — and carefully inert over the video chrome and
-// a zoomed image (see the composable). Live drag position feeds the filmstrip's
-// drag-follow animation; the paired onDragEnd snaps back unless this gesture
-// already committed via onNext/onPrevious.
+// the on-screen controls hidden, unless the user switched swipe navigation off
+// (`preview_swipe_enabled`, which also turns off swipe-down-to-close) — and
+// carefully inert over the video chrome and a zoomed image (see the
+// composable). Live drag position feeds the filmstrip's drag-follow animation;
+// the paired onDragEnd snaps back unless this gesture already committed via
+// onNext/onPrevious.
 usePreviewSwipe(dialog, {
-  enabled: () => $store.preview_open && get(has_multiple_media) && !get(is_animating),
+  enabled: () => $store.preview_open && $store.preview_swipe_enabled && get(has_multiple_media) && !get(is_animating),
   // Not while expanded: there the top edge belongs to the media.
-  enabledClose: () => $store.preview_open && !get(expanded) && !get(is_closing) && !get(is_close_snapping),
+  enabledClose: () => $store.preview_open && $store.preview_swipe_enabled &&
+    !get(expanded) && !get(is_closing) && !get(is_close_snapping),
   onCloseCommit: closeCommitAnimation,
   onCloseDragUpdate: (dy) => {
     set(close_drag_y, dy);

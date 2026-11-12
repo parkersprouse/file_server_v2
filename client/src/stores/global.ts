@@ -21,6 +21,11 @@ export const useStore = defineStore('global', () => {
   const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
   const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
   const preview_markdown_rendered = useLocalStorage<boolean>('preview_markdown_rendered', true);
+  // The preview dialog's swipe gestures: swipe / click-drag between gallery
+  // media, and swipe down from the top edge to close. On by default; turning
+  // it off stops accidental navigation while scrubbing a video (the prev/next
+  // buttons, arrow keys, Esc and the close button keep working).
+  const preview_swipe_enabled = useLocalStorage<boolean>('preview_swipe_enabled', true);
   // Whether the preview `<dialog>` is currently showing modally. Store state
   // rather than PreviewDialog-local state because `App.vue` needs it too: a
   // modal dialog makes everything outside its subtree inert, so the toaster has
@@ -93,6 +98,7 @@ export const useStore = defineStore('global', () => {
     preview_inline_colors_disabled,
     preview_markdown_rendered,
     preview_open,
+    preview_swipe_enabled,
     preview_text_wrapped,
     preview_video_loop,
     preview_video_rate,

@@ -78,6 +78,23 @@
       />
     </template>
 
+    <!-- Every file type: besides gallery swipes this also gates swipe-down-to-close. -->
+    <PreviewDialogTooltip>
+      <Button
+        variant='ghost'
+        :aria-label='`${$store.preview_swipe_enabled ? "Disable" : "Enable"} swipe navigation`'
+        class='ghost-ext h-auto!'
+        @click.prevent='() => { $store.preview_swipe_enabled = !$store.preview_swipe_enabled; }'
+      >
+        <icon-ext-gallery-horizontal-filled v-if='$store.preview_swipe_enabled' />
+        <icon-gallery-horizontal v-else />
+      </Button>
+
+      <template #content>
+        {{ $store.preview_swipe_enabled ? 'Disable' : 'Enable' }} Swipe Navigation
+      </template>
+    </PreviewDialogTooltip>
+
     <PreviewDialogTooltip>
       <Button
         variant='ghost'

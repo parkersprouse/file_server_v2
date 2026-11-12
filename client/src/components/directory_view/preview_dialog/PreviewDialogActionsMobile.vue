@@ -69,6 +69,13 @@
           {{ $store.show_media_tools ? 'Hide' : 'Show' }} Controls
         </DropdownMenuItem>
 
+        <!-- Every file type: besides gallery swipes this also gates swipe-down-to-close. -->
+        <DropdownMenuItem @select='() => { $store.preview_swipe_enabled = !$store.preview_swipe_enabled; }'>
+          <icon-ext-gallery-horizontal-filled v-if='$store.preview_swipe_enabled' />
+          <icon-gallery-horizontal v-else />
+          {{ $store.preview_swipe_enabled ? 'Disable' : 'Enable' }} swiping
+        </DropdownMenuItem>
+
         <DropdownMenuItem @select='() => { $store.preview_bg_enabled = !$store.preview_bg_enabled; }'>
           <icon-ext-contrast-filled v-if='$store.preview_bg_enabled' />
           <icon-contrast v-else />
