@@ -10,11 +10,13 @@
     <SheetTrigger as-child>
       <Button
         variant='ghost'
-        aria-label='Bookmarks'
+        :aria-label='current_bookmarked ? "Bookmarks (this folder is bookmarked)" : "Bookmarks"'
         title='Bookmarks'
         class='p-1.5! h-auto self-stretch ghost-ext'
       >
-        <icon-bookmark
+        <!-- Filled while the folder on screen is itself a bookmark. -->
+        <component
+          :is='current_bookmarked ? IconBookmarkFilled : IconBookmark'
           aria-hidden='true'
           :class='$is_mobile ? "size-7!" : "size-6!"'
         />
@@ -103,6 +105,9 @@
 </template>
 
 <script setup lang='ts'>
+import IconBookmark from '~icons/lucide/bookmark';
+import IconBookmarkFilled from '~icons/lucide-extended/bookmark-filled';
+
 import { VisuallyHidden } from 'reka-ui';
 import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';

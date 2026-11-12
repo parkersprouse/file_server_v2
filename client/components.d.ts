@@ -103,7 +103,6 @@ declare module 'vue' {
     IconArrowDownWideNarrow: typeof import('~icons/lucide/arrow-down-wide-narrow')['default']
     IconArrowUpNarrowWide: typeof import('~icons/lucide/arrow-up-narrow-wide')['default']
     IconBan: typeof import('~icons/lucide/ban')['default']
-    IconBookmark: typeof import('~icons/lucide/bookmark')['default']
     IconBookmarkMinus: typeof import('~icons/lucide/bookmark-minus')['default']
     IconBookmarkPlus: typeof import('~icons/lucide/bookmark-plus')['default']
     IconCheck: typeof import('~icons/lucide/check')['default']
