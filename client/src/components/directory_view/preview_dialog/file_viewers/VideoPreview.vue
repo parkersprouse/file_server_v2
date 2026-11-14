@@ -12,10 +12,11 @@
         centre play button and bigger targets;
       • the touch `toggleControls` gesture disabled (app-handled) and no
         double-tap fullscreen gesture (see the note by the gestures);
-      • an Expand button in place of the fullscreen one: it fills the window
-        through the app's expanded mode, never the Fullscreen API (see
-        composables/fake_fullscreen.ts). The skin's real fullscreen button and
-        `f` hotkey come back only when the user opts in from the Settings menu;
+      • an Expand button in the fullscreen button's slot (last in the bar):
+        it fills the window through the app's expanded mode, never the
+        Fullscreen API (see composables/fake_fullscreen.ts). The skin's real
+        fullscreen button and `f` hotkey replace it there only when the user
+        opts in from the Settings menu, so the bar never shows both;
       • per-instance ids, and numeric/boolean props bound as values (Vue
         assigns known custom-element props as properties, so a plain
         `seconds='5'` would arrive as the string '5');
@@ -412,27 +413,6 @@
               </media-menu>
 
               <media-controls-group class='video-controls-trailing'>
-                <button
-                  :id='ids.expand'
-                  type='button'
-                  class='media-button preview-video-expand-button'
-                  :aria-label='expanded ? "Exit expanded view" : "Expand to fill the window"'
-                  :aria-pressed='expanded'
-                  @click='() => expand.toggle()'
-                >
-                  <media-icon
-                    family='neutral'
-                    :name='expanded ? "fullscreen-exit" : "fullscreen-enter"'
-                    class='media-button-icon'
-                  />
-                </button>
-                <media-tooltip
-                  :trigger='ids.expand'
-                  side='top'
-                  class='media-popup media-popup-safe-area media-popup-transition media-popup-surface media-tooltip'
-                >
-                  <media-tooltip-label>{{ expanded ? 'Exit expanded view' : 'Expand' }}</media-tooltip-label>
-                </media-tooltip>
                 <template
                   v-for='button in trailing_buttons'
                   :key='button.tag'
@@ -460,6 +440,58 @@
                   >
                     <media-tooltip-label />
                     <media-tooltip-shortcut class='media-tooltip-shortcut' />
+                  </media-tooltip>
+                </template>
+                <!--
+                  One slot, two controls: the real fullscreen button once the
+                  user has opted in, the app's Expand button otherwise.
+                -->
+                <template v-if='native_fullscreen'>
+                  <media-fullscreen-button
+                    :id='ids.fullscreen'
+                    class='media-button media-fullscreen-button'
+                  >
+                    <media-icon
+                      family='neutral'
+                      name='fullscreen-enter'
+                      class='media-button-icon media-fullscreen-button-enter-icon'
+                    />
+                    <media-icon
+                      family='neutral'
+                      name='fullscreen-exit'
+                      class='media-button-icon media-fullscreen-button-exit-icon'
+                    />
+                  </media-fullscreen-button>
+                  <media-tooltip
+                    :trigger='ids.fullscreen'
+                    side='top'
+                    class='media-popup media-popup-safe-area media-popup-transition media-popup-surface media-tooltip'
+                  >
+                    <media-tooltip-label />
+                    <media-tooltip-shortcut class='media-tooltip-shortcut' />
+                  </media-tooltip>
+                </template>
+                <template v-else>
+                  <button
+                    :id='ids.expand'
+                    type='button'
+                    class='media-button preview-video-expand-button'
+                    :aria-label='expanded ? "Exit expanded view" : "Expand to fill the window"'
+                    :aria-pressed='expanded'
+                    @click='() => expand.toggle()'
+                  >
+                    <media-icon
+                      family='neutral'
+                      :name='expanded ? "fullscreen-exit" : "fullscreen-enter"'
+                      class='media-button-icon'
+                    />
+                  </button>
+                  <media-tooltip
+                    :trigger='ids.expand'
+                    side='top'
+                    class='media-popup media-popup-safe-area media-popup-transition media-popup-surface media-tooltip'
+                  >
+                    <media-tooltip-label>{{ expanded ? 'Exit expanded view' : 'Expand' }}</media-tooltip-label>
                   </media-tooltip>
                 </template>
               </media-controls-group>
@@ -589,6 +621,7 @@
 </template>
 
 <script setup lang='ts'>
+import { selectFullscreen } from '@videojs/html';
 // Not part of the registry skin, which has no checkbox items.
 import '@videojs/html/ui/menu-checkbox-item';
 import '@videojs/html/video/player';
@@ -652,8 +685,8 @@ const SETTINGS_SUBMENUS = [
   },
 ] as const;
 
-// Each hides itself where unsupported (no Cast / AirPlay / PiP). The real
-// fullscreen button is filtered out unless the user opted in (see below).
+// Each hides itself where unsupported (no Cast / AirPlay / PiP). The
+// fullscreen / Expand button follows them, in a slot of its own.
 const TRAILING_BUTTONS = [
   {
     icon: 'cast',
@@ -667,16 +700,13 @@ const TRAILING_BUTTONS = [
     icon: 'pip',
     tag: 'media-pip-button',
   },
-  {
-    icon: 'fullscreen',
-    tag: 'media-fullscreen-button',
-  },
 ] as const;
 
 // `trigger` / `commandfor` pair elements by id, so ids must be unique per player.
 const uid = useId();
 const ids = {
   expand: `${uid}-expand`,
+  fullscreen: `${uid}-fullscreen`,
   loop: `${uid}-loop`,
   mute: `${uid}-mute`,
   play: `${uid}-play`,
@@ -708,20 +738,22 @@ useMediaPlaybackRate(video_ele, preview_video_rate);
 const expand = useInjectedFakeFullscreen();
 const expanded = expand.active;
 const fullscreen_supported = document.fullscreenEnabled;
-const real_fullscreen = computed<boolean>(() => fullscreen_supported && $store.real_fullscreen_enabled);
+// Which of the two the bar's one fullscreen slot (and `f`) drives. A player
+// that is still expanded keeps the Expand control whatever the setting says
+// (e.g. the gallery moved on to this video while an image was expanded), so
+// there is always a way back out.
+const native_fullscreen = computed<boolean>(() =>
+  fullscreen_supported && $store.real_fullscreen_enabled && !expanded.value);
 
-const trailing_buttons = computed(() => TRAILING_BUTTONS.filter((button) => {
-  if (button.tag === 'media-pip-button') return !narrow.value;
-  if (button.tag === 'media-fullscreen-button') return real_fullscreen.value;
-  return true;
-}));
+const trailing_buttons = computed(() =>
+  TRAILING_BUTTONS.filter((button) => button.tag !== 'media-pip-button' || !narrow.value));
 
-const hotkeys = computed(() => (real_fullscreen.value ? [...VIDEO_HOTKEYS, FULLSCREEN_HOTKEY] : VIDEO_HOTKEYS));
+const hotkeys = computed(() => (native_fullscreen.value ? [...VIDEO_HOTKEYS, FULLSCREEN_HOTKEY] : VIDEO_HOTKEYS));
 
 // `f` expands unless it is bound to real fullscreen above. Like the Video.js
 // hotkeys, it only applies while focus is inside the player.
 useEventListener(container, 'keydown', (event: KeyboardEvent) => {
-  if (real_fullscreen.value || event.key.toLowerCase() !== 'f') return;
+  if (native_fullscreen.value || event.key.toLowerCase() !== 'f') return;
   if (event.ctrlKey || event.metaKey || event.altKey || event.defaultPrevented) return;
   const target = event.target as HTMLElement | null;
   if (target?.closest('input, textarea, select, [contenteditable]')) return;
@@ -729,8 +761,26 @@ useEventListener(container, 'keydown', (event: KeyboardEvent) => {
   expand.toggle();
 });
 
-function onRealFullscreenChange(event: Event): void {
-  $store.real_fullscreen_enabled = (event as CustomEvent<{ checked: boolean; }>).detail.checked;
+// Flipping the setting while the video already fills the window / screen
+// carries it over to the other kind, so the mode on screen always matches the
+// control in the bar. The menu item's click is the user activation the
+// Fullscreen API needs.
+async function onRealFullscreenChange(event: Event): Promise<void> {
+  const enabled = (event as CustomEvent<{ checked: boolean; }>).detail.checked;
+  const store = player.value?.store;
+  const fullscreen = store?.target ? selectFullscreen(store.state) : undefined;
+  const was_expanded = expanded.value;
+  const was_fullscreen = fullscreen?.isFullscreen ?? false;
+  $store.real_fullscreen_enabled = enabled;
+
+  if (enabled && was_expanded && fullscreen) {
+    expand.exit();
+    // Refused by the browser: the video is simply left unexpanded.
+    await fullscreen.requestFullscreen().catch(() => {});
+  } else if (!enabled && was_fullscreen && fullscreen) {
+    await fullscreen.exitFullscreen().catch(() => {});
+    if (!document.fullscreenElement) expand.enter();
+  }
 }
 
 function onLoopChange(event: Event): void {

@@ -1,5 +1,7 @@
 import { useDark as vueUseDark } from '@vueuse/core';
 
+import { storageKey } from 'lib/storage.ts';
+
 import type { UseDarkOptions } from '@vueuse/core';
 import type { WritableComputedRef } from 'vue';
 
@@ -20,7 +22,7 @@ export function useDark(opts: UseDarkOptions = {}): WritableComputedRef<boolean,
     initOnMounted: true,
     listenToStorageChanges: true,
     selector: 'html',
-    storageKey: 'theme',
+    storageKey: storageKey('theme'),
     valueDark: 'dark',
     valueLight: 'light',
     ...opts,

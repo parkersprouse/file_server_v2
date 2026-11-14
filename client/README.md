@@ -53,7 +53,7 @@ Why: on Android 17 (seen on Nothing OS 5.0), Chromium-based browsers pass every 
 - **Videos:** the Expand button in the player's control bar, or `f` while the player has focus.
 - **Images:** the Expand action in the preview's action bar (the ⋯ menu on mobile).
 - **Leaving:** the same button, `Esc`, or the back gesture / button. Closing the preview or changing folder leaves it too.
-- **Real fullscreen** is still there as an opt-in: the video player's Settings menu → *Native fullscreen* (off by default, remembered per browser, only shown where the browser supports it). Turning it on brings back the fullscreen button and makes `f` use it.
+- **Real fullscreen** is still there as an opt-in: the video player's Settings menu → *Native fullscreen* (off by default, remembered per browser, only shown where the browser supports it). Turning it on swaps the Expand button for the real fullscreen button (same place in the bar, never both) and makes `f` use it. Flipping the setting while a video is already expanded or fullscreen moves it straight to the other kind.
 
 The behaviour lives in `src/composables/fake_fullscreen.ts`; the look is the `.preview-dialog--expanded` state of `PreviewDialog.vue`. There is no orientation lock (that needs real fullscreen), so rotate the device yourself.
 
@@ -63,6 +63,7 @@ The client is a Progressive Web App: installed, it opens in its own window with 
 
 - **Install:** use *Install app* in the navbar (the settings sheet on mobile) in Chrome / Chromium browsers. On iOS, use Share → *Add to Home Screen* (the same button shows the steps).
 - **Updates:** when a new build is deployed, an *Update available* toast appears. Nothing reloads until you press *Reload*.
+- **Separate settings:** the installed app keeps its own preferences and bookmarks, apart from the same site open in a browser tab (they share an origin, so the app stores its values under `pwa:`-prefixed `localStorage` keys; see `src/lib/storage.ts`). The first launch of the installed app copies the tab's values over once; after that, changes in one never show up in the other.
 - **Offline:** the app shell is cached and opens without a network; folder listings are always fetched live, so they show an offline state and reload themselves on reconnect. Files, thumbnails and media are never cached, and the service worker never handles them (the API is a separate origin), so seeking in large videos works as in a normal tab.
 - **HTTPS is required.** Service workers and installation need a secure context with a *trusted* certificate — clicking through a certificate warning is not enough, the worker silently fails to register. With the bundled Caddy setup, install Caddy's root CA (`.caddy/pki/authorities/local/root.crt`) on each device, as a *CA certificate* on Android. `localhost` works without any of this.
 - **Testing locally:** the dev server doesn't register the service worker. Run `pnpm build && pnpm preview` and open the `localhost` URL.

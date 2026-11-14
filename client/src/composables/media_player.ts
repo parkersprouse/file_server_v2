@@ -2,6 +2,8 @@ import { selectControls, selectPiP, selectVolume } from '@videojs/html';
 import { get, set, useElementSize, useEventListener } from '@vueuse/core';
 import { computed, onScopeDispose, readonly, ref, toValue, watch } from 'vue';
 
+import { storageKey } from 'lib/storage.ts';
+
 import type { AudioPlayerElement } from '@videojs/html/audio';
 import type { VideoPlayerElement } from '@videojs/html/video';
 import type { DeepReadonly, MaybeRefOrGetter, Ref, WritableComputedRef } from 'vue';
@@ -32,8 +34,8 @@ interface VolumePrefs {
 // access so playback never depends on it.
 function readPrefs(muted_key: string): VolumePrefs {
   try {
-    const volume = globalThis.localStorage.getItem(VOLUME_KEY);
-    const muted = globalThis.localStorage.getItem(muted_key);
+    const volume = globalThis.localStorage.getItem(storageKey(VOLUME_KEY));
+    const muted = globalThis.localStorage.getItem(storageKey(muted_key));
     return {
       muted: muted === null ? null : muted === 'true',
       volume: volume !== null && Number.isFinite(Number(volume)) ? Number(volume) : null,
@@ -48,8 +50,8 @@ function readPrefs(muted_key: string): VolumePrefs {
 
 function writePrefs(volume: number, muted: boolean, muted_key: string): void {
   try {
-    globalThis.localStorage.setItem(VOLUME_KEY, String(volume));
-    globalThis.localStorage.setItem(muted_key, String(muted));
+    globalThis.localStorage.setItem(storageKey(VOLUME_KEY), String(volume));
+    globalThis.localStorage.setItem(storageKey(muted_key), String(muted));
   } catch {
     // Storage unavailable; skip persistence.
   }

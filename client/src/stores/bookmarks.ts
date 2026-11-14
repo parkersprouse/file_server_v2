@@ -3,6 +3,7 @@ import { defineStore } from 'pinia';
 import { computed } from 'vue';
 
 import { isDir } from 'lib/entry_helpers.ts';
+import { storageKey } from 'lib/storage.ts';
 
 import type { Bookmark } from 'types/bookmark.d.ts';
 import type { Entry } from 'types/entry.d.ts';
@@ -14,7 +15,7 @@ import type { Entry } from 'types/entry.d.ts';
  * dead-link handling when the entry has since moved.
  */
 export const useBookmarksStore = defineStore('bookmarks', () => {
-  const stored = useLocalStorage<Bookmark[]>('bookmarks', []);
+  const stored = useLocalStorage<Bookmark[]>(storageKey('bookmarks'), []);
 
   // Storage is user-editable and shared across tabs / app versions, so only
   // well-formed records are ever handed to the UI.

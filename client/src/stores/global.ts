@@ -2,6 +2,8 @@ import { get, set, useLocalStorage } from '@vueuse/core';
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 
+import { storageKey } from 'lib/storage.ts';
+
 import type { FileHighlightResult } from 'types/file_highlight_result.d.ts';
 
 // Cap on the number of remembered per-path scroll offsets, to bound growth over
@@ -16,16 +18,16 @@ export const useStore = defineStore('global', () => {
   const linked_entry_error = ref<string | undefined>();
   // Media player preferences, per kind (a looping clip shouldn't make the next
   // album track loop). Volume / mute live in `composables/media_player.ts`.
-  const preview_audio_loop = useLocalStorage<boolean>('preview_audio_loop', false);
-  const preview_audio_rate = useLocalStorage<number>('preview_audio_rate', 1);
-  const preview_bg_enabled = useLocalStorage<boolean>('preview_bg_enabled', false);
-  const preview_inline_colors_disabled = useLocalStorage<boolean>('preview_inline_colors_disabled', false);
-  const preview_markdown_rendered = useLocalStorage<boolean>('preview_markdown_rendered', true);
+  const preview_audio_loop = useLocalStorage<boolean>(storageKey('preview_audio_loop'), false);
+  const preview_audio_rate = useLocalStorage<number>(storageKey('preview_audio_rate'), 1);
+  const preview_bg_enabled = useLocalStorage<boolean>(storageKey('preview_bg_enabled'), false);
+  const preview_inline_colors_disabled = useLocalStorage<boolean>(storageKey('preview_inline_colors_disabled'), false);
+  const preview_markdown_rendered = useLocalStorage<boolean>(storageKey('preview_markdown_rendered'), true);
   // The preview dialog's swipe gestures: swipe / click-drag between gallery
   // media, and swipe down from the top edge to close. On by default; turning
   // it off stops accidental navigation while scrubbing a video (the prev/next
   // buttons, arrow keys, Esc and the close button keep working).
-  const preview_swipe_enabled = useLocalStorage<boolean>('preview_swipe_enabled', true);
+  const preview_swipe_enabled = useLocalStorage<boolean>(storageKey('preview_swipe_enabled'), true);
   // Whether the preview `<dialog>` is currently showing modally. Store state
   // rather than PreviewDialog-local state because `App.vue` needs it too: a
   // modal dialog makes everything outside its subtree inert, so the toaster has
@@ -33,15 +35,15 @@ export const useStore = defineStore('global', () => {
   // PreviewDialog's `open` attribute observer, so it tracks every close path
   // (Esc, backdrop click, the close button) and not just the ones we initiate.
   const preview_open = ref<boolean>(false);
-  const preview_text_wrapped = useLocalStorage<boolean>('preview_text_wrapped', false);
-  const preview_video_loop = useLocalStorage<boolean>('preview_video_loop', false);
-  const preview_video_rate = useLocalStorage<number>('preview_video_rate', 1);
+  const preview_text_wrapped = useLocalStorage<boolean>(storageKey('preview_text_wrapped'), false);
+  const preview_video_loop = useLocalStorage<boolean>(storageKey('preview_video_loop'), false);
+  const preview_video_rate = useLocalStorage<number>(storageKey('preview_video_rate'), 1);
   // Opt-in to the real Fullscreen API in the video player (off by default: on
   // Android 17 a fullscreen request from a Chromium browser pulls a split-screen
   // task to the whole display, so the default is the app-drawn expanded mode).
-  const real_fullscreen_enabled = useLocalStorage<boolean>('real_fullscreen_enabled', false);
+  const real_fullscreen_enabled = useLocalStorage<boolean>(storageKey('real_fullscreen_enabled'), false);
   const scroll_offset = ref<{ [key: string]: number; }>({});
-  const show_media_tools = useLocalStorage<boolean>('show_media_tooling', true);
+  const show_media_tools = useLocalStorage<boolean>(storageKey('show_media_tooling'), true);
   const toolbar_height = ref<number>(0);
 
   /*-- Computed --*/

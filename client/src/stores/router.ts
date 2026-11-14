@@ -10,6 +10,7 @@ import { SearchScope } from 'enums/search_scope.ts';
 import { SortDir } from 'enums/sort_dir.ts';
 import { SortKey } from 'enums/sort_key.ts';
 import { ViewType } from 'enums/view_type.ts';
+import { storageKey } from 'lib/storage.ts';
 import { SEARCH_QUERY_PARAMS, breadcrumbify, encodePath, stripTransientParams } from 'lib/utils.ts';
 
 import type { Breadcrumb } from 'types/breadcrumb.d.ts';
@@ -39,9 +40,9 @@ export const useRouterStore = defineStore('router', () => {
   // (an installed PWA always starts at `/`, with no query). The query params
   // still win when present, so shared links and back/forward keep working;
   // storage is only written when the user picks a value.
-  const saved_dir = useLocalStorage<SortDir>('sort_dir', SortDir.ASC);
-  const saved_key = useLocalStorage<SortKey>('sort_key', SortKey.NAME);
-  const saved_view = useLocalStorage<ViewType>('view', ViewType.LIST);
+  const saved_dir = useLocalStorage<SortDir>(storageKey('sort_dir'), SortDir.ASC);
+  const saved_key = useLocalStorage<SortKey>(storageKey('sort_key'), SortKey.NAME);
+  const saved_view = useLocalStorage<ViewType>(storageKey('view'), ViewType.LIST);
 
   const dir = computed<SortDir>(() =>
     validate($route.query.dir, SortDir, validate(get(saved_dir), SortDir, SortDir.ASC)));
