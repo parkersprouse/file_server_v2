@@ -25,7 +25,7 @@
 
     <SheetContent side='left' class='bookmarks-sheet'>
       <SheetHeader class='p-4 pb-2'>
-        <SheetTitle class='text-lg'>
+        <SheetTitle class='text-lg border-none'>
           Bookmarks
         </SheetTitle>
         <VisuallyHidden>
@@ -57,10 +57,12 @@
 
       <Empty v-if='$bookmarks.bookmarks.length === 0' class='border-0'>
         <EmptyHeader>
-          <EmptyMedia variant='icon'>
-            <icon-bookmark aria-hidden='true' />
+          <EmptyMedia variant='icon' class='bg-transparent m-0'>
+            <IconBookmark aria-hidden='true' class='size-8' />
           </EmptyMedia>
-          <EmptyTitle>No bookmarks yet</EmptyTitle>
+          <EmptyTitle>
+            No bookmarks yet
+          </EmptyTitle>
           <EmptyDescription>
             Add one from a folder or file's actions menu.
           </EmptyDescription>
@@ -118,7 +120,7 @@
 
       <p
         v-if='reorderable'
-        class='px-4 py-3 text-xs text-muted-foreground'
+        class='px-4 py-3 text-xs text-muted-foreground m-0 text-right italic'
       >
         Press and hold a bookmark to reorder.
       </p>
@@ -260,6 +262,10 @@ async function openBookmark(bookmark: Bookmark): Promise<void> {
     @variant hover {
       @apply bg-muted;
     }
+  }
+
+  & [data-slot='sheet-close'] {
+    @apply not-hover:not-active:not-focus:bg-transparent;
   }
 }
 </style>
