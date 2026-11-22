@@ -4,14 +4,52 @@
     {
       "name": "client-dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "client", "dev"],
+      "runtimeArgs": [
+        "--dir",
+        "client",
+        "dev"
+      ],
       "port": 5173
     },
     {
       "name": "client-preview",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--dir", "client", "preview", "--port", "4173", "--strictPort"],
+      "runtimeArgs": [
+        "--dir",
+        "client",
+        "preview",
+        "--port",
+        "4173",
+        "--strictPort"
+      ],
       "port": 4173
+    },
+    {
+      "name": "server-dev",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd server && cargo run"
+      ],
+      "port": 8100
+    },
+    {
+      "name": "client-http",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--dir",
+        "client",
+        "exec",
+        "vite",
+        "preview",
+        "--mode",
+        "http",
+        "--host",
+        "--port",
+        "8090",
+        "--strictPort"
+      ],
+      "port": 8090
     }
   ]
 }

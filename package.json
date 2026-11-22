@@ -12,7 +12,9 @@
     "server:dev": "cd server && cargo run",
     "release": "concurrently --kill-others --names \"Release Client\",\"Release Server\" --prefix-colors blue,yellow \"pnpm run client:release\" \"pnpm run server:release\"",
     "client:release": "cd client && pnpm run build && cd .. && node bin/run-caddy.mjs",
-    "server:release": "cd server && cargo run -r"
+    "server:release": "cd server && cargo run -r",
+    "release:http": "concurrently --kill-others --names \"HTTP Client\",\"Release Server\" --prefix-colors blue,yellow \"pnpm run client:release:http\" \"pnpm run server:release\"",
+    "client:release:http": "cd client && pnpm run build --mode http && pnpm exec vite preview --mode http --host --port 8090 --strictPort"
   },
   "dependencies": {
     "@types/caniuse-lite": "^1.0.5",
